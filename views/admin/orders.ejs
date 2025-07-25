@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin - Orders</title>
+  <link rel="stylesheet" href="/styles/admin/orders.css">
+  <link rel="stylesheet" href="/styles/admin/adminnavbar.css">
+  <link rel="stylesheet" href="/styles/admin/adminsidebar.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
+<body>
+
+  <%- include('../partials/admin/adminnavbar') %>
+  
+  <div class="admin-wrapper">
+    <%- include('../partials/admin/adminsidebar', { current: 'orders' }) %>
+
+    <div class="admin-main">
+      <div class="breadcrumb">Admin > Orders</div>
+
+      <div class="orders-section">
+        <div class="orders-header">
+          <h2>Orders</h2>
+          <input type="text" placeholder="🔍 Search orders" class="order-search" />
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Order</th>
+              <th>Date</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th>Order ID</th>
+            </tr>
+          </thead>
+          <tbody>
+  <% if (typeof orders === 'undefined' || orders.length === 0) { %>
+    <tr>
+      <td colspan="6" style="text-align:center; color:gray;">No orders available.</td>
+    </tr>
+  <% } else { %>
+    <% orders.forEach(function(order, index) { %>
+      <tr>
+        <td><img src="<%= order.image %>" alt="<%= order.name %>" /></td>
+        <td><%= order.name %></td>
+        <td><%= order.date %></td>
+        <td>₹<%= order.total.toLocaleString() %></td>
+        <td><%= order.status %></td>
+        <td><%= order.orderId %></td>
+      </tr>
+    <% }) %>
+  <% } %>
+</tbody>
+
+        </table>
+
+        <div class="pagination">
+          <span>&lt;</span>
+          <span class="active">1</span>
+          <span>2</span>
+          <span>...</span>
+          <span>24</span>
+          <span>&gt;</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

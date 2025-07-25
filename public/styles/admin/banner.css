@@ -1,0 +1,105 @@
+.banner-container {
+  margin: 30px 20px;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+}
+
+.banner-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding: 20px;
+  border-bottom: 1px solid #ddd;
+}
+
+.banner-card:last-child {
+  border-bottom: none;
+}
+
+.banner-label {
+  font-weight: 600;
+  width: 180px;
+  font-size: 15px;
+  margin-bottom: 10px;
+}
+
+.banner-upload {
+  flex-grow: 1;
+  margin-right: 10px;
+}
+
+.banner-upload select,
+.banner-upload input[type="date"],
+.banner-upload input[type="text"] {
+  padding: 8px;
+  width: 140px;
+  font-size: 14px;
+  margin: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.banner-status {
+  font-size: 13px;
+  padding: 8px;
+  border-radius: 5px;
+  background-color: #eee;
+  width: 120px;
+  text-align: center;
+  margin: 5px;
+}
+
+.update-btn {
+  background-color: #000;
+  color: #fff;
+  border: none;
+  padding: 8px 20px;
+  font-size: 14px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.update-btn:hover {
+  background-color: #222;
+}
+
+/* Add New Banner Form */
+.add-banner-form {
+  margin-top: 30px;
+  padding: 20px;
+  background: #fafafa;
+  border: 1px dashed #ccc;
+  border-radius: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.add-banner-form input,
+.add-banner-form select {
+  padding: 8px;
+  width: 180px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.add-banner-form button {
+  background-color: #000;
+  color: #fff;
+  border: none;
+  padding: 10px 25px;
+  font-size: 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.add-banner-form button:hover {
+  background-color: #222;
+}

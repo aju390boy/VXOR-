@@ -1,0 +1,1041 @@
+/* ========================================= */
+/* --- Product Detail Page Styles (MODERN, IMMERSIVE LAYOUT - V3) --- */
+/* ========================================= */
+
+/* Color Palette Variables (Adjusted for a sleeker dark theme) */
+:root {
+    --bg-dark-primary: #0f0f0f; /* Deep, almost black background */
+    --bg-dark-secondary: #181818; /* Slightly lighter dark for panels/elements */
+    --text-light: #f5f5f5; /* Off-white for primary text */
+    --text-muted: #b0b0b0; /* Soft gray for secondary text */
+    --accent-main: #00e676; /* Vibrant, modern green (like a lime/emerald) */
+    --accent-hover: #00c853; /* Darker green for hover */
+    --border-subtle: #333333; /* Very subtle borders */
+    --shadow-soft: rgba(0, 0, 0, 0.4);
+    --glow-effect: rgba(0, 230, 118, 0.4); /* Glow matching accent */
+    --error-color: #ef5350; /* Softer red for errors */
+    --success-color: #69f0ae; /* Lighter green for success */
+    --rating-color: #ffd740; /* Golden yellow for stars */
+}
+
+/* Base Styles */
+body {
+    font-family: 'Inter', sans-serif; /* Modern, clean sans-serif (link from Google Fonts) */
+    background-color: var(--bg-dark-primary);
+    margin: 0;
+    padding: 0; /* Remove body padding for full-bleed layout */
+    box-sizing: border-box;
+    color: var(--text-light);
+    line-height: 1.6;
+    min-height: 100vh; /* Ensure body takes full viewport height */
+    overflow-x: hidden; /* Prevent horizontal scroll */
+}
+
+/* Main Layout Container */
+.detail-container { /* Renamed for clarity, acts as the main wrapper for split screen */
+    display: flex;
+    min-height: 100vh; /* Ensure it covers the full viewport height */
+    width: 100%; /* Take full width */
+    overflow: hidden; /* Prevent internal scroll issues */
+    background-color: var(--bg-dark-primary); /* Consistent with body */
+}
+
+/* Product Image Section (Left Panel) */
+.detail-image { /* Now specifically for the left image panel */
+    flex: 0 0 60%; /* Takes 60% width on large screens */
+    position: relative;
+    background-color: #121212; /* Slightly different dark for image background */
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Center main image vertically */
+    align-items: center; /* Center main image horizontally */
+    padding: 40px; /* Internal padding */
+    box-sizing: border-box;
+}
+
+.detail-image #mainImage {
+    max-width: 100%;
+    max-height: 80vh; /* Limit height relative to viewport for immersion */
+    object-fit: contain; /* Ensures the entire image is visible */
+    border-radius: 8px; /* Subtle rounding */
+    box-shadow: 0 15px 40px var(--shadow-soft); /* Soft, pronounced shadow for the image */
+    transition: transform 0.4s ease-out;
+}
+
+.detail-image #mainImage:hover {
+    transform: scale(1.02); /* Slight scale on hover */
+}
+
+.detail-image .thumbnail-wrapper {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 30px;
+    padding: 0 20px; /* Padding for scrollable thumbnails */
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-main) var(--border-subtle);
+}
+
+.detail-image .thumbnail-wrapper::-webkit-scrollbar {
+    height: 6px; /* Thinner scrollbar */
+}
+.detail-image .thumbnail-wrapper::-webkit-scrollbar-track {
+    background: var(--bg-dark-secondary);
+    border-radius: 10px;
+}
+.detail-image .thumbnail-wrapper::-webkit-scrollbar-thumb {
+    background: var(--accent-main);
+    border-radius: 10px;
+}
+
+.detail-image .thumbnail {
+    width: 80px; /* Slightly smaller thumbnails for elegance */
+    height: 80px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.detail-image .thumbnail:hover {
+    border-color: var(--accent-main);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px var(--glow-effect);
+}
+
+.detail-image .thumbnail.active-thumb {
+    border-color: var(--accent-main);
+    box-shadow: 0 0 12px var(--glow-effect);
+    transform: scale(1.05);
+}
+
+
+/* Product Info Section (Right Panel) */
+.detail-info { /* Now specifically for the right details panel */
+    flex: 0 0 40%; /* Takes 40% width on large screens */
+    background-color: var(--bg-dark-secondary); /* Lighter dark background for this panel */
+    padding: 50px; /* Generous padding */
+    box-sizing: border-box;
+    overflow-y: auto; /* Allow scrolling if content exceeds height */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; /* Align content to top */
+    border-left: 1px solid var(--border-subtle); /* Subtle separator */
+}
+
+.product-breadcrumb {
+    font-size: 0.8em;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px; /* More spaced out for modern feel */
+    font-weight: 500;
+}
+
+.product-rating {
+    font-size: 1.2em;
+    color: var(--rating-color);
+    margin-bottom: 15px;
+}
+
+.detail-info h2 {
+    font-size: 3em; /* Very large, impactful heading */
+    color: var(--text-light);
+    margin-bottom: 25px;
+    font-weight: 700;
+    line-height: 1.1;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.08); /* Subtle light glow */
+}
+
+.stock-status {
+    font-size: 0.95em;
+    font-weight: bold;
+    color: var(--success-color);
+    margin-bottom: 25px;
+    text-transform: uppercase;
+    background-color: rgba(0, 230, 118, 0.1); /* Light transparent background matching accent */
+    padding: 6px 12px;
+    border-radius: 4px;
+    display: inline-block;
+    border: 1px solid rgba(0, 230, 118, 0.3);
+    letter-spacing: 0.8px;
+}
+
+.price-tag {
+    font-size: 3.5em; /* Even larger, striking price */
+    color: var(--accent-main); /* Price matches accent for premium feel */
+    font-weight: bold;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: baseline;
+    gap: 15px;
+    text-shadow: 0 0 20px var(--glow-effect); /* Stronger glow for price */
+}
+
+.original-price {
+    font-size: 0.55em; /* Smaller relative to new price size */
+    color: var(--text-muted) !important;
+    text-decoration: line-through;
+    margin-left: 5px;
+}
+
+.discount-percent {
+    font-size: 0.6em;
+    color: var(--success-color);
+    font-weight: bold;
+    background-color: rgba(0, 230, 118, 0.15);
+    padding: 3px 7px;
+    border-radius: 3px;
+    border: 1px solid rgba(0, 230, 118, 0.4);
+}
+
+.save-amount {
+    font-size: 0.9em;
+    color: var(--text-muted);
+    margin-bottom: 30px;
+    font-weight: 400;
+}
+
+/* Options / Selectors - Less "Boxy" */
+.available-types,
+.select-size,
+.quantity-selector,
+.color-options {
+    margin-bottom: 25px;
+    padding: 0; /* Remove padding here, spacing done by margin on elements */
+    background-color: transparent; /* No explicit background */
+    border-radius: 0;
+    border: none; /* No explicit border */
+    box-shadow: none;
+}
+
+.available-types h3,
+.select-size h3,
+.quantity-selector h3,
+.color-options h3 {
+    font-size: 1.05em;
+    color: var(--text-light);
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-weight: 600;
+    border-bottom: 1px dashed var(--border-subtle); /* Very subtle separator */
+    padding-bottom: 10px;
+}
+
+.type-button,
+.size-button {
+    background-color: transparent;
+    color: var(--text-light);
+    border: 1px solid var(--border-subtle); /* Subtle border for interaction */
+    padding: 10px 20px;
+    margin: 5px;
+    border-radius: 25px; /* Pill shape */
+    cursor: pointer;
+    font-size: 0.85em;
+    transition: all 0.2s ease-in-out;
+    outline: none;
+}
+
+.type-button:hover,
+.size-button:hover {
+    background-color: var(--accent-main);
+    color: var(--bg-dark-primary); /* Dark text on accent hover */
+    border-color: var(--accent-main);
+    box-shadow: 0 4px 15px var(--glow-effect);
+    transform: translateY(-2px);
+}
+
+.type-button.selected,
+.size-button.selected {
+    background-color: var(--accent-main);
+    color: var(--bg-dark-primary);
+    border-color: var(--accent-main);
+    box-shadow: 0 0 15px var(--glow-effect);
+    transform: scale(1.03);
+}
+
+.quantity-selector {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 15px; /* Add some top margin to align after heading */
+}
+
+.quantity-btn {
+    background-color: var(--accent-main);
+    color: var(--bg-dark-primary); /* Dark text on accent */
+    border: none;
+    width: 36px; /* Slightly smaller */
+    height: 36px;
+    border-radius: 50%;
+    font-size: 1.4em;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out, box-shadow 0.2s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    outline: none;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+}
+
+.quantity-btn:hover {
+    background-color: var(--accent-hover);
+    transform: scale(1.08);
+    box-shadow: 0 5px 12px var(--glow-effect);
+}
+
+.quantity-value {
+    font-size: 1.3em;
+    font-weight: bold;
+    color: var(--text-light);
+    padding: 0 10px;
+    min-width: 40px;
+    text-align: center;
+}
+
+.color-options .color-dot {
+    display: inline-block;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--bg-dark-secondary); /* Border contrasting with panel background */
+    box-shadow: 0 0 0 1px var(--border-subtle), inset 0 0 4px rgba(0,0,0,0.5);
+    cursor: pointer;
+    margin: 0 8px 5px 0;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.color-options .color-dot:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 3px var(--accent-main), inset 0 0 6px var(--glow-effect);
+}
+
+
+/* Add to Cart Button */
+.add-cart-btn {
+    background: linear-gradient(45deg, var(--accent-main), var(--accent-hover));
+    color: var(--bg-dark-primary); /* Dark text on bright button */
+    border: none;
+    padding: 15px 30px;
+    font-size: 1.15em;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    width: 100%;
+    margin-top: auto; /* Pushes button to the bottom if content is short */
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 25px var(--glow-effect);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.add-cart-btn:hover {
+    background: linear-gradient(45deg, var(--accent-hover), var(--accent-main));
+    box-shadow: 0 12px 30px var(--glow-effect);
+    transform: translateY(-3px) scale(1.005);
+}
+
+.shipping-info {
+    font-size: 0.85em;
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: 25px;
+    font-style: italic;
+    border-top: 1px dashed var(--border-subtle);
+    padding-top: 15px;
+}
+
+
+/* Detail / Reviews Tabs Section (Integrated into scrollable panel) */
+.tabs {
+    display: flex;
+    justify-content: flex-start; /* Align tabs to left */
+    margin-top: 40px; /* Space after main product details */
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border-subtle);
+    padding-bottom: 5px;
+}
+
+.tab-button {
+    background-color: transparent;
+    border: none;
+    padding: 10px 20px;
+    font-size: 0.95em;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    outline: none;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.tab-button::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -5px;
+    width: 100%;
+    height: 3px;
+    background-color: var(--accent-main);
+    border-radius: 2px;
+    transform: scaleX(0);
+    transition: transform 0.3s ease-in-out;
+}
+
+.tab-button.active {
+    color: var(--text-light);
+    font-weight: 600;
+}
+
+.tab-button.active::after {
+    transform: scaleX(1);
+}
+
+.tab-button:hover:not(.active) {
+    color: var(--accent-main);
+}
+
+.tab-content {
+    background-color: transparent; /* No background, blend with panel */
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0; /* No padding here, use section padding */
+    margin-top: 20px;
+    line-height: 1.7;
+    color: var(--text-light); /* Main content text */
+    border: none;
+    font-size: 0.9em;
+}
+
+.tab-content h4 {
+    font-size: 1.2em;
+    color: var(--text-light);
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+
+.tab-content p {
+    margin-bottom: 15px;
+    color: var(--text-muted); /* Paragraphs slightly muted */
+}
+
+.tab-content ul {
+    list-style-type: disc;
+    margin-left: 20px;
+    padding-left: 0;
+    color: var(--text-muted);
+}
+
+.tab-content ul li {
+    margin-bottom: 8px;
+    color: var(--text-light);
+}
+
+
+/* Media Queries for Responsiveness */
+@media (max-width: 992px) {
+    .detail-container {
+        flex-direction: column; /* Stack image and info vertically */
+        min-height: auto; /* Allow container to grow */
+    }
+
+    .detail-image {
+        flex: auto; /* Allow image section to take required height */
+        width: 100%;
+        max-height: 500px; /* Limit height when stacked */
+        padding: 30px;
+    }
+    .detail-image #mainImage {
+        max-height: 70vh; /* Adjust for smaller screens */
+    }
+
+    .detail-info {
+        flex: auto; /* Allow info section to take required height */
+        width: 100%;
+        padding: 30px;
+        border-left: none; /* Remove left border */
+        border-top: 1px solid var(--border-subtle); /* Add top border for separation */
+    }
+
+    .detail-info h2 {
+        font-size: 2.5em;
+    }
+
+    .price-tag {
+        font-size: 2.8em;
+    }
+
+    .tabs {
+        justify-content: center; /* Center tabs when stacked */
+    }
+}
+
+@media (max-width: 768px) {
+    .detail-image {
+        padding: 20px;
+    }
+    .detail-image #mainImage {
+        max-height: 60vh;
+    }
+
+    .detail-info {
+        padding: 25px;
+    }
+    .detail-info h2 {
+        font-size: 2em;
+    }
+    .price-tag {
+        font-size: 2.2em;
+    }
+    .add-cart-btn {
+        padding: 12px 25px;
+        font-size: 1em;
+    }
+}
+
+@media (max-width: 480px) {
+    .detail-image {
+        padding: 15px;
+    }
+    .detail-image #mainImage {
+        max-height: 50vh;
+    }
+    .detail-image .thumbnail {
+        width: 65px;
+        height: 65px;
+    }
+    .detail-info {
+        padding: 20px;
+    }
+    .detail-info h2 {
+        font-size: 1.7em;
+        margin-bottom: 20px;
+    }
+    .price-tag {
+        font-size: 1.8em;
+        gap: 10px;
+    }
+    .type-button,
+    .size-button {
+        padding: 8px 15px;
+        font-size: 0.8em;
+    }
+    .quantity-btn {
+        width: 30px;
+        height: 30px;
+        font-size: 1.1em;
+    }
+    .color-options .color-dot {
+        width: 24px;
+        height: 24px;
+    }
+    .add-cart-btn {
+        padding: 10px 20px;
+        font-size: 0.9em;
+    }
+    .shipping-info {
+        font-size: 0.8em;
+    }
+    .tabs {
+        flex-wrap: wrap;
+        margin-top: 30px;
+    }
+    .tab-button {
+        padding: 8px 10px;
+        font-size: 0.8em;
+    }
+    .tab-content {
+        padding: 0; /* Remove internal padding here as panel has it */
+    }
+}
+
+/* ========================================= */
+/* --- Product Detail Page Styles (MODERN, PREMIUM CONTAINER) --- */
+/* ========================================= */
+
+/* Color Palette Variables (Adjusted for a sleeker dark theme) */
+:root {
+    --bg-dark-primary: #0d0d0d; /* Deepest background, for body */
+    --bg-dark-secondary: #1a1a1a; /* Main container background */
+    --bg-dark-tertiary: #252525; /* Inner panel background (image/info) */
+    --text-light: #f0f0f0; /* Off-white for primary text */
+    --text-muted: #a0a0a0; /* Soft gray for secondary text */
+    --accent-main: #00e676; /* Vibrant, modern green */
+    --accent-hover: #00c853; /* Darker green for hover */
+    --border-subtle: #333333; /* Very subtle borders */
+    --shadow-soft: rgba(0, 0, 0, 0.5); /* Prominent shadow for the main block */
+    --glow-effect: rgba(0, 230, 118, 0.3); /* Glow matching accent */
+    --error-color: #ef5350;
+    --success-color: #69f0ae;
+    --rating-color: #ffd740;
+}
+
+/* Base Styles */
+body {
+    font-family: 'Inter', sans-serif; /* Modern, clean sans-serif */
+    background-color: var(--bg-dark-primary);
+    margin: 0;
+    padding: 30px 20px; /* Added padding to body to give space around the central container */
+    box-sizing: border-box;
+    color: var(--text-light);
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* Main Layout Container (Updated for Premium Look and Size) */
+.detail-container {
+    display: flex;
+    flex-wrap: wrap; /* Allows stacking on smaller screens */
+    /* Increased Size & Premium Look */
+    max-width: 1400px; /* Make it wider, but centered */
+    margin: 30px auto; /* Center it with top/bottom margin */
+    background-color: var(--bg-dark-secondary); /* A distinct dark background for the main block */
+    border-radius: 12px; /* Smoother rounded corners */
+    box-shadow: 0 15px 45px var(--shadow-soft); /* More pronounced, soft shadow */
+    overflow: hidden; /* Ensures inner elements respect border-radius */
+    border: 1px solid var(--border-subtle); /* A very subtle outer border */
+    padding: 40px; /* Padding inside the main container to create a frame around content */
+    gap: 40px; /* Space between the image and info panels */
+    min-height: 700px; /* Ensure a good minimum height for the whole block */
+    align-items: stretch; /* Ensures flex items (image/info) stretch to equal height */
+}
+
+/* Product Image Section (Left Panel) */
+.detail-image {
+    flex: 1; /* Allows it to grow to take available space */
+    min-width: 400px; /* Minimum width before stacking on smaller screens */
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Center main image vertically */
+    align-items: center; /* Center main image horizontally */
+    background-color: var(--bg-dark-tertiary); /* Slightly lighter background for the image pane */
+    border-radius: 8px; /* Inner rounding */
+    padding: 30px; /* Padding inside the image pane */
+    box-sizing: border-box;
+    box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.4); /* Inner shadow for depth */
+    border: 1px solid var(--border-subtle); /* Subtle border for definition */
+}
+
+.detail-image #mainImage {
+    max-width: 100%;
+    max-height: 500px; /* Limit height for aesthetic consistency within its pane */
+    object-fit: contain;
+    border-radius: 6px;
+    box-shadow: 0 10px 30px var(--shadow-soft); /* Stronger shadow for the main image */
+    transition: transform 0.3s ease-out;
+}
+
+.detail-image #mainImage:hover {
+    transform: scale(1.01);
+}
+
+.detail-image .thumbnail-wrapper {
+    display: flex;
+    justify-content: center;
+    gap: 12px; /* Adjusted gap */
+    margin-top: 25px; /* Adjusted margin */
+    padding: 0 10px; /* Adjusted padding */
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-main) var(--border-subtle);
+}
+
+.detail-image .thumbnail-wrapper::-webkit-scrollbar {
+    height: 6px;
+}
+.detail-image .thumbnail-wrapper::-webkit-scrollbar-track {
+    background: var(--bg-dark-tertiary); /* Consistent with pane background */
+    border-radius: 10px;
+}
+.detail-image .thumbnail-wrapper::-webkit-scrollbar-thumb {
+    background: var(--accent-main);
+    border-radius: 10px;
+}
+
+.detail-image .thumbnail {
+    width: 75px; /* Adjusted size */
+    height: 75px;
+    object-fit: cover;
+    border-radius: 5px; /* Adjusted rounding */
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.detail-image .thumbnail:hover {
+    border-color: var(--accent-main);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--glow-effect);
+}
+
+.detail-image .thumbnail.active-thumb {
+    border-color: var(--accent-main);
+    box-shadow: 0 0 10px var(--glow-effect);
+    transform: scale(1.04);
+}
+
+
+/* Product Info Section (Right Panel) */
+.detail-info {
+    flex: 1; /* Allows it to grow to take available space, ensuring equal height with detail-image */
+    min-width: 400px; /* Minimum width before stacking */
+    background-color: var(--bg-dark-tertiary); /* Consistent background with image pane */
+    padding: 30px; /* Generous padding */
+    box-sizing: border-box;
+    overflow-y: auto; /* Allow scrolling if content exceeds height */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; /* Align content to top */
+    border-radius: 8px; /* Consistent rounding */
+    box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border-subtle);
+    /* border-left: 1px solid var(--border-subtle); - Removed this as gap/background handles separation */
+}
+
+.product-breadcrumb {
+    font-size: 0.8em;
+    color: var(--text-muted);
+    margin-bottom: 8px; /* Adjusted margin */
+    text-transform: uppercase;
+    letter-spacing: 1.8px; /* More spaced out for modern feel */
+    font-weight: 500;
+}
+
+.product-rating {
+    font-size: 1.1em; /* Adjusted size */
+    color: var(--rating-color);
+    margin-bottom: 12px; /* Adjusted margin */
+}
+
+.detail-info h2 {
+    font-size: 2.5em; /* Impactful heading */
+    color: var(--text-light);
+    margin-bottom: 20px; /* Adjusted margin */
+    font-weight: 700;
+    line-height: 1.15; /* Adjusted line height */
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.05); /* Subtle light glow */
+}
+
+.stock-status {
+    font-size: 0.9em; /* Adjusted size */
+    font-weight: bold;
+    color: var(--success-color);
+    margin-bottom: 20px; /* Adjusted margin */
+    text-transform: uppercase;
+    background-color: rgba(0, 230, 118, 0.1);
+    padding: 5px 10px; /* Adjusted padding */
+    border-radius: 4px;
+    display: inline-block;
+    border: 1px solid rgba(0, 230, 118, 0.3);
+    letter-spacing: 0.6px; /* Adjusted letter spacing */
+}
+
+.price-tag {
+    font-size: 3em; /* Dominant price */
+    color: var(--accent-main);
+    font-weight: bold;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: baseline;
+    gap: 12px; /* Adjusted gap */
+    text-shadow: 0 0 15px var(--glow-effect); /* Stronger glow for price */
+}
+
+.original-price {
+    font-size: 0.5em; /* Smaller relative to new price size */
+    color: var(--text-muted) !important;
+    text-decoration: line-through;
+    margin-left: 5px;
+}
+
+.discount-percent {
+    font-size: 0.55em; /* Adjusted size */
+    color: var(--success-color);
+    font-weight: bold;
+    background-color: rgba(0, 230, 118, 0.1); /* Adjusted transparency */
+    padding: 2px 6px; /* Adjusted padding */
+    border-radius: 3px;
+    border: 1px solid rgba(0, 230, 118, 0.2); /* Adjusted transparency */
+}
+
+.save-amount {
+    font-size: 0.85em; /* Adjusted size */
+    color: var(--text-muted);
+    margin-bottom: 25px; /* Adjusted margin */
+    font-weight: 400;
+}
+
+/* Options / Selectors - Clean & Minimalist */
+.available-types,
+.select-size,
+.quantity-selector,
+.color-options {
+    margin-bottom: 20px; /* Adjusted margin */
+    padding: 15px 0; /* Added vertical padding for spacing within pane */
+    background-color: transparent; /* No explicit background */
+    border-radius: 0;
+    border: none; /* No explicit border */
+    box-shadow: none;
+}
+
+.available-types h3,
+.select-size h3,
+.quantity-selector h3,
+.color-options h3 {
+    font-size: 1em; /* Adjusted size */
+    color: var(--text-light);
+    margin-bottom: 12px; /* Adjusted margin */
+    text-transform: uppercase;
+    letter-spacing: 1.2px; /* Adjusted letter spacing */
+    font-weight: 600;
+    border-bottom: 1px dashed var(--border-subtle);
+    padding-bottom: 8px; /* Adjusted padding */
+}
+
+.type-button,
+.size-button {
+    background-color: transparent;
+    color: var(--text-light);
+    border: 1px solid var(--border-subtle);
+    padding: 9px 18px; /* Adjusted padding */
+    margin: 4px; /* Adjusted margin */
+    border-radius: 20px; /* Slightly less rounded */
+    cursor: pointer;
+    font-size: 0.8em; /* Adjusted size */
+    transition: all 0.2s ease-in-out;
+    outline: none;
+}
+
+.type-button:hover,
+.size-button:hover {
+    background-color: var(--accent-main);
+    color: var(--bg-dark-primary);
+    border-color: var(--accent-main);
+    box-shadow: 0 3px 10px var(--glow-effect); /* Adjusted shadow */
+    transform: translateY(-2px);
+}
+
+.type-button.selected,
+.size-button.selected {
+    background-color: var(--accent-main);
+    color: var(--bg-dark-primary);
+    border-color: var(--accent-main);
+    box-shadow: 0 0 12px var(--glow-effect);
+    transform: scale(1.02); /* Adjusted scale */
+}
+
+.quantity-selector {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Adjusted gap */
+    margin-top: 10px; /* Adjusted margin */
+}
+
+.quantity-btn {
+    background-color: var(--accent-main);
+    color: var(--bg-dark-primary);
+    border: none;
+    width: 34px; /* Adjusted size */
+    height: 34px;
+    border-radius: 50%;
+    font-size: 1.3em; /* Adjusted size */
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out, box-shadow 0.2s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    outline: none;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2); /* Adjusted shadow */
+}
+
+.quantity-btn:hover {
+    background-color: var(--accent-hover);
+    transform: scale(1.06); /* Adjusted scale */
+    box-shadow: 0 4px 10px var(--glow-effect); /* Adjusted shadow */
+}
+
+.quantity-value {
+    font-size: 1.2em; /* Adjusted size */
+    font-weight: bold;
+    color: var(--text-light);
+    padding: 0 8px; /* Adjusted padding */
+    min-width: 35px; /* Adjusted min-width */
+    text-align: center;
+}
+
+.color-options .color-dot {
+    display: inline-block;
+    width: 26px; /* Adjusted size */
+    height: 26px;
+    border-radius: 50%;
+    border: 2px solid var(--bg-dark-tertiary); /* Border contrasting with panel background */
+    box-shadow: 0 0 0 1px var(--border-subtle), inset 0 0 3px rgba(0,0,0,0.4); /* Adjusted shadow */
+    cursor: pointer;
+    margin: 0 7px 4px 0; /* Adjusted margin */
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.color-options .color-dot:hover {
+    transform: scale(1.08); /* Adjusted scale */
+    box-shadow: 0 0 0 3px var(--accent-main), inset 0 0 5px var(--glow-effect); /* Adjusted shadow */
+}
+
+
+/* Add to Cart Button */
+.add-cart-btn {
+    background: linear-gradient(45deg, var(--accent-main), var(--accent-hover));
+    color: var(--bg-dark-primary);
+    border: none;
+    padding: 14px 28px; /* Adjusted padding */
+    font-size: 1.05em; /* Adjusted size */
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    width: 100%;
+    margin-top: auto; /* Pushes button to the bottom if content is short */
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 20px var(--glow-effect); /* Adjusted shadow */
+    letter-spacing: 0.8px; /* Adjusted letter spacing */
+    text-transform: uppercase;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.add-cart-btn:hover {
+    background: linear-gradient(45deg, var(--accent-hover), var(--accent-main));
+    box-shadow: 0 10px 25px var(--glow-effect); /* Adjusted shadow */
+    transform: translateY(-2px) scale(1.002); /* Adjusted transform */
+}
+
+.shipping-info {
+    font-size: 0.8em; /* Adjusted size */
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: 20px; /* Adjusted margin */
+    font-style: italic;
+    border-top: 1px dashed var(--border-subtle);
+    padding-top: 15px;
+}
+
+
+/* --- REMOVED: Details and Reviews Part --- */
+/* The CSS rules for .tabs, .tab-button, and .tab-content have been removed */
+
+
+/* Media Queries for Responsiveness */
+@media (max-width: 1200px) { /* Adjusted breakpoint for larger screens to stack earlier if needed */
+    .detail-container {
+        flex-direction: column; /* Stack image and info vertically */
+        padding: 30px; /* Adjusted padding */
+        gap: 30px; /* Adjusted gap */
+        min-height: auto; /* Allow height to be determined by content when stacked */
+    }
+
+    .detail-image,
+    .detail-info {
+        min-width: unset; /* Remove min-width when stacking */
+        width: 100%; /* Take full width when stacked */
+        max-width: 100%;
+        flex: auto; /* Allow height to be determined by content */
+        padding: 25px; /* Adjusted padding */
+    }
+
+    .detail-image #mainImage {
+        max-height: 400px; /* Adjust max height for stacked layout */
+    }
+
+    .detail-info h2 {
+        font-size: 2.2em;
+    }
+
+    .price-tag {
+        font-size: 2.5em;
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 20px 10px;
+    }
+    .detail-container {
+        border-radius: 8px;
+        margin: 20px auto; /* Adjusted margin */
+        padding: 25px; /* Adjusted padding */
+    }
+    .detail-image,
+    .detail-info {
+        padding: 20px;
+    }
+    .detail-image #mainImage {
+        max-height: 300px;
+    }
+    .detail-info h2 {
+        font-size: 1.8em;
+    }
+    .price-tag {
+        font-size: 2em;
+    }
+    .add-cart-btn {
+        padding: 12px 25px;
+        font-size: 1em;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 15px 5px;
+    }
+    .detail-container {
+        padding: 15px; /* Adjusted padding */
+        gap: 15px; /* Adjusted gap */
+        margin: 15px auto; /* Adjusted margin */
+    }
+    .detail-image,
+    .detail-info {
+        padding: 15px;
+    }
+    .detail-image #mainImage {
+        max-height: 250px;
+    }
+    .detail-image .thumbnail {
+        width: 55px;
+        height: 55px;
+    }
+    .detail-info h2 {
+        font-size: 1.5em;
+        margin-bottom: 15px;
+    }
+    .price-tag {
+        font-size: 1.6em;
+        gap: 8px;
+    }
+    .type-button,
+    .size-button {
+        padding: 7px 12px;
+        font-size: 0.75em;
+    }
+    .quantity-btn {
+        width: 30px;
+        height: 30px;
+        font-size: 1em;
+    }
+    .color-options .color-dot {
+        width: 22px;
+        height: 22px;
+    }
+    .add-cart-btn {
+        padding: 10px 20px;
+        font-size: 0.9em;
+    }
+}

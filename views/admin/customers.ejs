@@ -1,0 +1,201 @@
+<!-- File: views/admin/customers.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin - Customers</title>
+  <link rel="stylesheet" href="/styles/admin/adminnavbar.css" />
+  <link rel="stylesheet" href="/styles/admin/adminsidebar.css" />
+  <link rel="stylesheet" href="/styles/admin/customers.css" />
+  <link rel="stylesheet" href="/styles/admin/dashboard.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+  <style>
+    .block-btn {
+  background-color: red;
+  color: white;
+  padding: 4px 8px;
+  border: none;
+  cursor: pointer;
+}
+.unblock-btn {
+  background-color: green;
+  color: white;
+  padding: 4px 8px;
+  border: none;
+  cursor: pointer;
+}
+.clear-btn {
+  color: red;
+  font-size: 18px;
+  text-decoration: none;
+  margin-left: 8px;
+}
+#searchInput {
+  width: 280px;
+  padding: 10px 15px;
+  border: 1.5px solid #ccc;
+  border-radius: 25px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+#searchInput:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 6px rgba(0, 123, 255, 0.25);
+}
+.pagination {
+  margin-top: 30px;
+  text-align: center;
+}
+
+.pagination a {
+  display: inline-block;
+  padding: 8px 14px;
+  margin: 0 5px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+  color: #333;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.pagination a:hover {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.pagination a.active {
+  background-color: black;
+  color: white;
+  border-color: black;
+}
+  </style>
+</head>
+<body>
+  <%- include('../partials/admin/adminnavbar') %>
+
+  <div class="admin-wrapper">
+    <%- include('../partials/admin/adminsidebar') %>
+
+    <div class="admin-main">
+      <div class="breadcrumb">Admin > Customers</div>
+
+      <div class="customers-card">
+        <div class="customers-header">
+          <h2>Customers</h2>
+         <input type="text" id="searchInput" placeholder="Search customers" />
+
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>👤</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Mobile</th>
+              <th>Status</th>
+              <th>Join Date</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+         <tbody> 
+  <% customers.forEach((customer,index) => { %>
+    <tr>
+       <td><div class="avatar"><%= index + 1 %></div></td>
+      <td><%= customer.name %></td>
+      <td><%= customer.email %></td>
+      <td><%= customer.mobile %></td>
+      <td><%= customer.status === 'blocked' ? 'Blocked' : 'Active' %></td>
+      <td><%= customer.joined %></td>
+      <td>
+        <% if (customer.status === 'blocked') { %>
+          <form method="POST" action="/admin/customers/<%= customer._id %>/unblock" onsubmit="return confirm('Unblock this user?')">
+            <button class="unblock-btn">Unblock</button>
+          </form>
+        <% } else { %>
+          <form method="POST" action="/admin/customers/<%= customer._id %>/block" onsubmit="return confirm('Block this user?')">
+            <button class="block-btn">Block</button>
+          </form>
+        <% } %>
+      </td>
+    </tr>
+  <% }) %>
+</tbody>
+
+        </table>
+
+       <% if (totalPages > 1) { %>
+  <div class="pagination">
+    <% if (currentPage > 1) { %>
+      <a href="?page=<%= currentPage - 1 %>">&laquo;</a>
+    <% } %>
+
+    <% for (let i = 1; i <= totalPages; i++) { %>
+      <a href="?page=<%= i %>" class="<%= currentPage === i ? 'active' : '' %>"><%= i %></a>
+    <% } %>
+
+    <% if (currentPage < totalPages) { %>
+      <a href="?page=<%= currentPage + 1 %>">&raquo;</a>
+    <% } %>
+  </div>
+<% } %>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  const searchInput = document.getElementById('searchInput');
+  const tableBody = document.querySelector('tbody');
+
+  searchInput.addEventListener('input', async () => {
+    const query = searchInput.value.trim();
+
+    try {
+      const res = await axios.get(`/admin/customers-search?search=${query}`);
+      const customers = res.data.customers;
+
+      tableBody.innerHTML = '';
+
+      if (customers.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="7">No customers found.</td></tr>`;
+        return;
+      }
+
+      customers.forEach((customer, index) => {
+        const row = `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${customer.name}</td>
+            <td>${customer.email}</td>
+            <td>${customer.mobile}</td>
+            <td>${customer.status === 'blocked' ? 'Blocked' : 'Active'}</td>
+            <td>${customer.joined}</td>
+            <td>
+              ${
+                customer.status === 'blocked'
+                  ? `<form method="POST" action="/admin/customers/${customer._id}/unblock" onsubmit="return confirm('Unblock this user?')">
+                      <button class="unblock-btn">Unblock</button>
+                    </form>`
+                  : `<form method="POST" action="/admin/customers/${customer._id}/block" onsubmit="return confirm('Block this user?')">
+                      <button class="block-btn">Block</button>
+                    </form>`
+              }
+            </td>
+          </tr>
+        `;
+        tableBody.innerHTML += row;
+      });
+    } catch (err) {
+      console.error('Search failed:', err);
+    }
+  });
+</script>
+
+</body>
+</html>

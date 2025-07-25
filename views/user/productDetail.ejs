@@ -1,0 +1,504 @@
+<% title = product.title || 'Product Details'; -%>
+
+<div class="detail-container">
+    <div class="detail-image">
+        <img id="mainImage" src="<%= product.images[0] %>" alt="<%= product.title %>" class="zoomable-image" />
+        <div class="thumbnail-wrapper" id="thumbnailWrapper">
+            <% product.images.forEach((img, index) => { %>
+                <img class="thumbnail <%= index === 0 ? 'active-thumb' : '' %>" src="<%= img %>" alt="Thumbnail <%= index %>">
+            <% }) %>
+        </div>
+    </div>
+
+    <div class="detail-info">
+        <p class="product-breadcrumb">Product / <%= product.category_id ? product.category_id.name : 'Category' %> / <%= product.title %></p>
+        <div class="product-rating">
+            <% if (product.rating > 0) { %>
+                <%= '⭐'.repeat(product.rating) %> (<%= product.rating %> Reviews)
+            <% } else { %>
+                ☆☆☆☆☆ (0 Reviews)
+            <% } %>
+        </div>
+        <h2><%= product.title %></h2>
+        <p class="stock-status" id="stockStatus">IN STOCK</p> <div class="price-tag">
+            <span id="displayPrice">₹<%= product.display_price.toFixed(2) %></span>
+            <% if (product.regular_price && product.regular_price > product.display_price) { %>
+                <span class="original-price" id="originalPrice" style="text-decoration: line-through; color: #777; font-size: 1rem; margin-left: 10px;">
+                    ₹<%= product.regular_price.toFixed(2) %>
+                </span>
+                <span class="discount-percent" id="discountPercent">
+                    (<%= ((1 - (product.display_price / product.regular_price)) * 100).toFixed(0) %>% Off)
+                </span>
+            <% } else { %>
+                <span class="original-price" id="originalPrice" style="display:none;"></span>
+                <span class="discount-percent" id="discountPercent" style="display:none;"></span>
+            <% } %>
+        </div>
+        <% if (product.regular_price && product.regular_price > product.display_price) { %>
+            <p class="save-amount" id="saveAmount">You save ₹<%= (product.regular_price - product.display_price).toFixed(2) %></p>
+        <% } else { %>
+            <p class="save-amount" id="saveAmount" style="display:none;"></p>
+        <% } %>
+
+        <% if (product.product_type && product.product_type.length) { %>
+            <div class="available-types">
+                <h3>AVAILABLE TYPES</h3>
+                <% product.product_type.forEach(type => { %>
+                    <button class="type-button"><%= type %></button>
+                <% }) %>
+            </div>
+        <% } %>
+
+        <% if (product.colorVariants && product.colorVariants.length > 0) { %>
+            <div class="color-options">
+                <h3>COLOR: <span id="selectedColorName"><%= product.colorVariants[0].colorName %></span></h3>
+                <div class="color-selector-wrapper">
+                    <% product.colorVariants.forEach((colorVar, index) => { %>
+                        <span class="color-dot <%= index === 0 ? 'active-color' : '' %>"
+                              data-color-name="<%= colorVar.colorName %>"
+                              data-color-index="<%= index %>"
+                              style="background-color: <%= colorVar.colorName === 'black' ? '#000' : colorVar.colorName %>;"
+                              title="<%= colorVar.colorName %>">
+                        </span>
+                    <% }) %>
+                </div>
+            </div>
+        <% } %>
+
+        <div class="select-size">
+            <h3>SELECT SIZE</h3>
+            <div class="size-buttons-wrapper" id="sizeButtonsWrapper">
+                <% product.sizes.forEach(size => { %>
+                    <button class="size-button" data-size="<%= size %>"><%= size %></button>
+                <% }) %>
+            </div>
+        </div>
+
+        <div class="quantity-selector">
+            <h3>QUANTITY</h3>
+            <button class="quantity-btn minus">-</button>
+            <span class="quantity-value" id="quantityValue" data-max-stock="0">1</span> <button class="quantity-btn plus">+</button>
+        </div>
+
+        <button class="add-cart-btn">ADD TO CART</button>
+        <p class="shipping-info">+ FREE SHIPPING ON ORDERS ₹50+</p>
+    </div>
+</div>
+
+<hr class="detail-separator">
+
+<div class="tabs">
+    <button class="tab-button active" data-tab="detail">Detail</button>
+    <button class="tab-button" data-tab="reviews">Reviews</button>
+</div>
+
+<div id="detail-content" class="tab-content active">
+    <p><%= product.description %></p>
+    <% if (product.warranty) { %>
+        <p>Warranty: <%= product.warranty %> year(s)</p>
+    <% } %>
+    </div>
+<div id="reviews-content" class="tab-content" style="display: none;">
+    <p>Customer reviews will be displayed here.</p>
+</div>
+
+<script>
+    // Pass the full product data (especially colorVariants) to client-side JS
+    const productData = <%- JSON.stringify(product) %>;
+
+    const mainImage = document.getElementById('mainImage');
+    const thumbnailWrapper = document.getElementById('thumbnailWrapper');
+    const quantityValueSpan = document.getElementById('quantityValue');
+    const minusBtn = document.querySelector('.quantity-btn.minus');
+    const plusBtn = document.querySelector('.quantity-btn.plus');
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    const displayPriceSpan = document.getElementById('displayPrice');
+    const originalPriceSpan = document.getElementById('originalPrice');
+    const discountPercentSpan = document.getElementById('discountPercent');
+    const saveAmountSpan = document.getElementById('saveAmount');
+    const stockStatusSpan = document.getElementById('stockStatus');
+    const selectedColorNameSpan = document.getElementById('selectedColorName');
+    const sizeButtonsWrapper = document.getElementById('sizeButtonsWrapper');
+    const colorDots = document.querySelectorAll('.color-dot');
+
+    let currentSelectedColorIndex = 0; // Default to the first color variant
+    let currentSelectedSize = null;
+    let currentQuantity = 1;
+
+    // --- Helper Functions ---
+
+    function updateThumbnails(images) {
+        thumbnailWrapper.innerHTML = ''; // Clear existing thumbnails
+        if (images && images.length > 0) {
+            images.forEach((imgSrc, index) => {
+                const thumb = document.createElement('img');
+                thumb.classList.add('thumbnail');
+                if (index === 0) {
+                    thumb.classList.add('active-thumb');
+                }
+                thumb.src = imgSrc;
+                thumb.alt = `Thumbnail ${index}`;
+                thumbnailWrapper.appendChild(thumb);
+            });
+            mainImage.src = images[0]; // Set main image to the first of the new set
+            attachThumbnailListeners(); // Re-attach listeners after new elements
+        } else {
+            mainImage.src = '/images/placeholder.png'; // Fallback
+        }
+    }
+
+    function attachThumbnailListeners() {
+        document.querySelectorAll('.thumbnail').forEach(thumb => {
+            thumb.removeEventListener('click', handleThumbnailClick); // Prevent duplicate listeners
+            thumb.addEventListener('click', handleThumbnailClick);
+        });
+    }
+
+    function handleThumbnailClick() {
+        mainImage.src = this.src;
+        document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active-thumb'));
+        this.classList.add('active-thumb');
+    }
+
+    function updateSizeButtons(sizes) {
+        sizeButtonsWrapper.innerHTML = ''; // Clear existing size buttons
+        if (sizes && sizes.length > 0) {
+            sizes.forEach(size => {
+                const button = document.createElement('button');
+                button.classList.add('size-button');
+                button.textContent = size;
+                button.dataset.size = size;
+                sizeButtonsWrapper.appendChild(button);
+            });
+            attachSizeButtonListeners(); // Re-attach listeners
+        }
+    }
+
+    function attachSizeButtonListeners() {
+        document.querySelectorAll('.size-button').forEach(button => {
+            button.removeEventListener('click', handleSizeButtonClick); // Prevent duplicate listeners
+            button.addEventListener('click', handleSizeButtonClick);
+        });
+    }
+
+    function handleSizeButtonClick() {
+        document.querySelectorAll('.size-button').forEach(btn => btn.classList.remove('active-size'));
+        this.classList.add('active-size');
+        currentSelectedSize = this.dataset.size;
+        updatePriceAndStock(); // Update price and stock based on selected size
+    }
+
+    function updatePriceAndStock() {
+        const selectedColorVariant = productData.colorVariants[currentSelectedColorIndex];
+        let priceFound = false;
+        let stockFound = false;
+
+        if (selectedColorVariant && selectedColorVariant.variants && currentSelectedSize) {
+            const selectedVariant = selectedColorVariant.variants.find(v => v.size === currentSelectedSize);
+            if (selectedVariant) {
+                // Update display price
+                displayPriceSpan.textContent = `₹${selectedVariant.price.toFixed(2)}`;
+                priceFound = true;
+
+                // Update regular price / discount (if regular_price exists in variant data)
+                // For simplicity, we'll assume regular_price is the 'maxPriceForDefaultVariant' from controller for now,
+                // or you might add a 'regularPrice' field to individual size variants in your schema.
+                // For now, let's keep the discount calculation based on what's available
+                const initialProductRegularPrice = productData.regular_price; // The highest price found by controller for default variant
+
+                if (initialProductRegularPrice > selectedVariant.price) {
+                    originalPriceSpan.textContent = `₹${initialProductRegularPrice.toFixed(2)}`;
+                    originalPriceSpan.style.display = 'inline';
+                    const discount = ((1 - (selectedVariant.price / initialProductRegularPrice)) * 100).toFixed(0);
+                    discountPercentSpan.textContent = `(${discount}% Off)`;
+                    discountPercentSpan.style.display = 'inline';
+                    saveAmountSpan.textContent = `You save ₹${(initialProductRegularPrice - selectedVariant.price).toFixed(2)}`;
+                    saveAmountSpan.style.display = 'block';
+                } else {
+                    originalPriceSpan.style.display = 'none';
+                    discountPercentSpan.style.display = 'none';
+                    saveAmountSpan.style.display = 'none';
+                }
+
+
+                // Update stock status
+                if (selectedVariant.stock > 0) {
+                    stockStatusSpan.textContent = `IN STOCK (${selectedVariant.stock} available)`;
+                    stockStatusSpan.style.color = 'green';
+                    quantityValueSpan.dataset.maxStock = selectedVariant.stock; // Set max stock for quantity selector
+                } else {
+                    stockStatusSpan.textContent = 'OUT OF STOCK';
+                    stockStatusSpan.style.color = 'red';
+                    quantityValueSpan.dataset.maxStock = 0;
+                }
+                stockFound = true;
+            }
+        }
+
+        // If no price/stock found for the selection, display defaults/unavailable
+        if (!priceFound) {
+             displayPriceSpan.textContent = `₹0.00`;
+             originalPriceSpan.style.display = 'none';
+             discountPercentSpan.style.display = 'none';
+             saveAmountSpan.style.display = 'none';
+        }
+        if (!stockFound) {
+            stockStatusSpan.textContent = 'Unavailable';
+            stockStatusSpan.style.color = 'orange';
+            quantityValueSpan.dataset.maxStock = 0;
+        }
+
+        // Reset quantity if it exceeds new max stock
+        if (currentQuantity > parseInt(quantityValueSpan.dataset.maxStock)) {
+            currentQuantity = Math.max(1, parseInt(quantityValueSpan.dataset.maxStock));
+            quantityValueSpan.textContent = currentQuantity;
+        }
+        updateQuantityButtons(); // Enable/disable quantity buttons
+    }
+
+
+    // --- Event Listeners ---
+
+    // Initial thumbnail setup
+    attachThumbnailListeners();
+
+    // Color dot click handler
+    colorDots.forEach(dot => {
+        dot.addEventListener('click', () => {
+            colorDots.forEach(d => d.classList.remove('active-color'));
+            dot.classList.add('active-color');
+
+            currentSelectedColorIndex = parseInt(dot.dataset.colorIndex);
+            selectedColorNameSpan.textContent = dot.dataset.colorName;
+
+            const selectedColorVariant = productData.colorVariants[currentSelectedColorIndex];
+
+            // Update images
+            const newImages = selectedColorVariant.images.map(img => `/uploads/products/${img}`);
+            updateThumbnails(newImages);
+
+            // Update available sizes for the new color
+            const newSizes = selectedColorVariant.variants.map(v => v.size);
+            updateSizeButtons(newSizes);
+
+            // Auto-select first available size for the new color, if any
+            if (newSizes.length > 0) {
+                currentSelectedSize = newSizes[0];
+                document.querySelector(`.size-button[data-size="${currentSelectedSize}"]`).classList.add('active-size');
+            } else {
+                currentSelectedSize = null;
+            }
+
+            updatePriceAndStock(); // Update price and stock based on new color and (potentially new) size
+        });
+    });
+
+    // Quantity selector
+    minusBtn.addEventListener('click', () => {
+        let currentQuantity = parseInt(quantityValueSpan.textContent);
+        if (currentQuantity > 1) {
+            quantityValueSpan.textContent = currentQuantity - 1;
+        }
+        updateQuantityButtons();
+    });
+
+    plusBtn.addEventListener('click', () => {
+        let currentQuantity = parseInt(quantityValueSpan.textContent);
+        const maxStock = parseInt(quantityValueSpan.dataset.maxStock);
+        if (maxStock > 0 && currentQuantity < maxStock) { // Check against max stock
+            quantityValueSpan.textContent = currentQuantity + 1;
+        }
+        updateQuantityButtons();
+    });
+
+    function updateQuantityButtons() {
+        const currentQuantity = parseInt(quantityValueSpan.textContent);
+        const maxStock = parseInt(quantityValueSpan.dataset.maxStock);
+
+        if (currentQuantity <= 1) {
+            minusBtn.disabled = true;
+            minusBtn.style.opacity = 0.5;
+            minusBtn.style.cursor = 'not-allowed';
+        } else {
+            minusBtn.disabled = false;
+            minusBtn.style.opacity = 1;
+            minusBtn.style.cursor = 'pointer';
+        }
+
+        if (currentQuantity >= maxStock) {
+            plusBtn.disabled = true;
+            plusBtn.style.opacity = 0.5;
+            plusBtn.style.cursor = 'not-allowed';
+        } else {
+            plusBtn.disabled = false;
+            plusBtn.style.opacity = 1;
+            plusBtn.style.cursor = 'pointer';
+        }
+    }
+
+
+    // Tab functionality (already good)
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+
+            tabContents.forEach(content => content.style.display = 'none');
+            document.getElementById(button.dataset.tab + '-content').style.display = 'block';
+        });
+    });
+
+    // --- Initial Load Setup ---
+    document.addEventListener('DOMContentLoaded', () => {
+        // Set first thumbnail as active by default on load (handled by EJS now)
+        // If no sizes are pre-selected in EJS, select the first size available for the default color
+        const initialSizesForDefaultColor = productData.colorVariants && productData.colorVariants.length > 0
+            ? productData.colorVariants[0].variants.map(v => v.size)
+            : [];
+
+        if (initialSizesForDefaultColor.length > 0) {
+            currentSelectedSize = initialSizesForDefaultColor[0];
+            const initialSizeButton = document.querySelector(`.size-button[data-size="${currentSelectedSize}"]`);
+            if (initialSizeButton) {
+                initialSizeButton.classList.add('active-size');
+            }
+        }
+        attachSizeButtonListeners(); // Attach listeners for initial size buttons
+        updatePriceAndStock(); // Set initial price and stock based on default color/size
+    });
+
+    // --- Image Zoom Feature ---
+    let zoomLevel = 1;
+    const maxZoom = 3; // Maximum zoom level
+    const zoomStep = 0.5; // How much to zoom in/out with each step
+
+    mainImage.style.transformOrigin = '0% 0%'; // Set initial origin
+    mainImage.style.transition = 'transform 0.1s ease-out'; // Smooth transition
+
+    mainImage.addEventListener('mousemove', (e) => {
+        if (zoomLevel > 1) {
+            const rect = mainImage.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / rect.width;
+            const y = (e.clientY - rect.top) / rect.height;
+
+            mainImage.style.transformOrigin = `${x * 100}% ${y * 100}%`;
+            mainImage.style.transform = `scale(${zoomLevel})`;
+        }
+    });
+
+    mainImage.addEventListener('mouseleave', () => {
+        if (zoomLevel > 1) {
+            mainImage.style.transform = `scale(1)`;
+            zoomLevel = 1; // Reset zoom when mouse leaves
+        }
+    });
+
+    mainImage.addEventListener('wheel', (e) => {
+        e.preventDefault(); // Prevent page scroll
+
+        if (e.deltaY < 0) { // Scrolling up (zoom in)
+            zoomLevel = Math.min(zoomLevel + zoomStep, maxZoom);
+        } else { // Scrolling down (zoom out)
+            zoomLevel = Math.max(zoomLevel - zoomStep, 1);
+        }
+
+        if (zoomLevel === 1) {
+            mainImage.style.transform = `scale(1)`; // Ensure no scaling if reset to 1
+        } else {
+            // Apply zoom based on current mouse position for natural feel
+            const rect = mainImage.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / rect.width;
+            const y = (e.clientY - rect.top) / rect.height;
+            mainImage.style.transformOrigin = `${x * 100}% ${y * 100}%`;
+            mainImage.style.transform = `scale(${zoomLevel})`;
+        }
+    }, { passive: false }); // Use passive: false to allow preventDefault
+</script>
+
+<style>
+/* Add this to your CSS file, or directly in a <style> tag in productDetail.ejs */
+.zoomable-image {
+    width: 100%;
+    height: 100%; /* Or a fixed height like 400px */
+    object-fit: contain; /* Use 'contain' so the whole image is visible initially */
+    cursor: zoom-in; /* Indicate zoomability */
+    transform: scale(1); /* Initial scale */
+    transition: transform 0.1s ease-out; /* Smooth zoom transition */
+}
+
+/* Hover effect for zoom */
+.zoomable-image:hover {
+    cursor: zoom-in;
+}
+
+/* When zoomed, change cursor */
+.zoomable-image.zoomed { /* You can add/remove this class with JS */
+    cursor: zoom-out;
+}
+
+/* Styles for color dots - if you don't have them in a global CSS */
+.color-selector-wrapper {
+    display: flex;
+    gap: 8px;
+    margin-top: 5px;
+}
+
+.color-dot {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent; /* Default border */
+    transition: border 0.2s ease, transform 0.1s ease;
+    box-shadow: 0 0 5px rgba(0,0,0,0.2);
+}
+
+.color-dot:hover {
+    transform: scale(1.1);
+}
+
+.color-dot.active-color {
+    border-color: #007bff; /* Highlight color */
+    box-shadow: 0 0 8px rgba(0, 123, 255, 0.6); /* Glow effect */
+}
+
+.size-buttons-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 5px;
+}
+
+.size-button {
+    padding: 8px 15px;
+    border: 1px solid #ddd;
+    background-color: #f0f0f0;
+    color: #333;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.size-button:hover {
+    background-color: #e0e0e0;
+}
+
+.size-button.active-size {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.quantity-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* Ensure the detail-image container has overflow hidden for zoom */
+.detail-image {
+    position: relative;
+    overflow: hidden; /* Crucial for containing the zoomed image */
+}
+</style>

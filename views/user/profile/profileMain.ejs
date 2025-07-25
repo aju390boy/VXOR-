@@ -1,0 +1,187 @@
+<%# views/user/profile/profileMain.ejs %>
+<% title = 'VIXOR | My Profile'; -%>
+
+<%# Breadcrumb %>
+<div class="flex justify-between items-center px-6 py-2 bg-gray-900 mt-10 flex-wrap gap-1">
+    <div class="breadcrumb text-xs text-gray-400">
+        <a href="/user/home" class="text-gray-400 font-bold hover:text-white">HOME</a> > <span>MY PROFILE</span>
+    </div>
+</div>
+
+<div class="flex flex-col md:flex-row px-10   py-2   bg-gray-900 min-h-5 text-gray-400">
+
+    <%# Sidebar Navigation - NOW STICKY AND CONTENT-HEIGHT %>
+    <aside id="profile-sidebar" class="
+        w-full md:w-1/4 lg:w-1/5            <%# Sets width on different screen sizes %>
+        p-4 md:p-6 border-r border-gray-800 bg-gray-900 <%# Styling %>
+        sticky top-[6.5rem]                 <%# Makes it sticky after 6.5rem from top (adjust if your header is different) %>
+        h-fit                               <%# Height fits content %>
+        md:self-start                       <%# Ensures it aligns to the top in flex container %>
+        z-0                                 <%# Lower z-index since it's not fixed across all content %>
+    ">
+        <h2 class="text-lg font-bold mb-4 text-white text-center border-b border-gray-700 pb-2">My Account</h2>
+        <ul class="flex flex-col gap-2">
+            <li>
+                <a href="/user/profile/section/profile" data-section="profile" class="sidebar-link flex items-center gap-3 py-2 px-3 rounded text-gray-400 hover:bg-gray-800 hover:text-white transition duration-200">
+                    <i class="fa-regular fa-user"></i> Profile
+                </a>
+            </li>
+            <li>
+                <a href="/user/profile/section/orders" data-section="orders" class="sidebar-link flex items-center gap-3 py-2 px-3 rounded text-gray-400 hover:bg-gray-800 hover:text-white transition duration-200">
+                    <i class="fa-solid fa-box"></i> Orders
+                </a>
+            </li>
+            <li>
+                <a href="/user/profile/section/wishlist" data-section="wishlist" class="sidebar-link flex items-center gap-3 py-2 px-3 rounded text-gray-400 hover:bg-gray-800 hover:text-white transition duration-200">
+                    <i class="fa-regular fa-heart"></i> Wishlist
+                </a>
+            </li>
+            <li>
+                <a href="/user/profile/section/address" data-section="address" class="sidebar-link flex items-center gap-3 py-2 px-3 rounded text-gray-400 hover:bg-gray-800 hover:text-white transition duration-200">
+                    <i class="fa-solid fa-location-dot"></i> Address
+                </a>
+            </li>
+            <li>
+                <a href="/user/profile/section/change-password" data-section="change-password" class="sidebar-link flex items-center gap-3 py-2 px-3 rounded text-gray-400 hover:bg-gray-800 hover:text-white transition duration-200">
+                    <i class="fa-solid fa-key"></i> Password
+                </a>
+            </li>
+            <li>
+                <a href="/user/profile/section/wallet" data-section="wallet" class="sidebar-link flex items-center gap-3 py-2 px-3 rounded text-gray-400 hover:bg-gray-800 hover:text-white transition duration-200">
+                    <i class="fa-solid fa-wallet"></i> Wallet
+                </a>
+            </li>
+            <li class="mt-4 border-t border-gray-700 pt-4">
+                <a href="/logout" class="block py-2 px-3 rounded bg-red-600 text-white font-bold hover:bg-red-700 transition duration-200">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </a>
+            </li>
+        </ul>
+    </aside>
+
+    <%# Main Content Area - No extra margin-left, inner content is contained %>
+    <main class="
+    flex-1 px-4 md:px-6 py-4 bg-gray-900
+    flex justify-center
+">
+    <div id="profile-content" class="w-full max-w-2xl bg-gray-900 p-4 rounded-md shadow-md mt-0">
+        <%- include('partials/_profileDetails', { user: user }) %>
+    </div>
+</main>
+
+
+</div>
+
+<%# Script for sidebar link handling - Keep this at the end of the file %>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const profileContentArea = document.getElementById('profile-content');
+        const sidebarLinks = document.querySelectorAll('.sidebar-link');
+
+        const loadSection = async (sectionName) => {
+            try {
+                const response = await fetch(`/user/profile/section/${sectionName}`);
+                if (!response.ok) {
+                    const errorMessage = await response.text();
+                    profileContentArea.innerHTML = `<p class="text-red-400">Error loading section: ${errorMessage}</p>`;
+                    return;
+                }
+                const htmlContent = await response.text();
+                profileContentArea.innerHTML = htmlContent;
+
+                // IMPORTANT: After new content is loaded, re-attach event listeners
+                // especially for the profile update form.
+                attachProfileFormListener();
+
+            } catch (error) {
+                console.error('Error fetching profile section:', error);
+                profileContentArea.innerHTML = '<p class="text-red-400">Failed to load section content due to a network error.</p>';
+            }
+        };
+
+        // Add click event listeners to sidebar links
+        sidebarLinks.forEach(link => {
+            link.addEventListener('click', (event) => {
+                event.preventDefault();
+                const sectionName = event.currentTarget.dataset.section;
+
+                // Remove 'active' class from all links
+                sidebarLinks.forEach(item => item.classList.remove('active', 'bg-gray-700', 'text-white'));
+                // Add 'active' class to clicked link
+                event.currentTarget.classList.add('active', 'bg-gray-700', 'text-white');
+
+                loadSection(sectionName);
+            });
+        });
+
+        // Function to attach listener to the profile update form
+        const attachProfileFormListener = () => {
+            const profileUpdateForm = document.getElementById('profile-update-form');
+            const profileMessageDiv = document.getElementById('profile-message'); // Get the message div
+
+            if (profileUpdateForm) {
+                profileUpdateForm.addEventListener('submit', async (event) => {
+                    event.preventDefault(); // Prevent default form submission (page reload)
+
+                    // Clear previous messages
+                    if (profileMessageDiv) {
+                        profileMessageDiv.textContent = '';
+                        profileMessageDiv.classList.remove('text-green-500', 'text-red-500');
+                    }
+
+                    const formData = new FormData(profileUpdateForm);
+                    const data = Object.fromEntries(formData.entries()); // Convert FormData to plain object
+
+                    try {
+                        const response = await fetch('/user/profile/update', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json' // Tell server we're sending JSON
+                                // If you implement CSRF, add: 'CSRF-Token': csrfToken
+                            },
+                            body: JSON.stringify(data) // Send data as JSON
+                        });
+
+                        const result = await response.json(); // Expect JSON response from server
+
+                        if (response.ok) { // Check if status is 2xx
+                            if (profileMessageDiv) {
+                                profileMessageDiv.textContent = result.message || 'Profile updated successfully!';
+                                profileMessageDiv.classList.add('text-green-500');
+
+                                
+                                setTimeout(() => {
+                                    loadSection('profile'); // Re-load profile section to show fresh data
+                                }, 1500); // Wait 1.5 seconds before reloading
+
+                            }
+                        } else {
+                            if (profileMessageDiv) {
+                                profileMessageDiv.textContent = result.message || 'Failed to update profile. Please try again.';
+                                profileMessageDiv.classList.add('text-red-500');
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error submitting profile update:', error);
+                        if (profileMessageDiv) {
+                            profileMessageDiv.textContent = 'Network error. Could not connect to server.';
+                            profileMessageDiv.classList.add('text-red-500');
+                        }
+                    }
+                });
+            }
+        };
+
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const defaultSection = urlParams.get('section') || 'profile';
+
+        const initialLink = document.querySelector(`.sidebar-link[data-section="${defaultSection}"]`);
+        if (initialLink) {
+            initialLink.click();
+        } else {
+            // Fallback if the default section link is not found
+            document.querySelector('.sidebar-link[data-section="profile"]').click();
+        }
+    });
+</script>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title><%= typeof title !== 'undefined' ? title : 'VIXOR' %></title>
+
+<link rel="stylesheet" href="/styles/user/login.css">
+<link rel="stylesheet" href="/styles/user/landing.css" />
+<link rel="stylesheet" href="/styles/user/profile.css" />
+<link rel="stylesheet" href="/styles/user/product.css" />
+ <link rel="stylesheet" href="/styles/user/forgot.css">
+  <link rel="stylesheet" href="/styles/user/productDetail.css">
+ <link rel="stylesheet" href="/styles/user/otp.css">
+ <link rel="stylesheet" href="/styles/user/signup.css">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="/styles/user/change-password.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+<%- typeof style!=='undefined'?style:""%>
+</head>
+
+<body class="flex flex-col min-h-screen bg-black text-gray-400 font-sans">
+ <div class="bg-gray-800 text-white text-center py-1 text-xs fixed top-0 w-full">
+ Get 25% OFF on your first order. <a href="/user/order" class="text-red-600 underline hover:text-gray-400">Order now</a>
+</div>
+
+<div class="pt-8 flex-grow flex flex-col">
+ <% if (typeof isAuthPage === 'undefined' || !isAuthPage) { %>
+<%- include('../partials/user/userNavbar') %>
+<% } else { %>
+ <%- include('../partials/user/userAuthNavbar') %>
+<% } %>
+ <main class="flex-grow">
+ <%- body %>
+</main>
+</div>
+
+ <%- include('../partials/user/userFooter') %>
+
+<%- typeof script!=="undefined"?script:''%>
+</body>
+
+</html>

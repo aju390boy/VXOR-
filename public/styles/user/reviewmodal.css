@@ -1,0 +1,65 @@
+.review-modal {
+  max-width: 400px;
+  background: #fff;
+  padding: 24px;
+  margin: 50px auto;
+  border-radius: 10px;
+  box-shadow: 0px 8px 30px rgba(0, 0, 0, 0.2);
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h2 {
+  font-size: 1.2rem;
+  color: #1c1c1c;
+}
+
+.close-btn {
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.review-form input,
+.review-form textarea {
+  width: 100%;
+  padding: 10px 12px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+.review-form button {
+  width: 100%;
+  padding: 10px;
+  background-color: #0d1117;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.review-form button:hover {
+  background-color: #1a1a1a;
+}
+
+.stars {
+  margin: 10px 0;
+}
+
+.star {
+  font-size: 1.4rem;
+  color: #bbb;
+  cursor: pointer;
+}
+
+.star.filled {
+  color: #ffb400;
+}

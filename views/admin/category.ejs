@@ -1,0 +1,372 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Category Management</title>
+  <link rel="stylesheet" href="/styles/admin/category.css">
+  <link rel="stylesheet" href="/styles/admin/adminnavbar.css">
+  <link rel="stylesheet" href="/styles/admin/adminsidebar.css">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Custom CSS to override/enhance Tailwind or for specific elements */
+    .admin-wrapper {
+      display: flex;
+      min-height: 100vh;
+    }
+    .admin-main {
+      flex-grow: 1;
+      padding: 2rem;
+      background-color: #f8f9fa; /* Light background for the main content */
+    }
+    .breadcrumb {
+      margin-bottom: 1.5rem;
+      font-size: 0.9rem;
+      color: #6c757d;
+    }
+
+    /* Table styles */
+    .category-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 2rem;
+      background-color: #ffffff;
+      box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+      border-radius: 0.5rem;
+      overflow: hidden; /* Ensures rounded corners apply to content */
+    }
+
+    .category-table th,
+    .category-table td {
+      padding: 1rem 1.25rem;
+      text-align: left;
+      border-bottom: 1px solid #e2e8f0; /* Light gray border */
+    }
+
+    .category-table th {
+      background-color: #f1f5f9; /* Lighter header background */
+      font-weight: 600;
+      color: #334155; /* Darker text for headers */
+      text-transform: uppercase;
+      font-size: 0.875rem;
+    }
+
+    .category-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .category-table tbody tr:hover {
+      background-color: #fbfdff; /* Subtle hover effect */
+    }
+
+    /* Switch styles (as you had them, integrated with modern look) */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 24px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 24px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: #4CAF50; /* Green for checked */
+    }
+
+    input:focus + .slider {
+      box-shadow: 0 0 1px #4CAF50;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(16px);
+    }
+
+    /* Add/Edit Form specific styles */
+    .add-category-section {
+      background-color: #ffffff;
+      padding: 2rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+      margin-top: 2rem;
+    }
+
+    .add-category-section h2 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      color: #1a202c;
+    }
+
+    .add-category-form label,
+    #editCategoryForm label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: #4a5568;
+      margin-top: 1rem;
+    }
+
+    .add-category-form input[type="text"],
+    .add-category-form input[type="number"],
+    .add-category-form textarea,
+    #editCategoryForm input[type="text"],
+    #editCategoryForm input[type="number"],
+    #editCategoryForm textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #cbd5e0;
+      border-radius: 0.375rem;
+      font-size: 1rem;
+      box-sizing: border-box; /* Ensures padding doesn't increase width */
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .add-category-form input[type="text"]:focus,
+    .add-category-form input[type="number"]:focus,
+    .add-category-form textarea:focus,
+    #editCategoryForm input[type="text"]:focus,
+    #editCategoryForm input[type="number"]:focus,
+    #editCategoryForm textarea:focus {
+      border-color: #4299e1; /* Blue focus border */
+      box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5); /* Blue glow */
+      outline: none;
+    }
+    .add-category-form textarea, #editCategoryForm textarea {
+        min-height: 80px; /* Give description a bit more height */
+        resize: vertical;
+    }
+
+    /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000; /* Higher z-index to ensure it's on top */
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.6); /* Slightly darker overlay */
+      display: flex; /* Use flexbox for centering */
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background: #fff;
+      padding: 30px; /* Increased padding */
+      border-radius: 12px; /* More rounded corners */
+      width: 90%;
+      max-width: 450px; /* Slightly wider modal */
+      position: relative;
+      animation: fadeIn 0.3s ease-in-out;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23); /* More pronounced shadow */
+    }
+
+    .modal-content h2 {
+      margin-top: 0;
+      margin-bottom: 1.5rem; /* Space below title */
+      font-size: 1.75rem;
+      color: #1a202c;
+      text-align: center;
+    }
+
+    .modal-content .close {
+      position: absolute;
+      right: 15px;
+      top: 10px;
+      font-size: 28px; /* Larger close button */
+      cursor: pointer;
+      color: #a0aec0; /* Lighter color */
+      transition: color 0.2s ease;
+    }
+
+    .modal-content .close:hover {
+      color: #e53e3e; /* Red on hover */
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+  </style>
+</head>
+<body>
+
+<%- include('../partials/admin/adminnavbar') %>
+
+<div class="admin-wrapper">
+  <%- include('../partials/admin/adminsidebar', { current: 'category' }) %>
+
+  <div class="admin-main" style="margin-left: 250px; margin-top: 85px;">
+    <div class="breadcrumb">Admin > Category</div>
+
+    <div class="bg-white p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-bold mb-4 text-gray-800">Existing Categories</h2>
+        <table class="category-table">
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Category Name</th>
+              <th>Description</th> <th>Offer (%)</th>   <th>List / Unlist</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+      <% if (categories.length > 0) { %>
+        <% categories.forEach((category, index) => { %>
+          <tr>
+            <td><%= index + 1 %></td>
+            <td><%= category.name %></td>
+            <td><%= category.description || 'N/A' %></td> <td><%= category.offer %>%</td>               <td>
+              <form action="/admin/category/toggle/<%= category._id %>" method="POST">
+                <label class="switch">
+                  <input type="checkbox" name="status" onchange="this.form.submit()" <%= category.isListed ? 'checked' : '' %>>
+                  <span class="slider round"></span>
+                </label>
+              </form>
+            </td>
+            <td>
+               <button 
+  type="button" 
+  class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg inline-flex items-center transition-colors duration-200"
+  onclick="openEditModal('<%= category._id %>', '<%= category.name %>', '<%= category.description %>', '<%= category.offer %>')">
+  <i class="fas fa-pen mr-2"></i> Edit
+</button>
+
+                <form action="/admin/category/delete/<%= category._id %>" method="POST" style="display:inline;">
+                    <button type="submit" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg inline-flex items-center ml-2 transition-colors duration-200"
+                            onclick="return confirm('Are you sure you want to delete <%= category.name %>? This action cannot be undone.')">
+                        <i class="fas fa-trash mr-2"></i> Delete
+                    </button>
+                </form>
+            </td>
+          </tr>
+        <% }) %>
+      <% } else { %>
+        <tr>
+          <td colspan="6" class="text-center py-4 text-gray-500">No categories found.</td>
+        </tr>
+      <% } %>
+    </tbody>
+        </table>
+    </div>
+
+    <div class="add-category-section mt-8">
+      <h2>ADD NEW CATEGORY</h2>
+      <form action="/admin/category/add" method="POST" class="add-category-form">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required class="mt-1" placeholder="Enter category name" />
+
+        <label for="description">Description:</label>
+        <textarea id="description" name="description" class="mt-1" rows="3" placeholder="Short description about the category"></textarea>
+
+        <label for="offer">Offer (%):</label>
+        <input type="number" id="offer" name="offer" min="0" max="100" value="0" class="mt-1" placeholder="e.g., 10 for 10% off" />
+
+        <label for="isListedAdd" class="block mt-4">Status:</label>
+        <label class="switch">
+          <input type="checkbox" id="isListedAdd" name="isListed" checked>
+          <span class="slider round"></span>
+        </label>
+
+        <button type="submit" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg mt-6 w-full transition-colors duration-200 text-lg">
+            <i class="fas fa-plus-circle mr-2"></i> Add Category
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div id="editModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal()">&times;</span>
+    <h2 class="text-2xl font-bold mb-6">Edit Category</h2>
+    <form id="editCategoryForm" method="POST">
+      <label for="editName">Category Name:</label>
+      <input type="text" id="editName" name="name" required class="mt-1 mb-4" />
+
+      <label for="editDescription">Description:</label>
+      <textarea id="editDescription" name="description" class="mt-1 mb-4" rows="3"></textarea>
+
+      <label for="editOffer">Offer (%):</label>
+      <input type="number" id="editOffer" name="offer" min="0" max="100" class="mt-1 mb-4" />
+
+      <input type="hidden" id="editId" />
+      <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg w-full transition-colors duration-200 text-lg mt-4">
+          <i class="fas fa-save mr-2"></i> Update Category
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+
+function openEditModal(id, name, description, offer) {
+  const nameInput = document.getElementById("editName");
+  const descInput = document.getElementById("editDescription");
+  const offerInput = document.getElementById("editOffer");
+  const idInput = document.getElementById("editId");
+  const form = document.getElementById("editCategoryForm");
+  const modal = document.getElementById("editModal");
+  
+
+  if (nameInput && descInput && offerInput && idInput && form && modal) {
+    nameInput.value = name;
+    descInput.value = description === 'N/A' ? '' : description;
+    offerInput.value = offer;
+    idInput.value = id;
+    form.action = `/admin/category/edit/${id}`;
+    modal.style.display = "flex";
+  }
+}
+
+
+  function closeModal() {
+    document.getElementById("editModal").style.display = "none";
+  }
+
+  // Optional: close modal on outside click
+  window.onclick = function (event) {
+    const modal = document.getElementById("editModal");
+    if (event.target == modal) {
+      modal.style.display = "none";
+    }
+  }
+</script>
+<script src="https://cdn.tailwindcss.com"></script>
+
+</body>
+</html>
+```

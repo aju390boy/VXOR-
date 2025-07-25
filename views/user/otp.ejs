@@ -1,0 +1,26 @@
+
+
+  <main>
+    <section class="otp-container">
+      <h2>Verify OTP</h2>
+
+       <% if (typeof error !== 'undefined') { %>
+      <p class="error-message"><%= error %></p>
+     <% } %>
+
+      <form action="/verify-otp" method="POST">
+        <input type="text" name="otp" placeholder="enter your OTP" required>
+
+        <div class="otp-bottom">
+          <span>DON'T RECEIVE THE OTP?</span>
+          <a href="/resend-otp" class="resend">RESEND OTP</a>
+        </div>
+
+        <button type="submit">CONFIRM</button>
+      </form>
+    </section>
+  </main>
+
+ 
+</body>
+</html>

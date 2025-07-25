@@ -1,0 +1,284 @@
+<% title = 'VIXOR | Products'; -%>
+
+<div class="flex justify-between items-center px-6 py-2 bg-gray-900 mt-10 flex-wrap gap-1">
+  <div class="breadcrumb text-xs text-gray-400">
+    <a href="/user/home" class="text-gray-400 font-bold hover:text-white">HOME</a> > <span>PRODUCTS</span>
+  </div>
+
+  <div class="sort-box text-xs text-gray-400 flex items-center">
+    <label for="sortSelect">Sort by:</label>
+    <select
+      id="sortSelect"
+      class="ml-2 p-1.5 bg-gray-800 text-gray-400 border border-gray-400 rounded outline-none cursor-pointer text-xs"
+    >
+      <% sortOptions.forEach(option => { %>
+        <option value="<%= option.value %>" <%= (option.value === query.sort) ? 'selected' : '' %>><%= option.label %></option>
+      <% }) %>
+    </select>
+  </div>
+</div>
+
+<div class="flex px-4 mt-4">
+  <div id="filter-section" class="w-1/5 max-h-[calc(100vh-9.5rem)] overflow-y-auto p-3 border-r border-gray-800 bg-gray-900 sticky top-26 rounded">
+    <h2 class="text-lg font-bold mb-4 text-gray-400 text-center border-b border-gray-400 pb-1.5">Filter Products</h2>
+    <div class="mb-4 bg-gray-800 p-2 rounded-lg border border-gray-700 shadow hover:shadow-md transition">
+      <div class="flex justify-between items-center cursor-pointer" onclick="toggleSection('categoryOptions', this)">
+        <h3 class="text-sm text-gray-400 mb-1.5">Category</h3>
+        <span class="text-sm toggle-arrow text-gray-400">▼</span>
+      </div>
+      <div id="categoryOptions" class="flex flex-col gap-1.5 mt-1.5">
+        <% // IMPORTANT: Loop through dynamic categories if available %>
+        <% // For now, use hardcoded values, but dynamically populate if possible %>
+        <% const selectedCategories = Array.isArray(query.category) ? query.category : (query.category ? [query.category] : []); %>
+        <label class="flex items-center text-xs"><input type="checkbox" name="category" value="MEN" class="mr-1.5 accent-gray-400" <%= selectedCategories.includes('MEN') ? 'checked' : '' %>> MEN</label>
+        <label class="flex items-center text-xs"><input type="checkbox" name="category" value="WOMEN" class="mr-1.5 accent-gray-400" <%= selectedCategories.includes('WOMEN') ? 'checked' : '' %>> WOMEN</label>
+        <label class="flex items-center text-xs"><input type="checkbox" name="category" value="KIDS" class="mr-1.5 accent-gray-400" <%= selectedCategories.includes('KIDS') ? 'checked' : '' %>> KIDS</label>
+      </div>
+    </div>
+
+    <div class="mb-3 bg-gray-800 p-2 rounded-lg border border-gray-700 shadow hover:shadow-md transition">
+      <div class="flex justify-between items-center cursor-pointer" onclick="toggleSection('brandOptions', this)">
+        <h3 class="text-sm text-gray-400 mb-1.5">Brand</h3>
+        <span class="text-sm toggle-arrow text-gray-400">▼</span>
+      </div>
+      <div id="brandOptions" class="flex flex-col gap-1.5 mt-1.5">
+        <% const selectedBrands = Array.isArray(query.brand) ? query.brand : (query.brand ? [query.brand] : []); %>
+        <label class="flex items-center text-xs"><input type="checkbox" name="brand" value="AXOR" class="mr-1.5 accent-gray-400" <%= selectedBrands.includes('AXOR') ? 'checked' : '' %>> AXOR</label>
+        <label class="flex items-center text-xs"><input type="checkbox" name="brand" value="MT" class="mr-1.5 accent-gray-400" <%= selectedBrands.includes('MT') ? 'checked' : '' %>> MT</label>
+        <label class="flex items-center text-xs"><input type="checkbox" name="brand" value="SMK" class="mr-1.5 accent-gray-400" <%= selectedBrands.includes('SMK') ? 'checked' : '' %>> SMK</label>
+      </div>
+    </div>
+
+    <div class="mb-3 bg-gray-800 p-2 rounded-lg border border-gray-700 shadow hover:shadow-md transition">
+      <h3 class="text-sm text-gray-400 mb-1.5">Price Range</h3>
+      <div class="flex flex-col gap-1.5">
+        <input type="range" id="priceRange" name="price" min="0" max="10000" step="1000" value="<%= query.price || 10000 %>" class="accent-gray-400" />
+        <span id="priceValue" class="text-xs">Up to ₹<%= parseFloat(query.price || 10000).toLocaleString('en-IN') %></span>
+      </div>
+    </div>
+    <div class="mb-3 bg-gray-800 p-2 rounded-lg border border-gray-700 shadow hover:shadow-md transition">
+      <h3 class="text-sm text-gray-400 mb-1.5">Rating</h3>
+      <div class="flex flex-col gap-1.5">
+        <% const selectedRatings = Array.isArray(query.rating) ? query.rating : (query.rating ? [query.rating] : []); %>
+        <label class="flex items-center text-xs"><input type="checkbox" name="rating" value="5" class="mr-1.5 accent-gray-400" <%= selectedRatings.includes('5') ? 'checked' : '' %>> ⭐⭐⭐⭐⭐</label>
+        <label class="flex items-center text-xs"><input type="checkbox" name="rating" value="4" class="mr-1.5 accent-gray-400" <%= selectedRatings.includes('4') ? 'checked' : '' %>> ⭐⭐⭐⭐</label>
+        <label class="flex items-center text-xs"><input type="checkbox" name="rating" value="3" class="mr-1.5 accent-gray-400" <%= selectedRatings.includes('3') ? 'checked' : '' %>> ⭐⭐⭐</label>
+      </div>
+    </div>
+    <div class="mb-3 bg-gray-800 p-2 rounded-lg border border-gray-700 shadow hover:shadow-md transition">
+      <h3 class="text-sm text-gray-400 mb-1.5">Color</h3>
+      <div class="flex flex-wrap gap-1.5">
+        <% const selectedColors = Array.isArray(query.color) ? query.color : (query.color ? [query.color] : []); %>
+        <label class="flex items-center"><input type="checkbox" name="color" value="black" class="mr-1.5 accent-gray-400" <%= selectedColors.includes('black') ? 'checked' : '' %>> <div class="w-3 h-3 rounded-full bg-black border border-Gray-400"></div></label>
+        <label class="flex items-center"><input type="checkbox" name="color" value="red" class="mr-1.5 accent-gray-400" <%= selectedColors.includes('red') ? 'checked' : '' %>> <div class="w-3 h-3 rounded-full bg-red-600 border border-gray-400"></div></label>
+        <label class="flex items-center"><input type="checkbox" name="color" value="pink" class="mr-1.5 accent-gray-400" <%= selectedColors.includes('pink') ? 'checked' : '' %>> <div class="w-3 h-3 rounded-full bg-pink-400 border border-gray-400"></div></label>
+        <label class="flex items-center"><input type="checkbox" name="color" value="white" class="mr-1.5 accent-gray-400" <%= selectedColors.includes('white') ? 'checked' : '' %>> <div class="w-3 h-3 rounded-full bg-white border border-gray-400"></div></label>
+        <label class="flex items-center"><input type="checkbox" name="color" value="green" class="mr-1.5 accent-gray-400" <%= selectedColors.includes('green') ? 'checked' : '' %>> <div class="w-3 h-3 rounded-full bg-lime-400 border border-gray-400"></div></label>
+      </div>
+    </div>
+    <div class="mb-3 bg-gray-800 p-2 rounded-lg border border-gray-700 shadow hover:shadow-md transition">
+      <h3 class="text-sm text-gray-400 mb-1.5">Size</h3>
+      <div class="flex flex-wrap gap-1.5">
+        <% const selectedSizes = Array.isArray(query.size) ? query.size : (query.size ? [query.size] : []); %>
+        <label class="px-1.5 py-0.5 bg-gray-700 rounded text-xs hover:bg-gray-600 transition cursor-pointer"><input type="checkbox" name="size" value="S" class="mr-1.5 accent-gray-400" <%= selectedSizes.includes('S') ? 'checked' : '' %>> S</label>
+        <label class="px-1.5 py-0.5 bg-gray-700 rounded text-xs hover:bg-gray-600 transition cursor-pointer"><input type="checkbox" name="size" value="M" class="mr-1.5 accent-gray-400" <%= selectedSizes.includes('M') ? 'checked' : '' %>> M</label>
+        <label class="px-1.5 py-0.5 bg-gray-700 rounded text-xs hover:bg-gray-600 transition cursor-pointer"><input type="checkbox" name="size" value="L" class="mr-1.5 accent-gray-400" <%= selectedSizes.includes('L') ? 'checked' : '' %>> L</label>
+        <label class="px-1.5 py-0.5 bg-gray-700 rounded text-xs hover:bg-gray-600 transition cursor-pointer"><input type="checkbox" name="size" value="XL" class="mr-1.5 accent-gray-400" <%= selectedSizes.includes('XL') ? 'checked' : '' %>> XL</label>
+      </div>
+    </div>
+    <div class="flex gap-3">
+      <button type="submit" class="filter-btn apply px-3 py-1.5 text-xs font-bold bg-gray-400 text-black rounded hover:opacity-90">Apply Filter</button>
+      <button type="button" class="filter-btn clear px-3 py-1.5 text-xs font-bold bg-gray-700 text-white rounded hover:bg-red-700" onclick="window.location.href='/user/product'">Clear All</button>
+    </div>
+  </div>
+  <div class="w-4/5 p-3 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-5" id="productList">
+    <% if (products.length === 0) { %>
+      <p class="text-white text-center w-full col-span-full text-sm font-bold">No products match your filters </p>
+    <% } else { %>
+      <% products.forEach(item => { %>
+        <a href="/user/product/<%= item._id %>" class="item-link no-underline text-inherit">
+          <div class="item-block border border-gray-800 rounded-lg overflow-hidden hover:scale-105 transition bg-ye-500">
+            <div class="product">
+              <img src="<%= item.display_image_url %>" alt="<%= item.title %>" class="w-full h-60 object-cover">
+            </div>
+            <div class="p-2 text-center">
+              <p class="font-bold text-white text-xs"><%= item.title %></p>
+              <p class="text-gray-400 font-bold text-xs">₹<%= item.display_price != null ? item.display_price.toFixed(2) : 'N/A' %></p>
+              <p class="text-xs">Rating: <%= '⭐'.repeat(item.rating) + (item.rating < 5 ? '☆' : '') %></p>
+            </div>
+          </div>
+        </a>
+      <% }) %>
+    <% } %>
+  </div>
+</div>
+
+<script>
+  // This line must be at the very top of your script block
+  // It ensures the server-side 'query' object is available as 'serverQuery' in client-side JS.
+  const serverQuery = <%- JSON.stringify(query) %>;
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const productList = document.getElementById("productList");
+    const priceRange = document.getElementById("priceRange");
+    const priceValue = document.getElementById("priceValue");
+    const sortSelect = document.getElementById("sortSelect");
+
+    // Initialize price range display based on current value.
+    // The input's value is already set by EJS server-side (e.g., value="<%= query.price || 10000 %>")
+    // This line updates the *display text* based on the input's current value.
+    priceValue.textContent = `Up to ₹${parseFloat(priceRange.value).toLocaleString('en-IN')}`;
+
+    priceRange.addEventListener('input', () => {
+      priceValue.textContent = `Up to ₹${parseFloat(priceRange.value).toLocaleString('en-IN')}`;
+    });
+
+    const applyFiltersAndSort = async () => {
+        const params = new URLSearchParams();
+        document.querySelectorAll('#filter-section input[type="checkbox"]:checked').forEach(input => {
+            params.append(input.name, input.value);
+        });
+        params.append('price', priceRange.value);
+        params.append("sort", sortSelect.value); // Include current sort selection
+        try {
+            const res = await axios.get(`/user/product?${params.toString()}`);
+            productList.innerHTML = res.data.html;
+            // Optionally update URL without full page reload for better user experience
+            history.pushState(null, '', `/user/product?${params.toString()}`);
+        } catch (err) {
+            console.error('Filter or Sort failed:', err);
+        }
+    };
+
+    document.querySelector(".filter-btn.apply").addEventListener("click", applyFiltersAndSort);
+    sortSelect.addEventListener("change", applyFiltersAndSort);
+
+
+    const input = document.getElementById('searchInput'); // Assuming you have a search input with this ID somewhere
+    const resultsBox = document.getElementById('searchResults'); // Assuming you have a search results container
+
+    if (input && resultsBox) { // Add null checks for search elements
+      input.addEventListener('input', async () => {
+        // This 'query' is local to the search input, and is NOT the server-side query object.
+        const query = input.value.trim();
+        if (query.length === 0) {
+          resultsBox.innerHTML = '';
+          resultsBox.style.display = 'none';
+          return;
+        }
+        try {
+          const res = await axios.get(`/user/product-search?q=${encodeURIComponent(query)}`);
+          const data = res.data;
+          if (data.length > 0) {
+            resultsBox.innerHTML = data.map(item =>
+              `<a href="/user/product/${item._id}" class="item-link no-underline text-inherit">
+                <div class="item-block border border-gray-800 rounded-lg overflow-hidden hover:scale-105 transition bg-ye-500">
+                  <div class="product">
+                    <img src="${item.display_image_url}" alt="${item.title}" class="w-full h-60 object-cover" />
+                  </div>
+                  <div class="p-2 text-center">
+                    <p class="font-bold text-white text-xs">${item.title}</p>
+                    <p class="text-gray-400 font-bold text-xs">₹${item.display_price != null ? item.display_price.toFixed(2) : 'N/A'}</p>
+                    <p class="text-xs">Rating: ${'⭐'.repeat(item.rating) + (item.rating < 5 ? '☆' : '')}</p>
+                  </div>
+                </div>
+              </a>`).join('');
+            resultsBox.style.display = 'block';
+          } else {
+            resultsBox.innerHTML = '<p class="no-result p-1.5 text-gray-600 text-center text-xs">No products found</p>';
+            resultsBox.style.display = 'block';
+          }
+        } catch (err) {
+          console.error('Search failed:', err);
+        }
+      });
+
+      document.addEventListener('click', (e) => {
+        if (resultsBox && !resultsBox.contains(e.target) && e.target !== input) {
+          resultsBox.style.display = 'none';
+        }
+      });
+    }
+
+
+    // Function to set checkbox state based on query parameters
+    const setCheckboxState = () => {
+      // Loop through all filter types that use checkboxes
+      ['category', 'brand', 'rating', 'color', 'size'].forEach(filterName => {
+        // Correctly use 'serverQuery' here!
+        const selectedValues = Array.isArray(serverQuery[filterName]) ? serverQuery[filterName] : (serverQuery[filterName] ? [serverQuery[filterName]] : []);
+
+        document.querySelectorAll(`input[name="${filterName}"]`).forEach(input => {
+          if (selectedValues.includes(input.value)) {
+            input.checked = true;
+            // Also ensure the parent section is expanded
+            const parentSection = input.closest('.mb-4, .mb-3');
+            if (parentSection) {
+                const optionsDiv = parentSection.querySelector('.flex-col, .flex-wrap'); // flex-col for category/brand/rating, flex-wrap for color/size
+                const toggleArrow = parentSection.querySelector('.toggle-arrow');
+                if (optionsDiv && optionsDiv.style.display === 'none') {
+                    optionsDiv.style.display = 'flex';
+                    if (toggleArrow) toggleArrow.textContent = '▲';
+                }
+            }
+          } else {
+            input.checked = false; // Explicitly uncheck if not in query
+          }
+        });
+      });
+    };
+
+    // Initial setup on page load
+    setCheckboxState();
+    initializeToggleState(serverQuery); // Pass serverQuery to initializeToggleState
+
+    // IMPORTANT: Remove or comment out this line if priceRange.value is already correctly set by EJS
+    // and you only need to update the text display. The EJS value="<%= query.price || 10000 %>"
+    // on the input itself is what initially sets the range slider's position.
+    // The line below simply ensures the text display matches the slider's initial position.
+    // priceRange.value = serverQuery.price || 10000; // THIS LINE IS LIKELY REDUNDANT IF EJS IS SETTING IT.
+                                                    // It can also cause issues if serverQuery.price is a string
+                                                    // and priceRange.value expects a number immediately.
+                                                    // Keeping it for now if it was intentionally setting a default.
+
+    // This line is correct for updating the display text based on the input's current value.
+    priceValue.textContent = `Up to ₹${parseFloat(priceRange.value).toLocaleString('en-IN')}`;
+
+
+  });
+
+  // Passed 'this' to get the arrow for the correct section
+  function toggleSection(id, element) {
+    const section = document.getElementById(id);
+    const arrow = element.querySelector('.toggle-arrow'); // Use element to find arrow
+    if (section.style.display === 'none' || section.style.display === '') {
+      section.style.display = 'flex';
+      arrow.textContent = '▲';
+    } else {
+      section.style.display = 'none';
+      arrow.textContent = '▼';
+    }
+  }
+
+  // Initial toggle state setup.
+  // Now accepts 'query' as an argument, which will be 'serverQuery' from the DOMContentLoaded.
+  const initializeToggleState = (query) => {
+      document.querySelectorAll('#filter-section > div.mb-4, #filter-section > div.mb-3').forEach(sectionDiv => {
+          const optionsDiv = sectionDiv.querySelector('.flex-col, .flex-wrap');
+          const toggleArrow = sectionDiv.querySelector('.toggle-arrow');
+          const inputsChecked = Array.from(sectionDiv.querySelectorAll('input[type="checkbox"]:checked')).length > 0;
+          // Use the 'query' parameter passed into this function
+          const priceFilterActive = sectionDiv.querySelector('#priceRange') && parseFloat(query.price) < 10000;
+
+          if (optionsDiv && toggleArrow) {
+              if (inputsChecked || priceFilterActive) {
+                  optionsDiv.style.display = 'flex';
+                  toggleArrow.textContent = '▲';
+              } else {
+                  optionsDiv.style.display = 'none';
+                  toggleArrow.textContent = '▼';
+              }
+          }
+      });
+  };
+</script>

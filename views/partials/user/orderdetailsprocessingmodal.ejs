@@ -1,0 +1,51 @@
+<!-- orderDetailsModal.ejs -->
+<div class="order-modal">
+  <div class="order-header">
+    <h3>Order Details</h3>
+    <span class="close-btn">&times;</span>
+  </div>
+
+  <div class="order-info">
+    <h4><%= productName %></h4>
+    <p class="ordered-on">Ordered On: <%= orderDate %></p>
+
+    <div class="order-row">
+      <span>Quantity</span><span><%= quantity %></span>
+    </div>
+    <div class="order-row">
+      <span>Color</span><span><%= color %></span>
+    </div>
+    <div class="order-row">
+      <span>Per. Amount</span><span>Rs<%= amount %></span>
+    </div>
+    <div class="order-row">
+      <span>Shipping</span><span><%= shipping %></span>
+    </div>
+    <div class="order-row">
+      <span>Tax</span><span>Rs<%= tax %></span>
+    </div>
+    <div class="order-row">
+      <span>Coupen Discount Amt.</span><span><%= discount %></span>
+    </div>
+    <div class="order-row">
+      <span>Payment Type</span><span><%= paymentType %></span>
+    </div>
+    <div class="order-row total">
+      <span>Net Total.</span><span>$<%= netTotal %></span>
+    </div>
+    <div class="order-row">
+      <span>UPI Payment ID</span><span><%= paymentId %></span>
+    </div>
+    <div class="order-row">
+      <span>Payment Status</span><span><%= paymentStatus %></span>
+    </div>
+    <div class="order-row">
+      <span>Status</span><span><%= orderStatus %></span>
+    </div>
+    <div class="order-row address">
+      <span>Delivery Addr:</span><span><%= address %></span>
+    </div>
+  </div>
+
+  <button class="cancel-btn">CANCEL ORDER</button>
+</div>

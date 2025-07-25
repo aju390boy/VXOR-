@@ -1,0 +1,21 @@
+<!-- reviewModal.ejs -->
+<div class="review-modal">
+  <div class="modal-header">
+    <h2>Write Review</h2>
+    <span class="close-btn">&times;</span>
+  </div>
+
+  <form action="/submit-review" method="POST" class="review-form">
+    <input type="email" name="email" placeholder="Email" required />
+    <input type="text" name="fullName" placeholder="Full name" required />
+    <textarea name="review" placeholder="Review" rows="4" required></textarea>
+
+    <div class="stars">
+      <% for (let i = 1; i <= 5; i++) { %>
+        <span class="star <%= i <= 4 ? 'filled' : '' %>">&#9733;</span>
+      <% } %>
+    </div>
+
+    <button type="submit">Submit Your Review</button>
+  </form>
+</div>

@@ -1,0 +1,84 @@
+.category-modal {
+  max-width: 320px;
+  background-color: #b3b3b3;
+  padding: 20px;
+  border-radius: 25px;
+  font-family: 'Segoe UI', sans-serif;
+  margin: 20px auto;
+}
+
+.filter-form h4 {
+  font-size: 1rem;
+  margin: 15px 0 10px;
+  font-weight: 600;
+}
+
+.filter-form label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 0.95rem;
+}
+
+.color-options {
+  display: flex;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.color-options label {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.size-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+.size-options button {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.price-slider {
+  margin-top: 10px;
+  position: relative;
+}
+
+.price-slider input[type=range] {
+  width: 100%;
+}
+
+.price-label {
+  position: absolute;
+  top: 30px;
+  right: 0;
+  background: #0d1117;
+  color: white;
+  padding: 4px 8px;
+  font-size: 0.85rem;
+  border-radius: 5px;
+}
+
+.apply-btn {
+  display: block;
+  margin: 20px auto 0;
+  padding: 10px 20px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  background-color: #0d1117;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: cursive;
+}

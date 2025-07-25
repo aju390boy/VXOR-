@@ -1,0 +1,102 @@
+
+
+  
+
+  <!-- Hero Section -->
+  <section class="parallax-hero">
+  <video autoplay muted loop playsinline class="parallax-bg-video">
+    <source src="/videos/navvideo.mp4" type="video/mp4" />
+  </video>
+  <div class="parallax-overlay">
+    <h1 class="hero-text"><a href="/user/product">GEAR UP WITH VXOR</a></h1>
+    <p class="hero-sub">Premium Helmets. Built for Speed.</p>
+    <button class="hero-btn click-effect"><a href="/user/product">Explore Now</a></button>
+  </div>
+</section>
+
+<h2 class="home-things"> BEST SELLERS</h2>
+<div class="best-sellers-container">
+  <% bestSellers.forEach(item => { %>
+    <div class="item-block">
+      <div class="product" ><img src="<%= item.display_image_url %>" alt="<%= item.title %>"></div>
+      <div class="details">
+        <p><%= item.title %></p>
+        <p>₹<%= item.display_price != null ? item.display_price.toFixed(2) : 'N/A' %></p>
+        <p>Rating: <%= '⭐'.repeat(item.rating) + (item.rating < 5 ? '☆' : '') %></p>
+      </div>
+    </div>
+  <% }) %>
+</div>
+
+<h2 class="home-things"> LAUNCHING SOON...</h2>
+<div class="launching-soon">
+  <img src="/images/banner10.jpg" alt="Launching Soon" />
+</div>
+
+<h2 class="home-things"> TOP RATED</h2>
+<div class="top-rated-container">
+  <% topRated.forEach(item => { %>
+    <div class="item-block-2">
+      <div class="product"><img src="<%= item.display_image_url %>" alt="<%= item.title %>"></div>
+      <div class="details">
+        <p><%= item.title %></p>
+        <p>₹<%= item.display_price != null ? item.display_price.toFixed(2) : 'N/A' %></p>
+        <p>Rating: <%= '⭐'.repeat(item.rating) + (item.rating < 5 ? '☆' : '') %></p>
+      </div>
+    </div>
+  <% }) %>
+</div>
+
+<div class="banner">
+  <img src="/images/banner 3.webp" alt="Main Banner" />
+</div>
+
+<h2 class="home-things"> WHAT'S NEW</h2>
+<div class="whats-new-container">
+  <% whatsNew.forEach(item => { %>
+    <div class="item-block-3">
+      <div class="product"><img src="<%= item.display_image_url %>" alt="<%= item.title %>"></div>
+      <div class="details">
+        <p><%= item.title %></p>
+        <p>₹<%= item.display_price != null ? item.display_price.toFixed(2) : 'N/A' %></p>
+        <p>Rating: <%= '⭐'.repeat(item.rating) + (item.rating < 5 ? '☆' : '') %></p>
+      </div>
+    </div>
+  <% }) %>
+</div>
+
+<div class="banner">
+  <img src="/images/banner8.jpg" alt="Main Banner" />
+</div>
+
+<h2 class="home-things">💬 What Our Homies Say</h2>
+<div class="review-container">
+  <div class="review">"These helmets feel like Iron Man gear — solid and stylish!" ⭐⭐⭐⭐⭐</div>
+  <div class="review">"Insane comfort even after long rides. Worth every rupee!" ⭐⭐⭐⭐☆</div>
+  <div class="review">"Safe, sexy, certified. Helmet flex max!" ⭐⭐⭐⭐⭐</div>
+  <div class="review">"Gold detailing is *chef’s kiss*. 🔥🔥🔥" ⭐⭐⭐⭐☆</div>
+</div>
+
+<div class="banner">
+  <img src="/images/banner6.jpg" alt="Main Banner" />
+</div>
+<h2 class="home-things"> VIXOR FAM</h2>
+<div class="fam-container">
+  <% ["Royal Enfield", "Steelbird", "LS2", "Axor", "MT"].forEach((brand, idx) => { %>
+    <div class="item-block">
+      <div class="fam-item"><img src="/images/family<%= idx + 1 %>.jpg" alt="<%= brand %>"></div>
+      <div class="details"><p><%= brand %></p></div>
+    </div>
+  <% }) %>
+</div>
+
+<div class="info-bar">
+  <div>1 Year Warranty</div>
+  <div>100000+ Happy Customers</div>
+  <div>ISI, DOT, ECE Certified Protection</div>
+</div>
+
+ 
+  
+
+

@@ -1,0 +1,83 @@
+<!-- File: views/admin/dashboard.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="/styles/admin/adminnavbar.css">
+  <link rel="stylesheet" href="/styles/admin/adminsidebar.css">
+  <link rel="stylesheet" href="/styles/admin/dashboard.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
+<body>
+  <%- include('../partials/admin/adminnavbar') %>
+
+  <div class="admin-wrapper">
+    <%- include('../partials/admin/adminsidebar') %>
+
+    <div class="admin-main">
+      <div class="breadcrumb">Admin > Dashboard</div>
+
+      <div class="dashboard-cards">
+        <div class="card">
+          <div class="card-title">Total Sales</div>
+          <h2>₹<%= totalSales.toLocaleString('en-IN') %></h2>
+          <progress value="80" max="100"></progress>
+          <div class="progress-left">80% this month</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Customers</div>
+          <h2><%= customerCount %></h2>
+          <progress value="60" max="100"></progress>
+          <div class="progress-left">New Users 12%</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Orders</div>
+          <h2><%= orderCount %></h2>
+          <progress value="90" max="100"></progress>
+          <div class="progress-left">90% fulfilled</div>
+        </div>
+      </div>
+
+      <div class="dashboard-bottom">
+        <div class="recent-orders">
+          <div class="section-header">
+            <h3>Recent Orders</h3>
+            <button class="view-all">View All</button>
+          </div>
+          <table>
+            <thead>
+              <tr><th>ITEM</th><th>NAME</th><th>TOTAL</th><th>STATUS</th></tr>
+            </thead>
+            <tbody>
+              <% recentOrders.forEach(order => { %>
+                <tr>
+                  <td>#<%= order.title.toString().slice(-4) %></td>
+                  <td><%= order.firstname %></td> <!-- Adjust according to your schema -->
+                  <td>₹<%= order.offer_price %></td>
+                  <td><%= order.status %></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="best-selling">
+          <div class="section-header">
+            <h3>Best Selling</h3>
+            <button class="view-all">View All</button>
+          </div>
+          <ul>
+            <% bestSelling.forEach(product => { %>
+              <li><span class="dot green"></span> <%= product.name %></li>
+            <% }) %>
+          </ul>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

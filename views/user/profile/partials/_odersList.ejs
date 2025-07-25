@@ -1,0 +1,30 @@
+<%# views/user/profile/partials/_ordersList.ejs %>
+<h2 class="text-2xl font-bold text-white mb-6 border-b border-gray-700 pb-3">My Orders</h2>
+<p class="text-gray-400">A list of your past orders.</p>
+<%# Example table for orders %>
+<% if (orders && orders.length > 0) { %>
+    <div class="overflow-x-auto">
+        <table class="min-w-full bg-gray-800 rounded-lg shadow-md text-gray-400">
+            <thead>
+                <tr>
+                    <th class="py-2 px-4 border-b border-gray-700 text-left text-white">Order ID</th>
+                    <th class="py-2 px-4 border-b border-gray-700 text-left text-white">Date</th>
+                    <th class="py-2 px-4 border-b border-gray-700 text-left text-white">Total</th>
+                    <th class="py-2 px-4 border-b border-gray-700 text-left text-white">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% orders.forEach(order => { %>
+                    <tr>
+                        <td class="py-2 px-4 border-b border-gray-700"><%= order.orderId %></td>
+                        <td class="py-2 px-4 border-b border-gray-700"><%= order.date.toLocaleDateString() %></td>
+                        <td class="py-2 px-4 border-b border-gray-700">₹<%= order.total.toFixed(2) %></td>
+                        <td class="py-2 px-4 border-b border-gray-700"><span class="px-2 py-1 rounded-full text-xs <%= order.status === 'Delivered' ? 'bg-green-600' : 'bg-yellow-600' %> text-white"><%= order.status %></span></td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    </div>
+<% } else { %>
+    <p class="text-gray-500">You have no orders yet.</p>
+<% } %>

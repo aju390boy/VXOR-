@@ -1,0 +1,30 @@
+
+    <section class="login-container">
+      <h2>LOGIN</h2>
+      <p>Enter your email and password to login.</p>
+
+      <form action="/login" method="POST">
+        <input type="email" name="email" placeholder="E-mail" required>
+        <div class="password-wrapper">
+          <input type="password" name="password" placeholder="Password" required>
+          <a href="/forgot-password" class="forgot">Forgot your password?</a>
+        </div>
+        <button type="submit">LOGIN</button>
+      </form>
+
+      <p class="signup-text">Don't have an account? <a href="/Signup">Sign up</a></p>
+
+      <!-- OR Divider -->
+      <div class="or">
+        <hr><span>OR</span><hr>
+      </div>
+
+      <!-- Google Signup Button -->
+      <a href="/auth/google" class="google-btn">
+  <div class="google-icon-wrapper">
+    <img src="https://techdocs.akamai.com/identity-cloud/img/social-login/identity-providers/iconfinder-new-google-favicon-682665.png" alt="Google logo">
+  </div>
+  <span>Continue with Google</span>
+</a>
+ </section>
+  

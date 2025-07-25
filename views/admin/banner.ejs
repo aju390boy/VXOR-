@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Banner Management - Admin</title>
+  <link rel="stylesheet" href="/styles/admin/adminnavbar.css">
+  <link rel="stylesheet" href="/styles/admin/adminsidebar.css">
+  <link rel="stylesheet" href="/styles/admin/banner.css">
+</head>
+<body>
+
+  <%- include('../partials/admin/adminnavbar') %>
+  <div class="admin-wrapper">
+    <%- include('../partials/admin/adminsidebar', { current: 'banner' }) %>
+
+    <div class="admin-main" style="margin-left: 250px; margin-top: 85px; padding: 30px;">
+      <div class="breadcrumb">Admin > Dashboard</div>
+      <h2>Banner Management</h2>
+
+      <div class="sort-filter-section">
+        <select>
+          <option>End Date</option>
+          <option>Start Date</option>
+        </select>
+        <select>
+          <option>Ascending</option>
+          <option>Descending</option>
+        </select>
+        <select>
+          <option>All</option>
+          <option>Active</option>
+          <option>Expired</option>
+        </select>
+      </div>
+
+      <form method="POST" action="/admin/banner/add" enctype="multipart/form-data" class="banner-list">
+        <% const bannerPages = ['home page', 'shopping cart', 'checkout page', 'thankyou page', 'shop page']; %>
+        <% bannerPages.forEach((page, index) => { %>
+          <div class="banner-box">
+            <h4>Banner for <%= page %></h4>
+            <div class="upload-row">
+              <label>Image (1440px x 300px):</label>
+              <input type="file" name="images" multiple accept="image/*" required />
+
+
+            </div>
+            <div class="date-row">
+              <input type="date" name="startDates[]">
+              <input type="date" name="endDates[]">
+              <input type="text" value="30 Days Left" readonly>
+              <button type="submit" class="update-btn">Update</button>
+            </div>
+          </div>
+        <% }) %>
+      </form>
+
+      <div class="add-banner-form">
+        <h3>Add New Banner</h3>
+        <form method="POST" action="/admin/banner/add" enctype="multipart/form-data">
+          <input type="text" name="title" placeholder="Title" required>
+          <input type="text" name="status" placeholder="Status">
+          <input type="file" name="image" accept="image/*" required>
+          <input type="date" name="startDate">
+          <input type="date" name="endDate">
+          <button type="submit">ADD</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

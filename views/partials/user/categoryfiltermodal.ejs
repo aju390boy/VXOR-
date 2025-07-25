@@ -1,0 +1,39 @@
+<!-- categoryModal.ejs -->
+<div class="category-modal">
+  <form action="/filter-products" method="GET" class="filter-form">
+
+    <h4>Categories</h4>
+    <label><input type="checkbox" name="category" value="men" /> men helmets</label>
+    <label><input type="checkbox" name="category" value="kids" /> kids helmets</label>
+    <label><input type="checkbox" name="category" value="ladies" /> ladies helmets</label>
+    <label><input type="checkbox" name="category" value="unisex" /> Uni-sex helmets</label>
+    <label><input type="checkbox" name="category" value="agv" /> AGV helmets</label>
+    <label><input type="checkbox" name="category" value="mt" /> MT helmets</label>
+
+    <h4>Color</h4>
+    <div class="color-options">
+      <label style="background: #555;"></label>
+      <label style="background: #f2c100;"></label>
+      <label style="background: #fff; border: 1px solid #ccc;"></label>
+      <label style="background: red;"></label>
+      <label style="background: #2196f3;"></label>
+    </div>
+
+    <h4>Size</h4>
+    <div class="size-options">
+      <button type="button">S</button>
+      <button type="button">M</button>
+      <button type="button">L</button>
+      <button type="button">XL</button>
+      <button type="button">XXL</button>
+    </div>
+
+    <h4>Price</h4>
+    <div class="price-slider">
+      <input type="range" name="price" min="100" max="3000" value="890" />
+      <div class="price-label">₹ 890.00</div>
+    </div>
+
+    <button class="apply-btn" type="submit">APPLY</button>
+  </form>
+</div>
