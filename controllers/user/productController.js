@@ -9,13 +9,10 @@ const formatProductForListing = (product) => {
     let displayImageUrl = '/uploads/products/placeholder.png';
     let minPrice = Infinity;
 
-   
     if (product.colorVariants && product.colorVariants.length > 0) {
-        
         if (product.colorVariants[0].images && product.colorVariants[0].images.length > 0) {
             displayImageUrl = `/uploads/products/${product.colorVariants[0].images[0]}`;
         }
-        
         
         product.colorVariants.forEach(colorVariant => {
             if (colorVariant.variants && colorVariant.variants.length > 0) {
@@ -29,89 +26,99 @@ const formatProductForListing = (product) => {
     }
 
     return {
-        ...product, 
-        display_price: minPrice !== Infinity ? minPrice : null, 
+        ...product,
+        display_price: minPrice !== Infinity ? minPrice : null,
         display_image_url: displayImageUrl,
     };
 };
-
 
 exports.getAllProducts = async (req, res) => {
     try {
         const { category, brand, price, rating, color, size, sort } = req.query;
         console.log({ category, brand, price, rating, color, size, sort });
 
-        let queryObj = { isDeleted: false, isListed: false }; 
-        let sortOption = {};
+        let queryObj = { isDeleted: false, isListed: true }; 
+        let pipeline = [{ $match: queryObj }];
 
         
         if (category) {
             const categoriesToFind = Array.isArray(category) ? category : [category];
             const categoryDocs = await Category.find({ name: { $in: categoriesToFind } }).select('_id').lean();
             const categoryIds = categoryDocs.map(doc => doc._id);
-           
-            queryObj.category_id = categoryIds.length > 0 ? { $in: categoryIds } : null;
+            if (categoryIds.length > 0) {
+                pipeline[0].$match.category_id = { $in: categoryIds };
+            }
         }
 
-        
+        // Brand filter
         if (brand) {
             const brandsToFind = Array.isArray(brand) ? brand : [brand];
             const brandDocs = await Brand.find({ name: { $in: brandsToFind } }).select('_id').lean();
             const brandIds = brandDocs.map(doc => doc._id);
-          
-            queryObj.brand_id = brandIds.length > 0 ? { $in: brandIds } : null;
-        }
-
-       
-        if (price) {
-            const maxPrice = parseFloat(price);
-            if (!isNaN(maxPrice)) {
-                queryObj.min_price = { $lte: maxPrice };
+            if (brandIds.length > 0) {
+                pipeline[0].$match.brand_id = { $in: brandIds };
             }
         }
 
-        
+        // Rating filter
         if (rating) {
             const selectedRatings = Array.isArray(rating) ? rating.map(Number) : [Number(rating)];
             if (selectedRatings.length > 0) {
-                queryObj.rating = { $in: selectedRatings };
+                pipeline[0].$match.rating = { $in: selectedRatings };
             }
         }
 
-        
+        // Color and size filter
         if (color || size) {
             const colorMatch = color ? { colorName: { $in: Array.isArray(color) ? color : [color] } } : {};
             const sizeMatch = size ? { 'variants.size': { $in: Array.isArray(size) ? size : [size] } } : {};
-
-            
-            const colorAndSizeMatch = {
-                $elemMatch: {
-                    ...colorMatch,
-                    ...sizeMatch
-                }
-            };
-
-           
-            queryObj.colorVariants = colorAndSizeMatch;
+            pipeline[0].$match.colorVariants = { $elemMatch: { ...colorMatch, ...sizeMatch } };
         }
 
-        
+        // price filtering and sorting
+        pipeline.push({
+            $addFields: {
+                computed_min_price: {
+                    $min: {
+                        $reduce: {
+                            input: '$colorVariants.variants',
+                            initialValue: [],
+                            in: { $concatArrays: ['$$value', '$$this.price'] }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Price filter
+        if (price) {
+            const maxPrice = parseFloat(price);
+            if (!isNaN(maxPrice) && maxPrice > 0) {
+                pipeline.push({
+                    $match: {
+                        computed_min_price: { $lte: maxPrice, $gt: 0 }
+                    }
+                });
+            }
+        }
+
+        // Sorting
+        let sortOption = {};
         if (sort === 'price_asc') {
-            sortOption.min_price = 1;
+            sortOption.computed_min_price = 1;
         } else if (sort === 'price_desc') {
-            sortOption.min_price = -1;
+            sortOption.computed_min_price = -1;
         } else if (sort === 'name_asc') {
             sortOption.title = 1;
         } else if (sort === 'name_desc') {
             sortOption.title = -1;
-        } else if (sort === 'newest') {
-            sortOption.createdAt = -1;
         } else {
             sortOption.createdAt = -1;
         }
+        pipeline.push({ $sort: sortOption });
+
         
-       
-        const products = await Product.find(queryObj).sort(sortOption).lean();
+        const products = await Product.aggregate(pipeline).exec();
         const formattedProducts = products.map(formatProductForListing);
 
         const displaySortOptions = [
@@ -132,7 +139,7 @@ exports.getAllProducts = async (req, res) => {
                     <div class="p-2 text-center">
                       <p class="font-bold text-white text-xs">${item.title}</p>
                       <p class="text-gray-400 font-bold text-xs">₹${item.display_price != null ? item.display_price.toFixed(2) : 'N/A'}</p>
-                      <p class="text-xs">Rating: ${'⭐'.repeat(item.rating) + (item.rating < 5 ? '☆' : '')}</p>
+                      <p class="text-xs">Rating: ${'⭐'.repeat(item.rating)}${'☆'.repeat(5 - item.rating)}</p>
                     </div>
                   </div>
                 </a>
@@ -146,7 +153,6 @@ exports.getAllProducts = async (req, res) => {
                 query: req.query
             });
         }
-
     } catch (error) {
         console.error('Error fetching products:', error);
         res.status(500).send('Server Error');
