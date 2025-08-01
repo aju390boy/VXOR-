@@ -1,6 +1,5 @@
 const express = require('express');
 const path = require('path');
-const fs = require('fs');
 const app = express();
 const nocache = require('nocache')
 const session = require('express-session'); 
@@ -25,32 +24,25 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(nocache());
 
-// 1. Session Middleware
 app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: false, // set true only if using https
-        maxAge: 1000 * 60 * 60 * 24, // 1 day
+        secure: false,
+        maxAge: 1000 * 60 * 60 * 24, 
     }
 }));
-
-// 2. Passport Middleware (Initialize and Session)
 app.use(passport.initialize());
 app.use(passport.session());
 
-
-
-// Routes
 app.use('/', authRoutes);
 app.use('/user', userRoutes)
 app.use('/admin', adminRoutes);
 app.use('/*splat',(req,res)=>{
     res.render('user/error',{layout:false})
 })
-
 app.listen(3000, () => {
-    console.log('server is running on http://localhost:3000/login')
+    console.log('server is running on http://localhost:3000/admin/login')
     connect();
 })
