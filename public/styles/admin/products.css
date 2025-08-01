@@ -1,4 +1,362 @@
 
+.admin-wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+        .admin-main {
+            flex-grow: 1;
+            padding: 2.5rem; /* Increased padding for main content area */
+            background-color: #f5f7fa; /* Light grey-blue background */
+        }
+        .breadcrumb {
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+            color: #6b7280;
+        }
+
+        /* Reusing form styles for consistent look where applicable */
+        .form-section-title { /* Used for main page titles like "PRODUCTS" */
+            font-size: 2.25rem; /* Large and bold title */
+            font-weight: 700;
+            color: #1f2937; /* Darker text for titles */
+            margin-bottom: 2.5rem;
+            text-align: left; /* Changed from center for products list */
+        }
+
+        /* Input field styling - Consistent with addProduct */
+        input[type="text"],
+        input[type="number"],
+        select,
+        textarea {
+            padding: 0.8rem 1rem; /* Consistent padding */
+            border: 1px solid #d1d5db; /* Light grey border */
+            border-radius: 0.5rem; /* Rounded input fields */
+            width: 100%;
+            box-sizing: border-box;
+            font-size: 0.95rem;
+            color: #374151; /* Dark text in inputs */
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus,
+        textarea:focus {
+            border-color: #6366f1; /* Indigo focus color */
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25); /* Matching glow */
+            outline: none;
+        }
+        
+        /* Main Action Buttons - Consistent with addProduct */
+        .main-action-button {
+            background-color: #4f46e5; /* Indigo */
+            color: white;
+            padding: 1rem 2.5rem;
+            border-radius: 0.75rem;
+            font-size: 1.15rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 5px 15px rgba(79, 70, 229, 0.3); /* Button shadow */
+            border: none; /* Ensure no default border */
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .main-action-button:hover {
+            background-color: #4338ca;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.4);
+        }
+
+        /* Small Action Buttons (for table actions) - REVISED STYLES */
+        .small-action-button {
+            padding: 0.6rem 0.8rem; /* More padding to make them proper buttons */
+            font-size: 0.9rem; /* Slightly smaller font for text/icon */
+            border-radius: 0.5rem; /* Rounded pill shape */
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.3rem; /* Small gap if text/icon is used, for consistency */
+            font-weight: 500; /* Medium font weight */
+            border: 1px solid transparent; /* Start with transparent border */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); /* Subtle shadow */
+            text-decoration: none; /* Ensure no underline for links */
+        }
+        .small-action-button i {
+            color: inherit; /* Icons inherit the button's text color */
+        }
+
+        /* Edit Button */
+        .small-action-button.edit-btn {
+            background-color: #e0f2fe; /* Light blue background */
+            color: #007bff; /* Blue icon/text color */
+            border-color: #a7d9ff; /* Border to match */
+        }
+        .small-action-button.edit-btn:hover {
+            background-color: #bee3f8; /* Darker blue on hover */
+            color: #0056b3; /* Darker blue icon/text on hover */
+            transform: translateY(-1px) scale(1.02);
+            box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
+        }
+
+        /* Delete Button */
+        .small-action-button.delete-btn {
+            background-color: #ffe0e6; /* Light red background */
+            color: #dc3545; /* Red icon/text color */
+            border-color: #ffb3c1; /* Border to match */
+        }
+        .small-action-button.delete-btn:hover {
+            background-color: #ffc2cc; /* Darker red on hover */
+            color: #c82333; /* Darker red icon/text on hover */
+            transform: translateY(-1.5px) scale(1.02); /* Slightly more pronounced */
+            box-shadow: 0 4px 8px rgba(220, 53, 69, 0.2);
+        }
+
+        /* Restore Button */
+        .small-action-button.restore-btn {
+            background-color: #d4edda; /* Light green background */
+            color: #28a745; /* Green icon/text color */
+            border-color: #9cd4a7; /* Border to match */
+        }
+        .small-action-button.restore-btn:hover {
+            background-color: #c3e6cb; /* Darker green on hover */
+            color: #218838; /* Darker green icon/text on hover */
+            transform: translateY(-1.5px) scale(1.02); /* Slightly more pronounced */
+            box-shadow: 0 4px 8px rgba(40, 167, 69, 0.2);
+        }
+
+
+        /* Products Header */
+        .products-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px; /* Adjust spacing */
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e5e7eb; /* Subtle separator */
+        }
+        .right-actions {
+            display: flex;
+            gap: 15px; /* Increased gap for actions */
+            align-items: center;
+        }
+
+        /* Product Search - Now uses general input style */
+        #searchInput {
+            width: 250px; /* Give it a defined width */
+        }
+
+        /* Add Button - Now uses general main-action-button style, but can be smaller */
+        .add-btn {
+            padding: 0.8rem 1.5rem; /* Slightly smaller than main-action-button */
+            font-size: 0.95rem;
+            border-radius: 0.6rem;
+            background-color: #4f46e5; /* Primary color */
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 3px 10px rgba(79, 70, 229, 0.2);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .add-btn:hover {
+            background-color: #4338ca;
+            transform: translateY(-1px);
+            box-shadow: 0 5px 12px rgba(79, 70, 229, 0.3);
+        }
+
+
+        /* Product Table Style */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+            font-family: 'Inter', sans-serif; /* Modern font */
+            background-color: #ffffff;
+            border-radius: 0.75rem; /* More rounded corners */
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); /* More prominent shadow */
+        }
+
+        th, td {
+            padding: 16px 20px; /* Increased padding */
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0; /* Light border */
+            color: #374151; /* Darker text */
+        }
+        th {
+            background-color: #f9fafb; /* Lighter header background */
+            font-weight: 600;
+            color: #4b5563; /* Medium grey for headers */
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.05em;
+        }
+        tbody tr:last-child td {
+            border-bottom: none; /* No border on last row */
+        }
+        tbody tr:hover {
+            background-color: #f5f7fa; /* Subtle hover effect */
+        }
+
+        td img {
+            width: 60px; /* Slightly larger images */
+            height: 60px;
+            object-fit: cover;
+            border-radius: 0.5rem; /* More rounded image corners */
+            border: 1px solid #e5e7eb; /* Lighter border */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); /* Soft shadow for images */
+        }
+
+        /* Action column specifically to prevent wrapping and space buttons */
+        td:last-child {
+            white-space: nowrap;
+            display: flex; /* Use flex to control spacing of inline-block forms */
+            gap: 5px; /* Small gap between action buttons */
+        }
+        td:last-child form {
+            display: inline-block; /* Ensure forms are treated as inline blocks for flex to work */
+            margin: 0; /* Remove default form margin */
+        }
+
+
+        /* Pagination */
+        .pagination {
+            margin-top: 30px;
+            text-align: center;
+            display: flex; /* Use flex for better control */
+            justify-content: center;
+            align-items: center;
+            gap: 8px; /* Gap between buttons */
+        }
+
+        .pagination a {
+            display: inline-flex; /* Use flex for alignment of icon/text */
+            align-items: center;
+            justify-content: center;
+            padding: 10px 16px; /* Larger clickable area */
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem; /* More rounded corners */
+            background-color: #ffffff;
+            color: #4b5563;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            min-width: 40px; /* Ensure minimum width for consistent shape */
+        }
+
+        .pagination a:hover {
+            background-color: #eff6ff; /* Light blue hover */
+            color: #4f46e5; /* Primary color text on hover */
+            border-color: #93c5fd; /* Light blue border on hover */
+        }
+
+        .pagination a.active {
+            background-color: #4f46e5; /* Primary background */
+            color: white;
+            border-color: #4f46e5;
+            box-shadow: 0 3px 8px rgba(79, 70, 229, 0.2);
+            font-weight: 600;
+        }
+
+        /* Modal Styles - Consistent with addProduct image crop modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000; /* Higher z-index for modal */
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.7);
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            padding: 30px;
+            border-radius: 12px;
+            width: 95%;
+            max-width: 500px; /* Adjusted max-width for edit modal */
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            animation: fadeInScale 0.3s ease-out;
+        }
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .close-button { /* Renamed from .close for consistency */
+            color: #9ca3af;
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 36px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+        .close-button:hover {
+            color: #4b5563;
+        }
+        .modal-title { /* For the "Edit Product" header in modal */
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        /* Modal form specific styles */
+        .modal-content form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .modal-content label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.25rem;
+        }
+        .modal-content input[type="text"],
+        .modal-content input[type="number"],
+        .modal-content input[type="file"],
+        .modal-content select { /* Added input[type=file] and select */
+             margin-bottom: 0; /* Remove default margin from inputs */
+        }
+        .modal-content small {
+            font-size: 0.85em;
+            color: #6b7280;
+            margin-top: -0.5rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        .modal-content button[type="submit"] {
+            background-color: #22c55e; /* Green for confirm */
+            color: white;
+            padding: 0.9rem 2rem;
+            border-radius: 0.6rem;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background-color 0.2s ease, transform 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border: none;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+        .modal-content button[type="submit"]:hover {
+            background-color: #16a34a;
+            transform: translateY(-1px);
+        }
 .products-section {
   margin-top: 25px;  
   padding: 20px;

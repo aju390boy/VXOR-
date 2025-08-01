@@ -233,9 +233,24 @@ body {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   animation: goldGlow 2s ease-in-out infinite alternate;
-  text-shadow: 0 0 3px white, 0 0 5px silver, 0 0 10px white;
+  text-shadow: 0 0 1px white, 0 0 2px silver, 0 0 3px white;
+}
+.fam-item-link {
+    display: block; /* Make the link a block-level element to wrap the div properly */
+    text-decoration: none; /* Remove underline */
+    color: inherit; /* Inherit text color */
 }
 
+/* Optional: Add hover effects to make clickable items obvious */
+.fam-item-link .item-block {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.fam-item-link .item-block:hover {
+    transform: translateY(-5px); /* Lift effect */
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2); /* Add shadow */
+    cursor: pointer; /* Change cursor to pointer */
+}
 
 /* Section Containers */
 .best-sellers-container,
@@ -243,40 +258,62 @@ body {
 .whats-new-container,
 .fam-container {
   display: flex;
-  justify-content: space-evenlyz  ;
-  flex-wrap: wrap;
+  justify-content: space-evenly;
   gap: 20px;
   padding: 20px;
-  box-shadow: 0 5px 10px grey;
+  box-shadow: 0 12px 20px rgb(64, 64, 64);
+  width: 100%;
+  flex-wrap: wrap;
 }
+
 
 /* Product & Fam */
 .item-block,
 .item-block-2,
-.item-block-3 {
+.item-block-3
+{ 
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 20px; 
+  flex-basis: calc(20% - 16px);
+  max-width: 180px; 
+  min-width: 120px;
 }
 
+.item-block-4{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px; 
+  flex-basis: calc(20% - 16px);
+  max-width: 300px; 
+  min-width: 250px;
+}
 
 .fam-item {
   background: black;
   border-radius: 12px;
-  /* Make both width and height the same to ensure a square container */
-  width: 330px; /* Keep your desired width */
-  height: 330px; /* Make height equal to width */
-  /* OR, a more responsive square approach: */
-  /* width: 100%; */
-  /* padding-bottom: 100%; /* This makes the div a perfect square based on its width */
-  /* height: 0; */ /* Reset height */
-  /* position: relative; */ /* Needed for absolute positioning of img */
+  
+  width: 100%;
+  padding-bottom: 100%;
+  height: 0; 
+  position: relative;
+  overflow: hidden;
 }
+.fam-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+  position: absolute; 
+  top: 0;          
+  left: 0;  
+}      
 .product:hover,
 .fam-item:hover {
   transform: scale(1.05);
-  box-shadow: 0 5px 10px grey;
+  box-shadow: 0 5px 10px rgb(64, 64, 64);
   cursor: pointer;
 }
 
@@ -308,18 +345,19 @@ product img,
 /* Launching Soon & Banner */
 
 .banner {
-  width: 100vw;
+  width: 96vw;
   height: 80vh;
   overflow: hidden;
   display: flex;
   justify-content: center;
   align-items: center;
   border-radius: 12px;                
-  box-shadow: 0 8px 20px grey;
-  margin: 20px 0;
+  box-shadow: 0 18px 30px rgb(64, 64, 64);
+  margin-left: 10px;
+  margin: 23px 0;
 }
 .launching-soon{
-  width: 100vw;
+  width: 96vw;
   height: 40vh;
   overflow: hidden;
   display: flex;
@@ -327,7 +365,7 @@ product img,
   align-items: center;
                /* 💥 PREMIUM BORDER */
   border-radius: 12px;                 /* match product style */
-  box-shadow: 0 5px 15px grey; /* golden glow */
+  box-shadow: 0 15px 30px  rgb(64, 64, 64); /* golden glow */
   margin: 20px 0;
 }
 
@@ -488,5 +526,22 @@ footer p {
   to {
     transform: translateY(0);
     opacity: 1;
+  }
+}
+@media (max-width: 768px) {
+ 
+
+ 
+  .item-block-4 { 
+    flex-basis: calc(50% - 15px); 
+    max-width: unset;
+    min-width: unset; 
+  }
+
+  .product, 
+  .fam-item { 
+    width: 100%;
+    padding-bottom: 100%; 
+    height: 0; 
   }
 }

@@ -2,7 +2,7 @@ const Banner = require('../../model/banner.js');
 const multer = require('multer');
 const path = require('path');
 
-// 🔧 Multer setup (inside controller, like you said)
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, 'public/uploads/banners');
@@ -22,18 +22,18 @@ const fileFilter = (req, file, cb) => {
 
 exports.upload = multer({ storage, fileFilter });
 
-// 📄 GET – All banners
+// GET – All banners
 exports.getBannerPage = async (req, res) => {
   try {
     const banners = await Banner.find();
     res.render('admin/banner', { banners });
   } catch (err) {
-    console.error('❌ Error loading banners:', err.message);
+    console.error(' Error loading banners:', err.message);
     res.status(500).send('Internal Server Error');
   }
 };
 
-// ➕ ADD new banner
+// ADD new banner
 exports.addBanner = async (req, res) => {
   try {
     const { title, description } = req.body;
@@ -55,7 +55,7 @@ exports.addBanner = async (req, res) => {
 };
 
 
-// 🔁 UPDATE existing banner
+// UPDATE existing banner
 exports.updateBanner = async (req, res) => {
   try {
     const { title, description, link, status } = req.body;
@@ -73,7 +73,7 @@ exports.updateBanner = async (req, res) => {
     await Banner.findByIdAndUpdate(req.params.id, updateData);
     res.redirect('/admin/banners');
   } catch (err) {
-    console.error('❌ Error updating banner:', err.message);
+    console.error(' Error updating banner:', err.message);
     res.status(500).send('Error updating banner');
   }
 };

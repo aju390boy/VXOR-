@@ -1,25 +1,170 @@
-
-
-  <main>
+<main>
     <section class="signup-container">
-      <h2>SIGN UP</h2>
-      <p>Please fill in the information below.</p>
+        <h2>SIGN UP</h2>
+        <p>Please fill in the information below.</p>
 
-      <form action="/signup" method="POST">
-        <input type="text" name="firstname" placeholder="First name" required>
-        <input type="text" name="lastname" placeholder="Last name" required>
-        <input type="text" name="mobile" placeholder="Mobile" required>
-        <input type="email" name="email" placeholder="E-mail" required>
-        <input type="password" name="password" placeholder="Password" required>
-        <input type="password" name="confirmPassword" placeholder="Confirm Password" required>
+        <form id="signupForm" action="/signup" method="POST">
+            <input type="text" name="firstname" placeholder="First name" required>
+            <input type="text" name="lastname" placeholder="Last name" required>
+            <input type="text" name="mobile" placeholder="Mobile" required>
+            <input type="email" name="email" placeholder="E-mail" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <input type="password" name="confirmPassword" placeholder="Confirm Password" required>
 
-        <button type="submit" >CREATE ACCOUNT</button>
-      </form>
+            <button type="submit">CREATE ACCOUNT</button>
+        </form>
 
-      <p class="login-text">Already have an account? <a href="/login">Login</a></p>
+        <p class="login-text">Already have an account? <a href="/login">Login</a></p>
     </section>
-  </main>
+</main>
 
- 
-</body>
-</html>
+<script>
+    const signupForm = document.getElementById('signupForm');
+
+    signupForm.addEventListener('submit', async (event) => {
+        event.preventDefault(); // Prevent default form submission
+
+        const formData = new FormData(signupForm);
+        const data = Object.fromEntries(formData.entries());
+
+        const errors = [];
+
+        // Client-side Validation
+        if (!data.firstname || !data.lastname || !data.mobile || !data.email || !data.password || !data.confirmPassword) {
+            errors.push('All fields are required.');
+        }
+
+        if (data.password !== data.confirmPassword) {
+            errors.push('Passwords do not match.');
+        }
+
+        // Password complexity (Example: at least 8 characters, one uppercase, one lowercase, one number, one special character)
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+}{"':;?/>.<,])(.{8,})$/;
+        if (data.password && !passwordRegex.test(data.password)) {
+            errors.push('Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character.');
+        }
+
+        if (data.mobile && !/^\d{10}$/.test(data.mobile)) {
+            errors.push('Mobile number must be 10 digits.');
+        }
+
+        if (errors.length > 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Validation Error!',
+                html: errors.join('<br>'),
+                customClass: { // <--- ADDED THIS BLOCK
+                    popup: 'swal-custom-popup',
+                    title: 'swal-custom-title',
+                    htmlContainer: 'swal-custom-content'
+                }
+            });
+            return; // Stop submission if there are client-side errors
+        }
+
+        // If client-side validation passes, send data to server via Fetch API
+        try {
+            const response = await fetch('/signup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+             if (result.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: result.message || 'Account created successfully!',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    customClass: {
+                        popup: 'swal-custom-popup',
+                        title: 'swal-custom-title',
+                        htmlContainer: 'swal-custom-content'
+                    }
+                }).then(() => {
+                    // *** IMPORTANT CHANGE HERE ***
+                    if (result.redirectTo) {
+                        window.location.href = result.redirectTo; // Use the URL provided by the backend
+                    } else {
+                        // Fallback, though your backend should always provide it now
+                        window.location.href = '/login';
+                    }
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: result.message || 'Something went wrong!',
+                    customClass: { // <--- ADDED THIS BLOCK
+                        popup: 'swal-custom-popup',
+                        title: 'swal-custom-title',
+                        htmlContainer: 'swal-custom-content'
+                        // confirmButton: 'swal-custom-confirm-button' // Add this if you have a confirm button on error
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Error during signup:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Network Error',
+                text: 'Could not connect to the server. Please try again.',
+                customClass: { // <--- ADDED THIS BLOCK
+                    popup: 'swal-custom-popup',
+                    title: 'swal-custom-title',
+                    htmlContainer: 'swal-custom-content'
+                    // confirmButton: 'swal-custom-confirm-button' // Add this if you have a confirm button on error
+                }
+            });
+        }
+    });
+</script>
+<style>
+    /* Custom SweetAlert2 modal styling */
+    .swal-custom-popup {
+        background-color: rgb(30, 30, 30) !important;
+        color: silver !important; /* This might be overridden by specific element styles below */
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+    }
+
+    .swal-custom-title {
+        color: white !important;
+        /* font-family: 'Orbitron', sans-serif; */ /* Make sure Orbitron is linked in your HTML/CSS */
+    }
+
+    .swal-custom-content { /* This targets the text content within the modal */
+        color: silver !important;
+        /* font-family: 'Poppins', sans-serif; */ /* Make sure Poppins is linked in your HTML/CSS */
+    }
+
+    .swal-custom-confirm-button { /* This targets the default 'OK' button */
+        background-color: #111 !important;
+        color: silver !important;
+        border: 1px solid silver !important;
+    }
+
+    .swal-custom-confirm-button:hover {
+        background-color: grey !important;
+        color: black !important;
+    }
+
+    /* SweetAlert2 also has a close button. If you want to style it: */
+    .swal2-close-button {
+        color: silver !important; /* For the 'x' icon */
+    }
+    .swal2-close-button:hover {
+        color: white !important;
+    }
+
+    /* If you also want to style the modal backdrop/overlay: */
+    .swal2-container.swal2-backdrop-show {
+        background: rgba(0,0,0,0.7) !important; /* Darker, slightly transparent overlay */
+    }
+
+</style>

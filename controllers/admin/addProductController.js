@@ -5,51 +5,41 @@ const multer = require('multer');
 const path = require('path');
 const mongoose=require('mongoose');
 
-
-
-// 🧠 Multer config right here in controller
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        // Ensure this directory exists in your project root!
-        // For example: your_project_root/public/images/products
         cb(null, 'public/uploads/products');
     },
     filename: function (req, file, cb) {
-        // Generate a unique filename: product_timestamp_randomString.extension
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         cb(null, 'product_' + uniqueSuffix + path.extname(file.originalname));
     }
 });
-
-// Multer file filter to allow only image types
 const fileFilter = (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|gif|webp/; // Regular expression for allowed image types
+    const allowedTypes = /jpeg|jpg|png|gif|webp/; 
     const mimetype = allowedTypes.test(file.mimetype);
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
 
     if (mimetype && extname) {
         return cb(null, true);
     }
-    // If the file type is not allowed, pass an error
     const error = new Error("Only .jpeg, .jpg, .png, .gif, .webp format allowed!");
-    error.code = 'FILE_TYPE_ERROR'; // Custom error code for easier handling
+    error.code = 'FILE_TYPE_ERROR';
     cb(error);
 };
 
 exports.upload = multer({
     storage: storage,
     fileFilter: fileFilter,
-    limits: { fileSize: 20 * 1024 * 1024 } // 20MB limit per file
+    limits: { fileSize: 20 * 1024 * 1024 } 
 });
 
-
-// 📄 GET /admin/addproducts
+///get addproduct page\\\\
 exports.getAddProductPage = async (req, res) => {
     try {
         const categories = await Category.find({ isListed: true });
-        const brands = await Brand.find({}); // Fetch brands for the dropdown
+        const brands = await Brand.find({});
 
-        res.render('admin/addproducts', { categories, brands, layout: false }); // Pass brands to the template
+        res.render('admin/addproducts', { categories, brands, layout: false }); 
 
     } catch (err) {
         console.error("Error loading Add Product page:", err.message);
@@ -57,50 +47,78 @@ exports.getAddProductPage = async (req, res) => {
     }
 };
 
-// 📤 POST /admin/addproducts
+// POST /admin/addproducts
 exports.addProduct = async (req, res) => {
     try {
-        // Destructure top-level fields
         const {
             title,
             description,
-            brand_id,      // Renamed from 'brand' to match schema
+            brand_id,
             warranty,
-            category_id,   // Renamed from 'category' to match schema
-            isListed       // From the new checkbox
+            category_id,
+            isListed
         } = req.body;
-
-        console.log("🟡 Product POST hit! req.body:", req.body);
-        console.log("🟡 Uploaded files:", req.files); // req.files will be an array of all files
-
-        // Process color variants and their nested images/sizes
-        const colorVariants = [];
-
-        // req.body.colorVariants will be an object where keys are indices like '0', '1', '2'
-        // and values are objects containing colorName, and potentially variants.
-        // If there's only one color variant, req.body.colorVariants might not be an array,
-        // so we need to handle that.
         const rawColorVariants = req.body.colorVariants;
-
-        // Ensure rawColorVariants is treated as an array of objects
         const parsedColorVariants = Object.values(rawColorVariants || {});
+        const errors = [];
+        const containsLetter = /[a-zA-Z]/.test(title);
+        if (!title || title.trim().length < 3 || !containsLetter) {
+        if (!title || title.trim().length === 0) {
+        errors.push('Product title is required.');
+        } else if (!containsLetter) {
+        errors.push('Product title must contain at least one alphabetical character.');
+        } else {
+        errors.push('Product title must be at least 3 characters long.');
+        }
+        }
+        if (!mongoose.Types.ObjectId.isValid(category_id)) {
+            errors.push('Invalid category selected.');
+        }
+        if (!mongoose.Types.ObjectId.isValid(brand_id)) {
+            errors.push('Invalid brand selected.');
+        }
+        if (warranty && (isNaN(parseInt(warranty)) || parseInt(warranty) < 0)) {
+            errors.push('Warranty must be a positive number.');
+        }
+        if (!parsedColorVariants || parsedColorVariants.length === 0) {
+            errors.push('At least one color variant is required.');
+        }
+        if (req.files.length === 0) {
+            errors.push('At least one image must be uploaded for the product.');
+        }
+        parsedColorVariants.forEach((variant, i) => {
+            if (!variant.colorName || variant.colorName.trim() === '') {
+                errors.push(`Color name is required for variant #${i + 1}.`);
+            }
+            if (!variant.variants || Object.keys(variant.variants).length === 0) {
+                errors.push(`At least one size variant is required for color #${i + 1}.`);
+            } else {
+                Object.values(variant.variants).forEach((sizeVariant, j) => {
+                    if (!sizeVariant.size || sizeVariant.size.trim() === '') {
+                        errors.push(`Size is required for size variant #${j + 1} of color #${i + 1}.`);
+                    }
+                    if (isNaN(parseFloat(sizeVariant.price)) || parseFloat(sizeVariant.price) < 0) {
+                        errors.push(`Price must be a positive number for size variant #${j + 1} of color #${i + 1}.`);
+                    }
+                    if (isNaN(parseInt(sizeVariant.stock)) || parseInt(sizeVariant.stock) < 0) {
+                        errors.push(`Stock must be a positive number for size variant #${j + 1} of color #${i + 1}.`);
+                    }
+                });
+            }
+        });
 
-
+        if (errors.length > 0) {
+            return res.status(400).json({ message: 'Validation failed', errors: errors });
+        }
+        const colorVariants = [];
         for (let i = 0; i < parsedColorVariants.length; i++) {
             const variantData = parsedColorVariants[i];
             const variantColorName = variantData.colorName;
-
-            // Extract images for this specific color variant
             const variantImages = req.files
-                .filter(file => file.fieldname === `colorVariants[${i}][images]`)
-                .map(file => file.filename);
-
-            // Process nested size variants for this color
+    .filter(file => file.fieldname === `colorVariants[${i}][images]`)
+    .map(file => file.filename); 
             const sizesAndStock = [];
-            // req.body.colorVariants[i].variants will also be an object if multiple sizes exist
             const rawSizeVariants = variantData.variants;
-
-            // Ensure rawSizeVariants is treated as an array of objects
             const parsedSizeVariants = Object.values(rawSizeVariants || {});
 
             for (let j = 0; j < parsedSizeVariants.length; j++) {
@@ -111,33 +129,151 @@ exports.addProduct = async (req, res) => {
                     stock: parseInt(sizeData.stock, 10)
                 });
             }
-
             colorVariants.push({
                 colorName: variantColorName,
                 images: variantImages,
                 variants: sizesAndStock
             });
         }
-
         const product = new Product({
             title,
             description,
             brand_id,
-            warranty: warranty ? parseInt(warranty, 10) : undefined, // Optional, parse as int
+            warranty: warranty ? parseInt(warranty, 10) : undefined,
             category_id,
-            isListed: isListed === 'true', // Convert string 'true'/'false' to boolean
-            colorVariants // Assign the processed color variants array
+            isListed: isListed === 'true',
+            colorVariants
         });
-
         await product.save();
-        res.redirect('/admin/products');
+        res.status(201).json({ message: 'Product added successfully!' });
     } catch (err) {
-        console.error("Error saving product:", err.message);
-        // More specific error handling
-        if (err.code === 'FILE_TYPE_ERROR') {
-            return res.status(400).send(err.message);
-        }
-        res.status(500).send('Error adding product: ' + err.message);
+        console.error("🔴 An error occurred while saving the product:", err);
+        res.status(500).json({ message: 'An unexpected error occurred during submission.', error: err.message });
     }
 };
 
+//edit product \\\\
+exports.getEditProductPage = async (req, res, next) => {
+    try {
+        const productId = req.params.id;
+        const product = await Product.findById(productId).populate('category_id').populate('brand_id');
+        const categories = await Category.find();
+        const brands = await Brand.find();
+
+        if (!product) {
+            return res.status(404).render('admin/404', { message: "Product not found" });
+        }
+
+        res.render('admin/addProducts', { product, categories, brands ,layout:false});
+    } catch (err) {
+        console.error("Error fetching product for edit:", err);
+        next(err);
+    }
+};
+
+//  edit product\\
+exports.updateProduct = async (req, res, next) => {
+    console.log('arrived')
+    try {
+        const productId = req.params.id;
+        const { title, description, warranty, category_id, brand_id, colorVariants, deletedImages } = req.body;
+        const errors = [];
+
+        if (!mongoose.Types.ObjectId.isValid(productId)) {
+            errors.push('Invalid product ID.');
+        }
+        const containsLetter = /[a-zA-Z]/.test(title);
+        if (!title || title.trim().length < 3 || !containsLetter) {
+            if (!title || title.trim().length === 0) {
+                errors.push('Product title is required.');
+            } else if (!containsLetter) {
+                errors.push('Product title must contain at least one alphabetical character.');
+            } else {
+                errors.push('Product title must be at least 3 characters long.');
+            }
+        }
+        if (!mongoose.Types.ObjectId.isValid(category_id)) {
+            errors.push('Invalid category selected.');
+        }
+        if (!mongoose.Types.ObjectId.isValid(brand_id)) {
+            errors.push('Invalid brand selected.');
+        }
+        if (warranty && (isNaN(parseInt(warranty)) || parseInt(warranty) < 0)) {
+            errors.push('Warranty must be a positive number.');
+        }
+        if (!colorVariants || colorVariants.length === 0) {
+            errors.push('At least one color variant is required.');
+        }
+        const existingImagesCount = colorVariants.reduce((count, variant) => {
+            const existing = Object.values(variant.images || {}).filter(img => img.filename);
+            return count + existing.length;
+        }, 0);
+        
+        if (req.files.length + existingImagesCount === 0) {
+            errors.push('At least one image must exist for the product.');
+        }
+       colorVariants.forEach((variant, i) => {
+            if (!variant.colorName || variant.colorName.trim() === '') {
+                errors.push(`Color name is required for variant #${i + 1}.`);
+            }
+            if (!variant.variants || Object.keys(variant.variants).length === 0) {
+                errors.push(`At least one size variant is required for color #${i + 1}.`);
+            } else {
+                Object.values(variant.variants).forEach((sizeVariant, j) => {
+                    if (!sizeVariant.size || sizeVariant.size.trim() === '') {
+                        errors.push(`Size is required for size variant #${j + 1} of color #${i + 1}.`);
+                    }
+                    if (isNaN(parseFloat(sizeVariant.price)) || parseFloat(sizeVariant.price) < 0) {
+                        errors.push(`Price must be a positive number for size variant #${j + 1} of color #${i + 1}.`);
+                    }
+                    if (isNaN(parseInt(sizeVariant.stock)) || parseInt(sizeVariant.stock) < 0) {
+                        errors.push(`Stock must be a positive number for size variant #${j + 1} of color #${i + 1}.`);
+                    }
+                });
+            }
+        });
+
+        if (errors.length > 0) {
+            return res.status(400).json({ message: 'Validation failed', errors: errors });
+        }
+        const productToUpdate = await Product.findById(productId);
+        if (!productToUpdate) {
+            return res.status(404).json({ message: 'Product not found.' });
+        }
+        productToUpdate.title = title;
+        productToUpdate.description = description;
+        productToUpdate.warranty = warranty;
+        productToUpdate.category_id = category_id;
+        productToUpdate.brand_id = brand_id;
+        const imagesToDelete = JSON.parse(deletedImages);
+        if (imagesToDelete && imagesToDelete.length > 0) {
+        }
+        const updatedColorVariants = [];
+        if (colorVariants && Array.isArray(colorVariants)) {
+            for (const variant of colorVariants) {
+                 const newImages = req.files.filter(file => file.fieldname === `colorVariants[${colorVariants.indexOf(variant)}][images]`);
+                let existingVariant = variant.colorId ? productToUpdate.colorVariants.id(variant.colorId) : null;
+                if (existingVariant) {
+                    existingVariant.colorName = variant.colorName;
+                    existingVariant.variants = variant.variants;
+                    if (newImages && newImages.length > 0) {
+                         const newImageUrls = newImages.map(file => `/uploads/products/${file.filename}`);
+                         existingVariant.images = existingVariant.images.concat(newImageUrls);
+                    }
+                } else {
+                     const newVariant = {
+                         colorName: variant.colorName,
+                         variants: variant.variants,
+                         images: newImages.map(file => `/uploads/products/${file.filename}`)
+                     };
+                     productToUpdate.colorVariants.push(newVariant);
+                }
+            }
+        }
+        await productToUpdate.save();
+        res.status(200).json({ message: 'Product updated successfully!' });
+    } catch (err) {
+        console.error('Error updating product:', err);
+        res.status(500).json({ message: 'Failed to update product.' });
+    }
+};

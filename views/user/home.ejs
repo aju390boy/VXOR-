@@ -17,17 +17,20 @@
 <h2 class="home-things"> BEST SELLERS</h2>
 <div class="best-sellers-container">
   <% bestSellers.forEach(item => { %>
-    <div class="item-block">
-      <div class="product" ><img src="<%= item.display_image_url %>" alt="<%= item.title %>"></div>
-      <div class="details">
-        <p><%= item.title %></p>
-        <p>₹<%= item.display_price != null ? item.display_price.toFixed(2) : 'N/A' %></p>
-        <p>Rating: <%= '⭐'.repeat(item.rating) + (item.rating < 5 ? '☆' : '') %></p>
+    <a href="/user/product/<%= item._id %>" class="item-link no-underline text-inherit">
+      <div class="item-block-2">
+        <div class="product">
+          <img src="<%= item.display_image_url %>" alt="<%= item.title %>">
+        </div>
+        <div class="details">
+          <p><%= item.title %></p>
+          <p>₹<%= item.display_price != null ? item.display_price.toFixed(2) : 'N/A' %></p>
+          <p>Rating: <%= '⭐'.repeat(item.rating) + (item.rating < 5 ? '☆' : '') %></p>
+        </div>
       </div>
-    </div>
+    </a>
   <% }) %>
 </div>
-
 <h2 class="home-things"> LAUNCHING SOON...</h2>
 <div class="launching-soon">
   <img src="/images/banner10.jpg" alt="Launching Soon" />
@@ -36,6 +39,7 @@
 <h2 class="home-things"> TOP RATED</h2>
 <div class="top-rated-container">
   <% topRated.forEach(item => { %>
+    <a href="/user/product/<%= item._id %>" class="item-link no-underline text-inherit">
     <div class="item-block-2">
       <div class="product"><img src="<%= item.display_image_url %>" alt="<%= item.title %>"></div>
       <div class="details">
@@ -44,6 +48,7 @@
         <p>Rating: <%= '⭐'.repeat(item.rating) + (item.rating < 5 ? '☆' : '') %></p>
       </div>
     </div>
+    </a>
   <% }) %>
 </div>
 
@@ -54,6 +59,7 @@
 <h2 class="home-things"> WHAT'S NEW</h2>
 <div class="whats-new-container">
   <% whatsNew.forEach(item => { %>
+    <a href="/user/product/<%= item._id %>" class="item-link no-underline text-inherit">
     <div class="item-block-3">
       <div class="product"><img src="<%= item.display_image_url %>" alt="<%= item.title %>"></div>
       <div class="details">
@@ -62,6 +68,7 @@
         <p>Rating: <%= '⭐'.repeat(item.rating) + (item.rating < 5 ? '☆' : '') %></p>
       </div>
     </div>
+    </a>
   <% }) %>
 </div>
 
@@ -74,7 +81,7 @@
   <div class="review">"These helmets feel like Iron Man gear — solid and stylish!" ⭐⭐⭐⭐⭐</div>
   <div class="review">"Insane comfort even after long rides. Worth every rupee!" ⭐⭐⭐⭐☆</div>
   <div class="review">"Safe, sexy, certified. Helmet flex max!" ⭐⭐⭐⭐⭐</div>
-  <div class="review">"Gold detailing is *chef’s kiss*. 🔥🔥🔥" ⭐⭐⭐⭐☆</div>
+  <div class="review">"Gold detailing is *chef’s kiss*." ⭐⭐⭐⭐☆</div>
 </div>
 
 <div class="banner">
@@ -82,11 +89,48 @@
 </div>
 <h2 class="home-things"> VIXOR FAM</h2>
 <div class="fam-container">
-  <% ["Royal Enfield", "Steelbird", "LS2", "Axor", "MT"].forEach((brand, idx) => { %>
-    <div class="item-block">
-      <div class="fam-item"><img src="/images/family<%= idx + 1 %>.jpg" alt="<%= brand %>"></div>
-      <div class="details"><p><%= brand %></p></div>
-    </div>
+  <% ["SMK", "AXOR", "AGV", "STUDDS", "MT"].forEach((brand, idx) => { %>
+
+    <%
+      let linkUrl = '';
+      let isClickable = false;
+      if (brand === "AXOR") {
+        linkUrl = "https://www.axorhelmets.com/"; 
+        isClickable = true;
+      }
+      
+       else if (brand === "SMK") {
+       linkUrl = "https://smkhelmets.com/"; 
+         isClickable = true;
+       }
+       else if (brand === "AGV") {
+       linkUrl = "https://www.agv.com/us/en/";
+         isClickable = true;
+       }
+       else if (brand === "STUDDS") {
+       linkUrl = "https://shop.studds.com/";
+         isClickable = true;
+       }
+       else if (brand === "MT") {
+       linkUrl = "https://mthelmets.com/en/"; 
+         isClickable = true;
+       }
+    %>
+
+    <% if (isClickable) { %>
+      <a href="<%= linkUrl %>" target="_blank" rel="noopener noreferrer" class="fam-item-link no-underline text-inherit">
+        <div class="item-block-4">
+          <div class="fam-item"><img src="/images/family<%= idx + 1 %>.jpg" alt="<%= brand %>"></div>
+          <div class="details"><p><%= brand %></p></div>
+        </div>
+      </a>
+    <% } else { %>
+      <div class="item-block-4">
+        <div class="fam-item"><img src="/images/family<%= idx + 1 %>.jpg" alt="<%= brand %>"></div>
+        <div class="details"><p><%= brand %></p></div>
+      </div>
+    <% } %>
+
   <% }) %>
 </div>
 

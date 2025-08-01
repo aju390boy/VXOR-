@@ -85,3 +85,31 @@
 .login-text a:hover {
     color: #8e6aff; 
 }
+/* SweetAlert2 Custom Styles */
+.swal-custom-popup {
+    background-color: rgb(30, 30, 30) !important;
+    color: silver !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+}
+
+.swal-custom-title {
+    color: white !important;
+    font-family: 'Orbitron', sans-serif;
+}
+
+.swal-custom-content {
+    color: silver !important;
+    font-family: 'Poppins', sans-serif;
+}
+
+.swal-custom-confirm-button {
+    background-color: #111 !important;
+    color: silver !important;
+    border: 1px solid silver !important;
+}
+
+.swal-custom-confirm-button:hover {
+    background-color: grey !important;
+    color: black !important;
+}

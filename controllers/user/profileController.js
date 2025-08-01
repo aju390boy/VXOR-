@@ -1,4 +1,5 @@
 
+const { use } = require('passport');
 const User = require('../../model/user.js'); 
 const bcrypt = require('bcrypt')
 
@@ -124,19 +125,19 @@ exports.changePassword = async (req, res) => {
     console.log("Change password request received:", req.body);
 
     const { currentPassword, newPassword, confirmPassword } = req.body;
-    const errors = {}; // Object to collect validation errors
+    const errors = {};
 
-    // 1. Server-Side Validation
+   
     if (!currentPassword || !newPassword || !confirmPassword) {
         errors.general = 'All password fields are required.';
         return res.status(400).json({ success: false, message: errors.general, errors });
     }
-
+      console.log(`This is current password:${currentPassword}`)
     if (newPassword !== confirmPassword) {
         errors.confirmPassword = 'New password and confirm password do not match.';
     }
-    if (newPassword.length < 8) {
-        errors.newPassword = 'New password must be at least 8 characters long.';
+    if (newPassword.length < 4) {
+        errors.newPassword = 'New password must be at least 4 characters long.';
     }
     if (!/[A-Z]/.test(newPassword)) {
         errors.newPassword = errors.newPassword ? errors.newPassword + ' And must contain at least one uppercase letter.' : 'New password must contain at least one uppercase letter.';
@@ -158,33 +159,33 @@ exports.changePassword = async (req, res) => {
     try {
         
         const userId = req.session.user._id;
-        // const userId = req.user._id; // Example: if using Passport.js or similar middleware
-
+      
         const user = await User.findById(userId);
 
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found.' });
         }
 
-        // 2. Verify Current Password
+       
         const isMatch = await bcrypt.compare(currentPassword, user.password);
+        console.log(`this latest password:${(user.password)}`)
         if (!isMatch) {
             errors.currentPassword = 'Incorrect current password.';
             return res.status(400).json({ success: false, message: errors.currentPassword, errors });
         }
 
-        // 3. Prevent new password from being the same as current password
+      
         const isNewSameAsCurrent = await bcrypt.compare(newPassword, user.password);
         if (isNewSameAsCurrent) {
             errors.newPassword = 'New password cannot be the same as your current password.';
             return res.status(400).json({ success: false, message: errors.newPassword, errors });
         }
 
-        // 4. Hash New Password
-        const salt = await bcrypt.genSalt(10); // Generate a salt
-        user.password = await bcrypt.hash(newPassword, salt); // Hash the new password
+      
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(newPassword, salt); 
 
-        // 5. Save to Database
+       
         await user.save();
 
         res.status(200).json({ success: true, message: 'Password updated successfully!' });

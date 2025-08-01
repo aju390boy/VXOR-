@@ -8,16 +8,16 @@
     </div>
 </div>
 
-<div class="flex flex-col md:flex-row px-10   py-2   bg-gray-900 min-h-5 text-gray-400">
+<div class="flex flex-col md:flex-row px-10 py-2 bg-gray-900 min-h-5 text-gray-400">
 
     <%# Sidebar Navigation - NOW STICKY AND CONTENT-HEIGHT %>
     <aside id="profile-sidebar" class="
-        w-full md:w-1/4 lg:w-1/5            <%# Sets width on different screen sizes %>
-        p-4 md:p-6 border-r border-gray-800 bg-gray-900 <%# Styling %>
-        sticky top-[6.5rem]                 <%# Makes it sticky after 6.5rem from top (adjust if your header is different) %>
-        h-fit                               <%# Height fits content %>
-        md:self-start                       <%# Ensures it aligns to the top in flex container %>
-        z-0                                 <%# Lower z-index since it's not fixed across all content %>
+        w-full md:w-1/4 lg:w-1/5
+        p-4 md:p-6 border-r border-gray-800 bg-gray-900
+        sticky top-[6.5rem]
+        h-fit
+        md:self-start
+        z-0
     ">
         <h2 class="text-lg font-bold mb-4 text-white text-center border-b border-gray-700 pb-2">My Account</h2>
         <ul class="flex flex-col gap-2">
@@ -59,129 +59,255 @@
         </ul>
     </aside>
 
-    <%# Main Content Area - No extra margin-left, inner content is contained %>
-    <main class="
-    flex-1 px-4 md:px-6 py-4 bg-gray-900
-    flex justify-center
-">
-    <div id="profile-content" class="w-full max-w-2xl bg-gray-900 p-4 rounded-md shadow-md mt-0">
-        <%- include('partials/_profileDetails', { user: user }) %>
-    </div>
-</main>
-
-
+    <%# Main Content Area %>
+    <main class="flex-1 px-4 md:px-6 py-4 bg-gray-900 flex justify-center">
+        <div id="profile-content" class="w-full max-w-2xl bg-gray-900 p-4 rounded-md shadow-md mt-0">
+            <%- include('partials/_profileDetails', { user: user }) %>
+        </div>
+    </main>
 </div>
 
-<%# Script for sidebar link handling - Keep this at the end of the file %>
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const profileContentArea = document.getElementById('profile-content');
-        const sidebarLinks = document.querySelectorAll('.sidebar-link');
+<%# SweetAlert2 CSS - Ensure this is linked! %>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<%# SweetAlert2 JS - Keep this at the end of the file %>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-        const loadSection = async (sectionName) => {
-            try {
-                const response = await fetch(`/user/profile/section/${sectionName}`);
-                if (!response.ok) {
-                    const errorMessage = await response.text();
-                    profileContentArea.innerHTML = `<p class="text-red-400">Error loading section: ${errorMessage}</p>`;
-                    return;
-                }
-                const htmlContent = await response.text();
-                profileContentArea.innerHTML = htmlContent;
+<%# Script for sidebar link handling %>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const profileContentArea = document.getElementById('profile-content');
+        const sidebarLinks = document.querySelectorAll('.sidebar-link');
+
+        const loadSection = async (sectionName) => {
+            try {
+                const response = await fetch(`/user/profile/section/${sectionName}`);
+                if (!response.ok) {
+                    const errorMessage = await response.text();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
+                        text: `Error loading section: ${errorMessage}`,
+                        customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
+                    });
+                    profileContentArea.innerHTML = ''; // Clear content area on error
+                    return;
+                }
+                const htmlContent = await response.text();
+                profileContentArea.innerHTML = htmlContent;
 
                 // IMPORTANT: After new content is loaded, re-attach event listeners
-                // especially for the profile update form.
-                attachProfileFormListener();
+                attachProfileFormListener(); // This function will now handle both forms
+                attachChangePasswordFormListener(); // New function for password form
+            } catch (error) {
+                console.error('Error fetching profile section:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Network Error!',
+                    text: 'Failed to load section content due to a network error.',
+                    customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
+                });
+                profileContentArea.innerHTML = ''; // Clear content area on error
+            }
+        };
 
-            } catch (error) {
-                console.error('Error fetching profile section:', error);
-                profileContentArea.innerHTML = '<p class="text-red-400">Failed to load section content due to a network error.</p>';
-            }
-        };
+        // Add click event listeners to sidebar links
+        sidebarLinks.forEach(link => {
+            link.addEventListener('click', (event) => {
+                event.preventDefault();
+                const sectionName = event.currentTarget.dataset.section;
 
-        // Add click event listeners to sidebar links
-        sidebarLinks.forEach(link => {
-            link.addEventListener('click', (event) => {
-                event.preventDefault();
-                const sectionName = event.currentTarget.dataset.section;
+                // Remove 'active' class from all links
+                sidebarLinks.forEach(item => item.classList.remove('active', 'bg-gray-700', 'text-white'));
+                // Add 'active' class to clicked link
+                event.currentTarget.classList.add('active', 'bg-gray-700', 'text-white');
 
-                // Remove 'active' class from all links
-                sidebarLinks.forEach(item => item.classList.remove('active', 'bg-gray-700', 'text-white'));
-                // Add 'active' class to clicked link
-                event.currentTarget.classList.add('active', 'bg-gray-700', 'text-white');
+                loadSection(sectionName);
+            });
+        });
 
-                loadSection(sectionName);
-            });
-        });
+        // Helper function to clear all error messages
+        const clearErrorMessages = (formId) => {
+            document.querySelectorAll(`#${formId} .error-message`).forEach(el => el.textContent = '');
+            document.querySelectorAll(`#${formId} input`).forEach(input => input.classList.remove('border-red-500'));
+        };
 
         // Function to attach listener to the profile update form
         const attachProfileFormListener = () => {
             const profileUpdateForm = document.getElementById('profile-update-form');
-            const profileMessageDiv = document.getElementById('profile-message'); // Get the message div
 
             if (profileUpdateForm) {
                 profileUpdateForm.addEventListener('submit', async (event) => {
-                    event.preventDefault(); // Prevent default form submission (page reload)
-
-                    // Clear previous messages
-                    if (profileMessageDiv) {
-                        profileMessageDiv.textContent = '';
-                        profileMessageDiv.classList.remove('text-green-500', 'text-red-500');
-                    }
+                    event.preventDefault();
 
                     const formData = new FormData(profileUpdateForm);
-                    const data = Object.fromEntries(formData.entries()); // Convert FormData to plain object
+                    const data = Object.fromEntries(formData.entries());
 
                     try {
                         const response = await fetch('/user/profile/update', {
                             method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json' // Tell server we're sending JSON
-                                // If you implement CSRF, add: 'CSRF-Token': csrfToken
-                            },
-                            body: JSON.stringify(data) // Send data as JSON
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(data)
                         });
 
-                        const result = await response.json(); // Expect JSON response from server
+                        const result = await response.json();
 
-                        if (response.ok) { // Check if status is 2xx
-                            if (profileMessageDiv) {
-                                profileMessageDiv.textContent = result.message || 'Profile updated successfully!';
-                                profileMessageDiv.classList.add('text-green-500');
-
-                                
-                                setTimeout(() => {
-                                    loadSection('profile'); // Re-load profile section to show fresh data
-                                }, 1500); // Wait 1.5 seconds before reloading
-
-                            }
+                        if (response.ok) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success!',
+                                text: result.message || 'Profile updated successfully!',
+                                customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
+                            });
+                            // Re-load profile section to show fresh data after a short delay
+                            setTimeout(() => {
+                                loadSection('profile');
+                            }, 1500);
                         } else {
-                            if (profileMessageDiv) {
-                                profileMessageDiv.textContent = result.message || 'Failed to update profile. Please try again.';
-                                profileMessageDiv.classList.add('text-red-500');
-                            }
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Oops...',
+                                text: result.message || 'Failed to update profile. Please try again.',
+                                customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
+                            });
                         }
                     } catch (error) {
                         console.error('Error submitting profile update:', error);
-                        if (profileMessageDiv) {
-                            profileMessageDiv.textContent = 'Network error. Could not connect to server.';
-                            profileMessageDiv.classList.add('text-red-500');
-                        }
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Network Error!',
+                            text: 'Could not connect to server. Please check your internet connection.',
+                            customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
+                        });
                     }
                 });
             }
         };
 
+        // Function to attach listener to the change password form
+        const attachChangePasswordFormListener = () => {
+            const changePasswordForm = document.getElementById('change-password-form');
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const defaultSection = urlParams.get('section') || 'profile';
+            if (changePasswordForm) {
+                changePasswordForm.addEventListener('submit', async (event) => {
+                    event.preventDefault();
+                    clearErrorMessages('change-password-form'); // Clear previous errors
 
-        const initialLink = document.querySelector(`.sidebar-link[data-section="${defaultSection}"]`);
-        if (initialLink) {
-            initialLink.click();
-        } else {
-            // Fallback if the default section link is not found
-            document.querySelector('.sidebar-link[data-section="profile"]').click();
-        }
-    });
+                    const formData = new FormData(changePasswordForm);
+                    const data = Object.fromEntries(formData.entries());
+
+                    try {
+                        const response = await fetch('/user/profile/change-password', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(data)
+                        });
+
+                        const result = await response.json();
+
+                        if (response.ok) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success!',
+                                text: result.message || 'Password updated successfully!',
+                                customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
+                            });
+                            // Clear form fields after successful update
+                            changePasswordForm.reset();
+                            // Optional: Reload section if you want to ensure state consistency
+                            // setTimeout(() => { loadSection('change-password'); }, 1500);
+                        } else {
+                            // Display field-specific errors if available
+                            if (result.errors) {
+                                for (const field in result.errors) {
+                                    const errorElement = document.getElementById(`${field}Error`);
+                                    if (errorElement) {
+                                        errorElement.textContent = result.errors[field];
+                                        const inputElement = changePasswordForm.querySelector(`[name="${field}"]`);
+                                        if (inputElement) {
+                                            inputElement.classList.add('border-red-500'); // Highlight input field
+                                        }
+                                    }
+                                }
+                            }
+                            // Display general error message with SweetAlert
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Validation Error!',
+                                text: result.message || 'Please correct the errors in the form.',
+                                customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error submitting change password:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Network Error!',
+                            text: 'Could not connect to server. Please check your internet connection.',
+                            customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
+                        });
+                    }
+                });
+            }
+        };
+
+        // Initial load of the default section and attach listeners
+        const urlParams = new URLSearchParams(window.location.search);
+        const defaultSection = urlParams.get('section') || 'profile';
+
+        const initialLink = document.querySelector(`.sidebar-link[data-section="${defaultSection}"]`);
+        if (initialLink) {
+            initialLink.click();
+        } else {
+            // Fallback if the default section link is not found
+            document.querySelector('.sidebar-link[data-section="profile"]').click();
+        }
+    });
 </script>
+
+<style>
+/* Custom SweetAlert2 styles for dark theme */
+.swal-dark-bg {
+    background-color: #1a202c !important; /* Tailwind gray-900 */
+    color: #e2e8f0 !important; /* Tailwind gray-200 */
+    border: 1px solid #4a5568 !important; /* Tailwind gray-600 */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5) !important;
+}
+
+.swal-dark-title {
+    color: #cbd5e0 !important; /* Tailwind gray-300 */
+}
+
+.swal-dark-content {
+    color: #a0aec0 !important; /* Tailwind gray-400 */
+}
+
+.swal-dark-button {
+    background-color: #4299e1 !important; /* Tailwind blue-500 */
+    color: white !important;
+    border: none !important;
+}
+
+.swal-dark-button:focus {
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5) !important; /* Blue shadow on focus */
+}
+
+/* Ensure font-awesome classes are applied */
+.swal2-icon {
+    font-family: 'Font Awesome 6 Free', sans-serif !important;
+    font-weight: 900 !important; /* Required for solid icons */
+}
+
+/* Example: Specific icons can be styled if needed */
+.swal2-success .swal2-success-line-tip,
+.swal2-success .swal2-success-line-long {
+    background-color: #38a169 !important; /* Green for success */
+}
+
+.swal2-error .swal2-x-mark-line-left,
+.swal2-error .swal2-x-mark-line-right {
+    background-color: #e53e3e !important; /* Red for error */
+}
+
+/* Add these to your main CSS file (e.g., app.css or common.css) */
+/* Or place them directly in this EJS file within <style> tags as I did here for demonstration. */
+</style>

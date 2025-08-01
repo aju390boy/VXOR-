@@ -1,26 +1,286 @@
+<style>
+        /* Your existing styles from previous answers, and the SweetAlert custom classes */
+        body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #f4f4f4; margin: 0; }
+        .otp-container { background-color: #161616; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); width: 100%; max-width: 400px; text-align: center; }
+        .otp-container h2 { margin-bottom: 20px; color: silver; }
+        .otp-container p { color: silver; margin-bottom: 25px; }
+        .otp-container form input { width: calc(100% - 20px); padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 4px; text-align: center; font-size: 1.2em; letter-spacing: 5px;}
+        .otp-container button { width: 100%; padding: 12px; background-color: black; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; transition: background-color 0.3s ease; }
+        .otp-container button:hover { background-color: rgb(238, 238, 238); }
+        .otp-bottom { margin-top: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .otp-bottom span { color:silver; font-size: 0.9em; }
+        .otp-bottom a.resend { color: rgb(195, 187, 201); text-decoration: none; font-weight: bold; }
+        .otp-bottom a.resend:hover { text-decoration: underline; }
+.resend.resend-disabled {
+    opacity: 0.6; /* Make it slightly transparent */
+    cursor: not-allowed; /* Change cursor to indicate it's not clickable */
+    pointer-events: auto; /* Ensure events still fire, don't use 'none' here */
+}
+        /* SweetAlert2 custom classes (from previous answers) */
+        .swal-custom-popup { background-color: rgb(30, 30, 30) !important; color: silver !important; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 0 20px rgba(0, 0, 0, 0.7); }
+        .swal-custom-title { color: white !important; }
+        .swal-custom-content { color: silver !important; }
+        .swal-custom-confirm-button { background-color: #111 !important; color: silver !important; border: 1px solid silver !important; }
+        .swal-custom-confirm-button:hover { background-color: grey !important; color: black !important; }
+    </style>
+</head>
+<body>
+    <main>
+        <section class="otp-container">
+            <h2>Verify OTP</h2>
+
+            <% if (typeof email !== 'undefined' && email) { %>
+                <p>An OTP has been sent to <strong><%= email %></strong>. Please enter it below.</p>
+            <% } else { %>
+                <p>Please enter the OTP sent to your email.</p>
+                <p style="color:red;">Error: Email not provided. Please go back to the previous step and try again.</p>
+            <% } %>
+
+            <% if (typeof error !== 'undefined' && error) { %>
+                <p style="color:red;"><%= error %></p>
+            <% } %>
+
+            <form id="otpForm">
+                <input type="hidden" name="email" value="<%= typeof email !== 'undefined' ? email : '' %>">
+                <input type="hidden" name="context" value="<%= typeof context !== 'undefined' ? context : 'unknown' %>">
+
+                <input type="text" name="otp" id="otp" placeholder="Enter your OTP" required maxlength="6" pattern="\d{6}">
+
+<p class="text-muted mb-2 text-center" style="font-size: 0.9em;">
+    OTP valid for: <strong id="otpTimer" class="text-danger">00:00</strong>
+</p>
+
+<div class="otp-bottom">
+    <span>DIDN'T RECEIVE THE OTP?</span>
+    <button type="button" class="btn btn-link resend p-0" id="resendOtpBtn">RESEND OTP</button>
+</div>
+
+<button type="submit" id="confirmOtpBtn">CONFIRM</button>
+
+<input type="hidden" id="otpExpiresAt" value="<%= otpExpiresAt %>">
+            </form>
+        </section>
+    </main>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('DOMContentLoaded fired!');
+
+        const otpForm = document.getElementById('otpForm');
+        const otpInputField = document.getElementById('otp');
+        const confirmOtpBtn = document.getElementById('confirmOtpBtn');
+        const resendOtpBtn = document.getElementById('resendOtpBtn');
+        console.log('resendOtpBtn element:', resendOtpBtn);
+
+        const otpTimerDisplay = document.getElementById('otpTimer');
+        const otpExpiresAtInput = document.getElementById('otpExpiresAt');
+
+        const currentContext = document.querySelector('input[name="context"]').value;
+        const userEmail = document.querySelector('input[name="email"]').value;
+
+        let countdownInterval;
+        let expirationTime = parseInt(otpExpiresAtInput.value);
+        let isFrontendCooldownActive = true; // New flag: Assume active initially since timer starts
+
+        // Function to show SweetAlert
+        const showAlert = (icon, title, text) => {
+            Swal.fire({
+                icon: icon,
+                title: title,
+                text: text,
+                customClass: {
+                    popup: 'swal-custom-popup',
+                    title: 'swal-custom-title',
+                    htmlContainer: 'swal-custom-content',
+                    confirmButton: 'swal-custom-confirm-button'
+                }
+            });
+        };
+
+        // Function to update the button's visual state
+        function updateResendButtonState() {
+            if (resendOtpBtn) {
+                if (isFrontendCooldownActive) {
+                    resendOtpBtn.classList.add('resend-disabled'); // Apply disabled look
+                } else {
+                    resendOtpBtn.classList.remove('resend-disabled'); // Remove disabled look
+                }
+            }
+        }
+
+        // Function to start or restart the countdown timer
+        function startTimer(initialExpirationTime) {
+            console.log('startTimer called with expirationTime:', initialExpirationTime);
+            expirationTime = initialExpirationTime;
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+
+            isFrontendCooldownActive = true; // Cooldown is active when timer starts
+            updateResendButtonState(); // Update button appearance
+            if (otpInputField) otpInputField.disabled = false;
+            if (confirmOtpBtn) confirmOtpBtn.disabled = false;
+            console.log('Resend button visually disabled by startTimer.');
 
 
-  <main>
-    <section class="otp-container">
-      <h2>Verify OTP</h2>
+            countdownInterval = setInterval(() => {
+                const now = new Date().getTime();
+                const timeLeft = expirationTime - now;
 
-       <% if (typeof error !== 'undefined') { %>
-      <p class="error-message"><%= error %></p>
-     <% } %>
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    otpTimerDisplay.textContent = 'Expired';
+                    isFrontendCooldownActive = false; // Cooldown is no longer active
+                    updateResendButtonState(); // Enable button visually
+                    console.log('Resend button visually ENABLED by timer expiration.');
 
-      <form action="/verify-otp" method="POST">
-        <input type="text" name="otp" placeholder="enter your OTP" required>
+                    if (confirmOtpBtn) confirmOtpBtn.disabled = true;
+                    if (otpInputField) otpInputField.disabled = true;
+                    showAlert('error', 'OTP Expired', 'Your OTP has expired. Please request a new one.');
+                } else {
+                    const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+                    otpTimerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                }
+            }, 1000); // Update every second
+        }
 
-        <div class="otp-bottom">
-          <span>DON'T RECEIVE THE OTP?</span>
-          <a href="/resend-otp" class="resend">RESEND OTP</a>
-        </div>
+        // --- Initial setup on page load ---
+        if (!isNaN(expirationTime) && expirationTime > new Date().getTime()) {
+            startTimer(expirationTime);
+        } else {
+            otpTimerDisplay.textContent = 'Expired. Please resend OTP.';
+            isFrontendCooldownActive = false; // No active cooldown if OTP already expired/missing
+            updateResendButtonState(); // Ensure button is visually enabled
+            console.log('Resend button visually ENABLED by initial page load (OTP expired/missing).');
 
-        <button type="submit">CONFIRM</button>
-      </form>
-    </section>
-  </main>
+            if (confirmOtpBtn) confirmOtpBtn.disabled = true;
+            if (otpInputField) otpInputField.disabled = true;
+            showAlert('warning', 'OTP Needed', 'Please resend OTP to continue.');
+        }
 
- 
-</body>
-</html>
+        // --- Handle OTP verification form submission (remains the same) ---
+        otpForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            // Check if OTP input is disabled (meaning OTP is expired)
+            if (otpInputField.disabled) {
+                showAlert('error', 'OTP Expired', 'Your OTP has expired. Please resend a new one.');
+                return;
+            }
+            
+            const formData = new FormData(otpForm);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await fetch('/verify-otp', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.redirected) {
+                    window.location.href = response.url;
+                } else {
+                    const result = await response.json();
+                    if (result.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: result.message || 'OTP verified successfully!',
+                            showConfirmButton: false,
+                            timer: 1500,
+                            customClass: {
+                                popup: 'swal-custom-popup',
+                                title: 'swal-custom-title',
+                                htmlContainer: 'swal-custom-content'
+                            }
+                        }).then(() => {
+                            if (result.redirectTo) {
+                                window.location.href = result.redirectTo;
+                            } else {
+                                console.warn("Backend did not provide a redirectTo URL.");
+                                window.location.href = '/login';
+                            }
+                        });
+                    } else {
+                        showAlert('error', 'Verification Failed', result.message || 'Invalid or expired OTP.');
+                    }
+                }
+            } catch (error) {
+                console.error('Error during OTP verification:', error);
+                showAlert('error', 'Network Error', 'Could not connect to the server for verification.');
+            }
+        });
+
+
+        // --- Handle Resend OTP button click ---
+        if (resendOtpBtn) {
+            resendOtpBtn.addEventListener('click', async (event) => {
+                event.preventDefault();
+                console.log('--- Resend OTP button click detected ---');
+
+                // --- NEW LOGIC: Check frontend cooldown ---
+                if (isFrontendCooldownActive) {
+                    showAlert('info', 'Hold On!', 'Please wait until the timer completes before resending OTP.');
+                    console.log('Frontend cooldown active, showing alert.');
+                    return; // Stop execution here
+                }
+                // --- END NEW LOGIC ---
+
+                if (!userEmail) {
+                    showAlert('error', 'Error', 'Cannot resend OTP without an email. Please go back and try again.');
+                    return;
+                }
+
+                // Visually disable button and show loading text (it's already clickable due to new logic)
+                resendOtpBtn.classList.add('resend-disabled');
+                resendOtpBtn.textContent = 'Sending...';
+                console.log('Resend button temporarily disabled visually during fetch.');
+
+                try {
+                    const response = await fetch('/resend-otp', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ email: userEmail, context: currentContext })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        showAlert('success', 'OTP Resent!', result.message || 'A new OTP has been sent to your email.');
+
+                        const newExpirationTime = result.expiresAt;
+                        startTimer(newExpirationTime); // Restart the countdown (this will set isFrontendCooldownActive = true)
+
+                        if (otpInputField) otpInputField.disabled = false;
+                        if (confirmOtpBtn) confirmOtpBtn.disabled = false;
+                        otpInputField.value = '';
+                    } else {
+                        // This handles the backend's cooldown message ("Please wait X seconds...")
+                        showAlert('error', 'Resend Failed', result.message || 'Could not resend OTP. Please try again.');
+                        isFrontendCooldownActive = false; // Allow resend if backend rejected for other reasons
+                        updateResendButtonState(); // Re-enable visually if needed
+                        console.log('Resend button re-enabled after failed resend (backend rejected).');
+                    }
+                } catch (error) {
+                    console.error('Resend OTP fetch error:', error);
+                    showAlert('error', 'Network Error', 'Could not connect to the server to resend OTP.');
+                    isFrontendCooldownActive = false; // Allow resend if network error
+                    updateResendButtonState(); // Re-enable visually
+                    console.log('Resend button re-enabled after network error.');
+                } finally {
+                    resendOtpBtn.textContent = 'RESEND OTP'; // Reset button text
+                }
+            });
+        } else {
+            console.error('resendOtpBtn element not found! Cannot attach event listener.');
+        }
+
+        // ... (Initial check for error messages from server redirects - remains the same) ...
+    });
+</script>

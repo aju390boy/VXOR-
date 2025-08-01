@@ -1,10 +1,10 @@
-<%# views/error.ejs %>
+<%# views/404.ejs %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Error!</title>
+    <title>404 Not Found!</title>
     <link rel="stylesheet" href="/css/style.css"> 
     <style>
         body {
@@ -34,7 +34,7 @@
             margin-bottom: 20px;
         }
         a {
-            background-color: #4299e1; /* Tailwind blue-500 */
+            background-color: #9f69cb; /* Tailwind blue-500 */
             color: white;
             padding: 10px 20px;
             border-radius: 5px;
@@ -48,9 +48,9 @@
 </head>
 <body>
     <div class="error-container">
-        <h1>An Error Occurred!</h1>
-        <p><%= message %></p>
-        <a href="/user/home">Go to Home Page</a>
+        <h1>404 - Not Found!</h1>
+        <p>The page you are looking for could not be found.</p>
+        <a href="/">Go to Home Page</a>
     </div>
 </body>
 </html>

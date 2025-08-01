@@ -1,38 +1,22 @@
-
-
-  <main>
+<main>
     <section class="forgot-container">
-      <h2>Recover Your Account</h2>
+        <h2>Recover Your Account</h2>
 
-      <form action="<%= step==='otp' ? '/forgot-password' : '/reset-password' %>" method="POST">
-  <input 
-    type="text" 
-    name="emailOrPhone" 
-    placeholder="Email or phone" 
-    required 
-    value="<%= emailOrPhone %>" 
-    <%= step==='reset' ? 'readonly' : '' %> 
-  />
+        <% if (typeof error !== 'undefined' && error) { %>
+            <p style="color:red;"><%= error %></p>
+        <% } %>
 
-  <% if (step==='otp') { %>
-    <button type="submit">Send OTP</button>
-  <% } else { %>
-    <div class="otp-group">
-      <input type="text" name="otp" placeholder="Enter OTP" required>
-      <button formaction="/verify-otp" formmethod="POST">Verify OTP</button>
-    </div>
+        <form action="/forgot-password" method="POST">
+            <input
+                type="text"
+                name="emailOrPhone"
+                placeholder="Email or phone"
+                required
+                value="<%= typeof emailOrPhone !== 'undefined' ? emailOrPhone : '' %>"
+            />
+            <button type="submit">Send OTP</button>
+        </form>
 
-    <% if (step==='reset') { %>
-      <input type="password" name="newPassword" placeholder="New password" required>
-      <input type="password" name="confirmPassword" placeholder="Confirm password" required>
-      <button type="submit">Reset Password</button>
-    <% } %>
-  <% } %>
-</form>
-
+        <p class="login-text">Remember your password? <a href="/login">Login</a></p>
     </section>
-  </main>
-
-  
-</body>
-</html>
+</main>

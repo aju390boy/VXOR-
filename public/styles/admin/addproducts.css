@@ -69,3 +69,372 @@ textarea {
   font-weight: bold;
   cursor: pointer;
 }
+
+        /* Base Admin Layout */
+        .admin-wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+        .admin-main {
+            flex-grow: 1;
+            padding: 2.5rem; /* Increased padding for main content area */
+            background-color: #f5f7fa; /* Light grey-blue background */
+        }
+        .breadcrumb {
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+            color: #6b7280;
+        }
+
+        /* --- Main Form Container --- */
+        .add-product-form {
+            background-color: #ffffff;
+            padding: 3rem; /* Generous padding */
+            border-radius: 0.75rem; /* Rounded corners */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); /* Soft, prominent shadow */
+        }
+        .form-section-title {
+            font-size: 2.25rem; /* Large and bold title */
+            font-weight: 700;
+            color: #1f2937; /* Darker text for titles */
+            margin-bottom: 2.5rem;
+            text-align: center;
+        }
+
+        /* --- Input Group & Field Styles --- */
+        .input-group {
+            margin-bottom: 1.5rem; /* Spacing between input groups */
+        }
+        .input-group label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #374151; /* Dark grey for labels */
+            margin-bottom: 0.5rem;
+        }
+        input[type="text"],
+        input[type="number"],
+        select,
+        textarea {
+            padding: 0.8rem 1rem; /* Consistent padding */
+            border: 1px solid #d1d5db; /* Light grey border */
+            border-radius: 0.5rem; /* Rounded input fields */
+            width: 100%;
+            box-sizing: border-box;
+            font-size: 0.95rem;
+            color: #374151; /* Dark text in inputs */
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus,
+        textarea:focus {
+            border-color: #6366f1; /* Indigo focus color */
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25); /* Matching glow */
+            outline: none;
+        }
+        textarea {
+            resize: vertical;
+            min-height: 120px; /* Taller description field */
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem; /* Spacing between grid columns */
+        }
+        @media (min-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        .hr-divider {
+            margin: 3.5rem 0; /* More vertical space around divider */
+            border: none;
+            border-top: 1px dashed #e5e7eb; /* Dashed lighter divider */
+        }
+
+        /* --- Product Variant Section (Premium Layout) --- */
+        .variants-section-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #4f46e5; /* Indigo for this section title */
+            margin-bottom: 2.5rem;
+            text-align: center;
+            position: relative;
+        }
+        .variants-section-title::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(to right, #6366f1, #8b5cf6); /* Gradient underline */
+            margin: 0.75rem auto 0;
+            border-radius: 2px;
+        }
+
+        .color-variant-card {
+            background-color: #fefeff; /* Almost white */
+            border: 1px solid #e0e7ff; /* Light indigo border */
+            border-left: 5px solid #6366f1; /* Prominent indigo left border */
+            border-radius: 0.75rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06); /* Soft shadow for cards */
+            position: relative;
+        }
+        .color-variant-card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #4338ca; /* Darker indigo */
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #e0e7ff; /* Matching border */
+        }
+        .remove-color-variant-btn {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background-color: #ef4444; /* Red */
+            color: white;
+            padding: 0.6rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.85rem;
+            transition: background-color 0.2s ease;
+        }
+        .remove-color-variant-btn:hover {
+            background-color: #dc2626;
+        }
+
+        /* --- Image Preview Section --- */
+        .image-preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); /* Flexible grid for images */
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+        .image-preview-item {
+            background-color: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 0.5rem;
+            padding: 0.55rem;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between; /* Distribute space */
+        }
+        .image-preview-item img {
+            width: 90px;
+            height: 90px;
+            object-fit: cover;
+            border-radius: 0.375rem;
+            margin-bottom: 0.75rem;
+        }
+        .image-preview-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            width: 100%;
+        }
+        .image-preview-actions button {
+            padding: 0.35rem 0.6rem;
+            font-size: 0.30rem;
+            border-radius: 0.375rem;
+            transition: background-color 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        .crop-btn {
+            background-color: #4f46e5; /* Indigo */
+            color: white;
+          
+        }
+        .crop-btn:hover {
+            background-color: #4338ca;
+        }
+        .remove-image-btn {
+            background-color: #ef4444; /* Red */
+            color: white;
+        }
+        .remove-image-btn:hover {
+            background-color: #dc2626;
+        }
+        /* Hide default file input button */
+        .hidden-file-input {
+            width: 0.1px;
+            height: 0.1px;
+            opacity: 0;
+            overflow: hidden;
+            position: absolute;
+            z-index: -1;
+        }
+        .custom-file-upload {
+            display: inline-block;
+            padding: 0.8rem 1.2rem;
+            cursor: pointer;
+            background-color: #4f46e5;
+            color: white;
+            border-radius: 0.5rem;
+            font-size: 0.95rem;
+            transition: background-color 0.2s ease, transform 0.2s ease;
+            margin-top: 1rem;
+            text-align: center;
+            width: 100%; /* Make it full width of its container */
+        }
+        .custom-file-upload:hover {
+            background-color: #4338ca;
+            transform: translateY(-1px);
+        }
+        .custom-file-upload i {
+            margin-right: 0.5rem;
+        }
+
+        /* --- Size Variant Styling --- */
+        .size-variant-group {
+            background-color: #fbfdff; /* Even lighter background */
+            border: 1px dashed #c7d2fe; /* Light dashed indigo border */
+            border-radius: 0.6rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .size-variant-group .input-group {
+            margin-bottom: 0.75rem; /* Tighter spacing within size group */
+        }
+        .remove-size-variant-btn {
+            background-color: #f97316; /* Orange for remove size */
+            color: white;
+            padding: 0.5rem 0.9rem;
+            border-radius: 0.4rem;
+            font-size: 0.8rem;
+            transition: background-color 0.2s ease;
+        }
+        .remove-size-variant-btn:hover {
+            background-color: #ea580c;
+        }
+        .add-size-variant-btn {
+            background-color: #10b981; /* Emerald green */
+            color: white;
+            padding: 0.7rem 1.2rem;
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            transition: background-color 0.2s ease;
+        }
+        .add-size-variant-btn:hover {
+            background-color: #059669;
+        }
+
+        /* --- Main Action Buttons --- */
+        .main-action-button {
+            background-color: #4f46e5; /* Indigo */
+            color: white;
+            padding: 1rem 2.5rem;
+            border-radius: 0.75rem;
+            font-size: 1.15rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 5px 15px rgba(79, 70, 229, 0.3); /* Button shadow */
+        }
+        .main-action-button:hover {
+            background-color: #4338ca;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.4);
+        }
+
+        /* --- Image Cropping Modal Styles --- */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.7);
+            justify-content: center;
+            align-items: center;
+            padding: 20px; /* Padding for modal container */
+        }
+        .modal-content {
+            background-color: #fefefe;
+            padding: 30px;
+            border-radius: 12px;
+            width: 95%;
+            max-width: 700px; /* Slightly wider modal for better cropping experience */
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            animation: fadeInScale 0.3s ease-out;
+        }
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .close-button {
+            color: #9ca3af; /* Light grey close button */
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 36px; /* Larger close icon */
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+        .close-button:hover {
+            color: #4b5563; /* Darker on hover */
+        }
+        .modal-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        .image-crop-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            max-height: 550px; /* Max height for the crop area */
+            overflow: hidden;
+            background-color: #e5e7eb; /* Light background for crop area */
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+        #imageToCrop {
+            display: block; /* Important for Cropper.js */
+            max-width: 100%;
+        }
+        .crop-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        .crop-buttons button {
+            padding: 0.9rem 2rem;
+            border-radius: 0.6rem;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background-color 0.2s ease, transform 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .crop-buttons .confirm-crop-btn {
+            background-color: #22c55e; /* Green for confirm */
+            color: white;
+        }
+        .crop-buttons .confirm-crop-btn:hover {
+            background-color: #16a34a;
+            transform: translateY(-1px);
+        }
+        .crop-buttons .cancel-crop-btn {
+            background-color: #ef4444; /* Red for cancel */
+            color: white;
+        }
+        .crop-buttons .cancel-crop-btn:hover {
+            background-color: #dc2626;
+            transform: translateY(-1px);
+        }
+    

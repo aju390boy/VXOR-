@@ -1,30 +1,120 @@
-
+<main>
     <section class="login-container">
-      <h2>LOGIN</h2>
-      <p>Enter your email and password to login.</p>
+        <h2>LOGIN</h2>
+        <p>Enter your email and password to login.</p>
 
-      <form action="/login" method="POST">
-        <input type="email" name="email" placeholder="E-mail" required>
-        <div class="password-wrapper">
-          <input type="password" name="password" placeholder="Password" required>
-          <a href="/forgot-password" class="forgot">Forgot your password?</a>
+        <form id="loginForm" action="/login" method="POST">
+            <input type="email" name="email" placeholder="E-mail" required>
+            <div class="password-wrapper">
+                <input type="password" name="password" placeholder="Password" required>
+                <a href="/forgot-password" class="forgot">Forgot your password?</a>
+            </div>
+            <button type="submit">LOGIN</button>
+        </form>
+
+        <p class="signup-text">Don't have an account? <a href="/Signup">Sign up</a></p>
+
+        <div class="or">
+            <hr><span>OR</span><hr>
         </div>
-        <button type="submit">LOGIN</button>
-      </form>
 
-      <p class="signup-text">Don't have an account? <a href="/Signup">Sign up</a></p>
+        <a href="/auth/google" class="google-btn">
+            <div class="google-icon-wrapper">
+                <img src="https://techdocs.akamai.com/identity-cloud/img/social-login/identity-providers/iconfinder-new-google-favicon-682665.png" alt="Google logo">
+            </div>
+            <span>Continue with Google</span>
+        </a>
+     
+    </section>
+</main>
 
-      <!-- OR Divider -->
-      <div class="or">
-        <hr><span>OR</span><hr>
-      </div>
+<script>
+    const loginForm = document.getElementById('loginForm');
 
-      <!-- Google Signup Button -->
-      <a href="/auth/google" class="google-btn">
-  <div class="google-icon-wrapper">
-    <img src="https://techdocs.akamai.com/identity-cloud/img/social-login/identity-providers/iconfinder-new-google-favicon-682665.png" alt="Google logo">
-  </div>
-  <span>Continue with Google</span>
-</a>
- </section>
+    loginForm.addEventListener('submit', async (event) => {
+        event.preventDefault(); // Prevent default form submission
+
+        const formData = new FormData(loginForm);
+        const data = Object.fromEntries(formData.entries());
+
+        const errors = [];
+
+        // Client-side Validation (basic check for empty fields)
+        if (!data.email) {
+            errors.push('Email is required.');
+        }
+        if (!data.password) {
+            errors.push('Password is required.');
+        }
+
+        if (errors.length > 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Validation Error!',
+                html: errors.join('<br>'),
+                customClass: { // Add your custom classes here if defined in your CSS
+                    popup: 'swal-custom-popup',
+                    title: 'swal-custom-title',
+                    htmlContainer: 'swal-custom-content'
+                }
+            });
+            return; // Stop submission if there are client-side errors
+        }
+
+        // If client-side validation passes, send data to server via Fetch API
+        try {
+            const response = await fetch('/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json(); // Parse the JSON response from the server
+
+            if (result.status) { // Check for 'status: true' from your controller
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Login Successful!',
+                    text: result.message || 'Redirecting to home...',
+                    showConfirmButton: false,
+                    timer: 1500, // Short timer for successful login
+                    customClass: { // Add your custom classes here if defined
+                        popup: 'swal-custom-popup',
+                        title: 'swal-custom-title',
+                        htmlContainer: 'swal-custom-content'
+                    }
+                }).then(() => {
+                    window.location.href = '/user/home'; // Redirect on success
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Login Failed!',
+                    text: result.message || 'Invalid credentials or account not found.',
+                    customClass: { // Add your custom classes here if defined
+                        popup: 'swal-custom-popup',
+                        title: 'swal-custom-title',
+                        htmlContainer: 'swal-custom-content',
+                        confirmButton: 'swal-custom-confirm-button' // If you want to style the 'OK' button
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Error during login:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Network Error',
+                text: 'Could not connect to the server. Please try again.',
+                customClass: { // Add your custom classes here if defined
+                    popup: 'swal-custom-popup',
+                    title: 'swal-custom-title',
+                    htmlContainer: 'swal-custom-content',
+                    confirmButton: 'swal-custom-confirm-button'
+                }
+            });
+        }
+    });
+</script>
   

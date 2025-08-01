@@ -1,7 +1,7 @@
 const express=require('express');
 const router=express.Router();
 
-const { isAuthenticated, isNotAuthenticated } = require('../middlewares/user/viewsMiddleware.js'); 
+const {isNotAuthenticated,isAuthenticated,isVerified}=require('../middlewares/user/authMiddleware.js') 
 const userController = require('../controllers/user/userController.js');
 const productController = require('../controllers/user/productController.js');
 const productDetailController = require('../controllers/user/productDetailController.js');
@@ -29,10 +29,9 @@ router.route('/productDetails')
 
 router.get('/profile', isAuthenticated, profileController.getProfilePage);
 
-// Route to get individual profile sections (AJAX endpoints)
+// individual profile sections 
 router.get('/profile/section/:sectionName', isAuthenticated, profileController.getProfileSection);
-
-// Example route for changing password (POST request)
+// profile changing password
 router.post('/profile/change-password', isAuthenticated, profileController.changePassword);
 router.post('/profile/update', isAuthenticated, profileController.updateProfile);
 

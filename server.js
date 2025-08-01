@@ -3,8 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const app = express();
 const nocache = require('nocache')
-const session = require('express-session');
-const flash = require('connect-flash'); 
+const session = require('express-session'); 
 const connect = require('./database/connect.js')
 const adminRoutes = require('./routes/adminRoutes.js');
 const userRoutes = require('./routes/userRoutes.js');
@@ -42,22 +41,16 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 
-app.use(flash());
-
-app.use((req, res, next) => {
-    
-    res.locals.success = req.flash('success');
-    res.locals.error = req.flash('error');
-    // Add other flash types if you use them, e.g., res.locals.info = req.flash('info');
-    next();
-});
 
 // Routes
 app.use('/', authRoutes);
 app.use('/user', userRoutes)
 app.use('/admin', adminRoutes);
+app.use('/*splat',(req,res)=>{
+    res.render('user/error',{layout:false})
+})
 
 app.listen(3000, () => {
-    console.log('server is running on http://localhost:3000')
+    console.log('server is running on http://localhost:3000/login')
     connect();
 })

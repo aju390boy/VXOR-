@@ -1,0 +1,168 @@
+/* Import fonts as in your home.css if needed, or directly use Poppins as in login.css */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Orbitron:wght@700&display=swap');
+
+/* Global body style to center the container */
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background-color:#000;
+  color:silver;
+  overflow-x: hidden;
+}
+
+/* Admin Login Container - Mimics .login-container */
+.admin-login-container {
+    text-align: center; /* Centers inline/inline-block content like h2, p, img */
+    max-width: 450px;
+    margin: 30px auto 15px auto; /* Matches user login margin */
+    padding: 50px; /* Matches user login padding */
+    background: rgb(22, 22, 22);
+    border-radius: 12px;
+    box-shadow:
+        0 15px 40px rgba(17, 17, 17, 0.7),
+        0 0 0 1px rgba(255, 255, 255, 0.05);
+    color: #f0f0f0;
+    position: relative;
+    z-index: 1;
+    /* Removed flex properties from here to rely on text-align: center for children */
+}
+
+/* Vxor Logo Wrapper - For centering the image and brand name */
+.vxor-logo-wrapper {
+    margin-bottom: 30px;
+    display: flex; /* Use flexbox */
+    flex-direction: column; /* Stack items vertically */
+    align-items: center; /* Center items horizontally */
+    width: 100%; /* Ensure it takes full width to center effectively */
+}
+
+.vxor-symbol {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    margin-bottom: 10px;
+}
+
+.vxor-brand-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.8rem;
+    color: white;
+    letter-spacing: 1px;
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+    margin: 0;
+}
+
+/* Headings and Paragraphs - Mimics user login */
+.admin-login-container h2 {
+    font-size: 30px; /* Matches user login */
+    letter-spacing: 1.5px; /* Matches user login */
+    color: white;
+    margin-bottom: 25px; /* Matches user login */
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.admin-login-container p {
+    font-size: 15px; /* Matches user login */
+    color: #b0b0b0;
+    margin-bottom: 35px; /* Matches user login */
+    line-height: 1.6;
+}
+
+/* Form Styling - Mimics user login */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 25px; /* Matches user login */
+    margin-top: 40px; /* Matches user login */
+    width: 100%; /* Ensure form takes full width */
+}
+
+input[type="email"],
+input[type="password"] {
+    padding: 18px; /* Matches user login */
+    border: 1px solid #0a0808;
+    border-radius: 8px;
+    font-size: 16px; /* Matches user login */
+    width: 100%; /* No calc needed here if password-wrapper is removed */
+    background-color: rgb(11, 16, 0);
+    color: #f0f0f0;
+    outline: none;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+input[type="email"]:focus,
+input[type="password"]:focus {
+    border-color: black;
+    box-shadow: 0 0 0 3px rgba(123, 79, 252, 0.3);
+}
+
+/* Removed .password-wrapper and .forgot styles as they are no longer in EJS */
+
+button[type="submit"] {
+    padding: 18px; /* Matches user login */
+    background: #111;
+    color: silver;
+    border: none;
+    cursor: pointer;
+    font-size: 18px; /* Matches user login */
+    border-radius: 8px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    width: 100%; /* Ensure button takes full width */
+}
+
+button[type="submit"]:hover {
+    background: grey;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.5);
+}
+
+/* SweetAlert2 Custom Styles */
+.swal-custom-popup {
+    background-color: rgb(30, 30, 30) !important;
+    color: silver !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+}
+
+.swal-custom-title {
+    color: white !important;
+    font-family: 'Orbitron', sans-serif;
+}
+
+.swal-custom-content {
+    color: silver !important;
+    font-family: 'Poppins', sans-serif;
+}
+
+.swal-custom-confirm-button {
+    background-color: #111 !important;
+    color: silver !important;
+    border: 1px solid silver !important;
+}
+
+.swal-custom-confirm-button:hover {
+    background-color: grey !important;
+    color: black !important;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 500px) {
+    .admin-login-container {
+        padding: 30px 20px;
+        margin: 15px;
+    }
+    .admin-login-container h2 {
+        font-size: 24px;
+    }
+    .vxor-symbol {
+        width: 60px;
+        height: 60px;
+    }
+    .vxor-brand-name {
+        font-size: 1.5rem;
+    }
+}

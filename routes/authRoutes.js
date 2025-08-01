@@ -3,7 +3,11 @@ const passport = require('passport');
 const router = express.Router();
 
 const authController = require('../controllers/user/authController.js');
-const { isAuthenticated, isNotAuthenticated } = require('../middlewares/user/viewsMiddleware.js');
+const signupController=require('../controllers/user/signupController.js')
+const otpController=require('../controllers/user/otpController.js')
+
+const viewsMiddleware  = require('../middlewares/user/viewsMiddleware.js');
+const {isNotAuthenticated,isAuthenticated,isVerified}=require('../middlewares/user/authMiddleware.js')
 
 
 router.get('/',(req,res)=>{
@@ -11,32 +15,28 @@ router.get('/',(req,res)=>{
 })
 
 
-// router.route('/landig') 
-//   .get(authController.isLanding);
-
 
 router.route('/login')
-  .get(isNotAuthenticated, authController.login)   
-  .post(isNotAuthenticated, authController.postLogin); 
+  .get(authController.login)   
+  .post(authController.postLogin); 
 
 router.route('/signup')
-  .get(isNotAuthenticated, authController.signup)   
-  .post(authController.signupadd);                 
+  .get(isNotAuthenticated, signupController.signup)   
+  .post(signupController.signupadd);                 
 
-  ///FORGOT PASSWORD\\\\
-  router.get('/forgot-password', authController.getForgotPage);
-  // Handle “Send me an OTP”
-  router.post('/forgot-password', authController.postForgotPassword);
-
-// Handle “Verify OTP”
-router.get('/verify-otp', authController.getOtpPage);
-router.post('/verify-otp', authController.postVerifyOtp);
-
-// Handle “Set new password”
-router.get('/reset-password', authController.getResetPage);
-router.post('/reset-password', authController.postResetPassword);
+  
+  router.get('/forgot-password', isNotAuthenticated,otpController.getForgotPage);
+  router.post('/forgot-password',isNotAuthenticated, otpController.postForgotPassword);
 
 
+router.get('/verify-otp',isNotAuthenticated, otpController.getOtpPage);
+router.post('/verify-otp',isNotAuthenticated, otpController.postVerifyOtp);
+
+
+router.get('/reset-password', isNotAuthenticated,otpController.getResetPage);
+router.post('/reset-password', otpController.postResetPassword);
+
+router.post('/resend-otp', isNotAuthenticated,otpController.postResendOtp);
 
 /////google signup\\\\\
   router.get('/auth/google',

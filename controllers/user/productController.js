@@ -6,24 +6,18 @@ const mongoose = require('mongoose');
 
 
 const formatProductForListing = (product) => {
-    let displayPrice = null;
     let displayImageUrl = '/uploads/products/placeholder.png';
+    let minPrice = Infinity;
 
-  
+   
     if (product.colorVariants && product.colorVariants.length > 0) {
-        let minPrice = Infinity;
-
+        
+        if (product.colorVariants[0].images && product.colorVariants[0].images.length > 0) {
+            displayImageUrl = `/uploads/products/${product.colorVariants[0].images[0]}`;
+        }
+        
         
         product.colorVariants.forEach(colorVariant => {
-            
-            if (colorVariant.images && colorVariant.images.length > 0) {
-               
-                if (displayImageUrl === '/uploads/products/placeholder.png') {
-                    displayImageUrl = `/uploads/products/${colorVariant.images[0]}`;
-                }
-            }
-
-            
             if (colorVariant.variants && colorVariant.variants.length > 0) {
                 colorVariant.variants.forEach(sizeVariant => {
                     if (sizeVariant.price !== undefined && typeof sizeVariant.price === 'number' && sizeVariant.price < minPrice) {
@@ -32,16 +26,11 @@ const formatProductForListing = (product) => {
                 });
             }
         });
-
-        
-        displayPrice = minPrice !== Infinity ? minPrice : null;
     }
 
     return {
-        _id: product._id,
-        title: product.title,
-        rating: product.rating || 0,
-        display_price: displayPrice,
+        ...product, 
+        display_price: minPrice !== Infinity ? minPrice : null, 
         display_image_url: displayImageUrl,
     };
 };
@@ -50,72 +39,64 @@ const formatProductForListing = (product) => {
 exports.getAllProducts = async (req, res) => {
     try {
         const { category, brand, price, rating, color, size, sort } = req.query;
-        console.log({ category, brand, price, rating, color, size, sort })
+        console.log({ category, brand, price, rating, color, size, sort });
 
-        let queryObj = { isDeleted: false };
+        let queryObj = { isDeleted: false, isListed: false }; 
         let sortOption = {};
 
         
         if (category) {
             const categoriesToFind = Array.isArray(category) ? category : [category];
-            
             const categoryDocs = await Category.find({ name: { $in: categoriesToFind } }).select('_id').lean();
             const categoryIds = categoryDocs.map(doc => doc._id);
-            if (categoryIds.length > 0) {
-                queryObj.category_id = { $in: categoryIds };
-            } else {
-                
-                queryObj.category_id = null;
-            }
+           
+            queryObj.category_id = categoryIds.length > 0 ? { $in: categoryIds } : null;
         }
 
         
         if (brand) {
             const brandsToFind = Array.isArray(brand) ? brand : [brand];
-            
             const brandDocs = await Brand.find({ name: { $in: brandsToFind } }).select('_id').lean();
             const brandIds = brandDocs.map(doc => doc._id);
-            if (brandIds.length > 0) {
-                queryObj.brand_id = { $in: brandIds };
-            } else {
-              
-                queryObj.brand_id = null;
-            }
+          
+            queryObj.brand_id = brandIds.length > 0 ? { $in: brandIds } : null;
         }
 
        
         if (price) {
-    const maxPrice = parseFloat(price);
-    if (!isNaN(maxPrice)) {
-        queryObj.min_price = { $lte: maxPrice };
-    }
-}
+            const maxPrice = parseFloat(price);
+            if (!isNaN(maxPrice)) {
+                queryObj.min_price = { $lte: maxPrice };
+            }
+        }
 
         
         if (rating) {
-    const selectedRatings = Array.isArray(rating) ? rating.map(Number) : [Number(rating)];
-    if (selectedRatings.length > 0) {
-        queryObj.rating = { $gte: Math.min(...selectedRatings) };
-    }
-}
-
-       
-       if (color) {
-    const colors = Array.isArray(color) ? color : [color];
-   
-    queryObj['colorVariants.colorName'] = { $in: colors };
-}
+            const selectedRatings = Array.isArray(rating) ? rating.map(Number) : [Number(rating)];
+            if (selectedRatings.length > 0) {
+                queryObj.rating = { $in: selectedRatings };
+            }
+        }
 
         
-        if (size) {
-    const sizes = Array.isArray(size) ? size : [size];
-   
-    queryObj['colorVariants.variants.size'] = { $in: sizes };
-}
+        if (color || size) {
+            const colorMatch = color ? { colorName: { $in: Array.isArray(color) ? color : [color] } } : {};
+            const sizeMatch = size ? { 'variants.size': { $in: Array.isArray(size) ? size : [size] } } : {};
+
+            
+            const colorAndSizeMatch = {
+                $elemMatch: {
+                    ...colorMatch,
+                    ...sizeMatch
+                }
+            };
+
+           
+            queryObj.colorVariants = colorAndSizeMatch;
+        }
 
         
         if (sort === 'price_asc') {
-            
             sortOption.min_price = 1;
         } else if (sort === 'price_desc') {
             sortOption.min_price = -1;
@@ -128,11 +109,9 @@ exports.getAllProducts = async (req, res) => {
         } else {
             sortOption.createdAt = -1;
         }
-
-        const products = await Product.find(queryObj)
-                                       .sort(sortOption)
-                                       .lean();
-
+        
+       
+        const products = await Product.find(queryObj).sort(sortOption).lean();
         const formattedProducts = products.map(formatProductForListing);
 
         const displaySortOptions = [
@@ -183,13 +162,13 @@ exports.liveSearch = async (req, res) => {
     try {
         const rawResults = await Product.find({
             title: { $regex: query, $options: 'i' },
-            isDeleted: false // Only show non-deleted products in search
+            isDeleted: false
         })
         .limit(5)
-        .select('title variants images rating') // Select necessary fields for formatting
-        .lean(); // Fetch as plain JS objects
+        .select('title variants images rating') 
+        .lean(); 
 
-        // Format results
+        
         const formattedResults = rawResults.map(formatProductForListing);
 
         res.json(formattedResults);
