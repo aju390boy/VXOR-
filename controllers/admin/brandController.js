@@ -33,10 +33,27 @@ exports.uploadBrandImage = multer({
 
 exports.getBrands = async (req, res) => {
     try {
-        const brands = await Brand.find();
-        const message = req.session.message; // Store the message in a variable
-        delete req.session.message; // Clear the message from the session
-        res.render('admin/brand', { brands, message, layout: false });
+        const query = {}; // Assuming your query is defined elsewhere.
+        const page = parseInt(req.query.page) || 1;
+        const limit = 2;
+        const skip = (page - 1) * limit; // Calculate how many documents to skip
+
+        const totalBrands = await Brand.countDocuments(query);
+        const totalPages = Math.ceil(totalBrands / limit);
+        
+        // Correct: Fetch only the brands for the current page
+        const brands = await Brand.find(query).skip(skip).limit(limit);
+
+        const message = req.session.message;
+        delete req.session.message;
+        
+        res.render('admin/brand', { 
+            brands, 
+            message, 
+            currentPage: page,
+            totalPages,
+            layout: false 
+        });
     } catch (err) {
         console.error("Error fetching brands:", err.message);
         res.status(500).redirect('/admin/dashboard');

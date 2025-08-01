@@ -9,7 +9,9 @@
   <link rel="stylesheet" href="/styles/admin/adminsidebar.css">
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <style>
     /* Custom CSS to override/enhance Tailwind or for specific elements */
     .admin-wrapper {
@@ -165,6 +167,34 @@
         min-height: 80px; /* Give description a bit more height */
         resize: vertical;
     }
+    .pagination {
+  margin-top: 30px;
+  text-align: center;
+}
+
+.pagination a {
+  display: inline-block;
+  padding: 8px 14px;
+  margin: 0 5px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+  color: #333;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.pagination a:hover {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.pagination a.active {
+  background-color: black;
+  color: white;
+  border-color: black;
+}
 
     /* Modal styles */
     .modal {
@@ -176,7 +206,7 @@
       width: 100%;
       height: 100%;
       background-color: rgba(0, 0, 0, 0.6); /* Slightly darker overlay */
-      display: flex; /* Use flexbox for centering */
+      
       justify-content: center;
       align-items: center;
     }
@@ -246,7 +276,7 @@
           <tbody>
       <% if (categories.length > 0) { %>
         <% categories.forEach((category, index) => { %>
-          <tr>
+           <tr id="category-row-<%= category._id %>">
             <td><%= index + 1 %></td>
             <td><%= category.name %></td>
             <td><%= category.description || 'N/A' %></td> <td><%= category.offer %>%</td>               <td>
@@ -259,20 +289,18 @@
             </td>
             <td>
                <button 
-  type="button" 
-  class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg inline-flex items-center transition-colors duration-200"
-  onclick="openEditModal('<%= category._id %>', '<%= category.name %>', '<%= category.description %>', '<%= category.offer %>')">
-  <i class="fas fa-pen mr-2"></i> Edit
-</button>
-
-                <form action="/admin/category/delete/<%= category._id %>" method="POST" style="display:inline;">
-                    <button type="submit" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg inline-flex items-center ml-2 transition-colors duration-200"
-                            onclick="return confirm('Are you sure you want to delete <%= category.name %>? This action cannot be undone.')">
-                        <i class="fas fa-trash mr-2"></i> Delete
-                    </button>
-                </form>
-            </td>
-          </tr>
+               type="button" 
+               class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg inline-flex items-center transition-colors duration-200"
+               onclick="openEditModal('<%= category._id %>', '<%= category.name %>', '<%= category.description %>', '<%= category.offer %>')">
+               <i class="fas fa-pen mr-2"></i> Edit
+               </button>
+               <button type="button" 
+               class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg inline-flex items-center ml-2 transition-colors duration-200 delete-category-btn" 
+               data-category-id="<%= category._id %>">
+              <i class="fas fa-trash mr-2"></i> Delete
+              </button>
+              </td>
+              </tr>
         <% }) %>
       <% } else { %>
         <tr>
@@ -282,6 +310,21 @@
     </tbody>
         </table>
     </div>
+     <% if (totalPages > 1) { %>
+  <div class="pagination">
+    <% if (currentPage > 1) { %>
+      <a href="?page=<%= currentPage - 1 %>">&laquo;</a>
+    <% } %>
+
+    <% for (let i = 1; i <= totalPages; i++) { %>
+      <a href="?page=<%= i %>" class="<%= currentPage === i ? 'active' : '' %>"><%= i %></a>
+    <% } %>
+
+    <% if (currentPage < totalPages) { %>
+      <a href="?page=<%= currentPage + 1 %>">&raquo;</a>
+    <% } %>
+  </div>
+<% } %>
 
     <div class="add-category-section mt-8">
       <h2>ADD NEW CATEGORY</h2>
@@ -364,6 +407,52 @@ function openEditModal(id, name, description, offer) {
       modal.style.display = "none";
     }
   }
+
+  document.addEventListener('DOMContentLoaded',()=> {
+    const serverMessage=<%-JSON.stringify(message) || 'null'%>;
+    if(serverMessage){
+      Swal.fire(serverMessage);
+    }
+
+    document.querySelectorAll('.delete-category-btn').forEach(button => {
+    button.addEventListener('click', (e) => {
+        const categoryId = e.currentTarget.dataset.categoryId;
+
+        Swal.fire({
+            title: 'Are you sure?',
+            text: 'This action is irreversible and the category will be permanently deleted!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Use axios to send an AJAX request
+                axios.post(`/admin/category/delete/${categoryId}`)
+                    .then(response => {
+                        if (response.data.success) {
+                            Swal.fire('Deleted!', response.data.message, 'success');
+                            
+                            // Dynamically remove the category's row from the table
+                            const row = document.getElementById(`category-row-${categoryId}`);
+                            if (row) {
+                                row.remove();
+                            }
+                        } else {
+                            Swal.fire('Error!', response.data.message, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        Swal.fire('Error!', 'Failed to delete the category.', 'error');
+                        console.error('Delete Category Error:', error);
+                    });
+            }
+        });
+    });
+});
+  })
+
 </script>
 <script src="https://cdn.tailwindcss.com"></script>
 
