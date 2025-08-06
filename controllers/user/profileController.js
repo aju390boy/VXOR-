@@ -2,10 +2,25 @@
 const { use } = require('passport');
 const User = require('../../model/user.js'); 
 const bcrypt = require('bcrypt')
+const multer = require('multer');
+const path=require('path');
+
+// Configure Multer for image uploads
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'public/uploads/profileImages/'); // Set your upload directory
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const fileExtension = file.originalname.split('.').pop();
+        cb(null, file.fieldname + '-' + uniqueSuffix + '.' + fileExtension);
+    }
+});
+exports.upload = multer({ storage: storage });
 
 
 exports.getProfilePage = async (req, res) => {
-    console.log("req.user in getProfilePage:", req.user);
+    
     try {
         const user = await User.findById(req.user._id).lean(); 
         console.log("User fetched from DB for profile page:", user);
@@ -87,42 +102,80 @@ exports.getProfileSection = async (req, res) => {
     }
 };
 
-exports.updateProfile =  async (req, res) => {
+exports.updateProfile = async (req, res) => {
     try {
-       
-        const userId = req.session.user._id; 
-        const { firstname, lastname, email, mobile } = req.body;
+        const userId = req.user._id;
 
-       
-        if (!firstname || !email) {
-            return res.status(400).json({ message: 'First name and email are required.' });
-        }
-
-       
-        const user = await User.findById(userId); 
+        // Fetch the user first to get their current state, including the profile image path
+        const user = await User.findById(userId);
         if (!user) {
-            return res.status(404).json({ message: 'User not found.' });
+            return res.status(404).json({ message: "User not found." });
         }
 
-        user.firstname = firstname;
-        user.lastname = lastname;
-        user.email = email;
-        user.mobile = mobile;
-        await user.save();
-
-      
-        res.status(200).json({ success: true, message: 'Profile updated successfully!' });
-
-    } catch (error) {
-        console.error('Error updating profile:', error);
+        const { firstname, lastname, email, mobile, originalEmail } = req.body;
         
-        res.status(500).json({ success: false, message: 'Failed to update profile due to a server error.' });
+        // --- CORRECTED LOGIC ---
+        // 1. IMPORTANT: Check for email change FIRST before any other actions
+        if (email !== originalEmail) {
+            // If the request is for an email change, handle it separately.
+            // You may need to create a new route/controller for this.
+            // For now, returning an error is correct.
+            // We'll also remove the newly uploaded file to avoid orphaned images.
+            if (req.file) {
+                const newImagePath = path.join(__dirname, '..', '..', 'public', req.file.path);
+                await fs.unlink(newImagePath).catch(err => console.error("Error deleting new file after validation error:", err.message));
+            }
+            return res.status(400).json({ message: "Changing email requires verification. This feature is not yet fully implemented." });
+        }
+        
+        // 2. Initialize update data with body fields
+        let updateData = {
+            firstname,
+            lastname,
+            email,
+            mobile: mobile || null,
+        };
+
+        // 3. Handle profile image upload if a new file is provided
+        if (req.file) {
+            // Delete the old profile image if it exists and is not the default
+            if (user.profileImage && user.profileImage !== '/images/default-profile.png') {
+                const oldImagePath = path.join(__dirname, '..', '..', 'public', user.profileImage);
+                try {
+                     await fs.unlink(oldImagePath);
+                } catch (err) {
+                     console.error("Error deleting old profile image:", err.message);
+                }
+            }
+            // Add the new image path to the update data
+            updateData.profileImage = `/uploads/profileImages/${req.file.filename}`;
+        }
+        
+        // 4. Update the user document in the database
+        const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true, runValidators: true });
+        
+        if (!updatedUser) {
+            return res.status(404).json({ message: "User not found after update." });
+        }
+        
+        res.status(200).json({ message: "Profile updated successfully!", user: updatedUser });
+
+    } catch (err) {
+        if (err.name === 'ValidationError') {
+            const errors = {};
+            for (const field in err.errors) {
+                errors[field] = err.errors[field].message;
+            }
+            return res.status(400).json({ message: "Validation failed.", errors });
+        }
+        console.error("Error updating user profile:", err);
+        res.status(500).json({ message: "Internal server error." });
     }
 };
 
 
 exports.changePassword = async (req, res) => {
-    console.log("Change password request received:", req.body);
+
 
     const { currentPassword, newPassword, confirmPassword } = req.body;
     const errors = {};
@@ -132,7 +185,7 @@ exports.changePassword = async (req, res) => {
         errors.general = 'All password fields are required.';
         return res.status(400).json({ success: false, message: errors.general, errors });
     }
-      console.log(`This is current password:${currentPassword}`)
+      
     if (newPassword !== confirmPassword) {
         errors.confirmPassword = 'New password and confirm password do not match.';
     }
@@ -168,7 +221,7 @@ exports.changePassword = async (req, res) => {
 
        
         const isMatch = await bcrypt.compare(currentPassword, user.password);
-        console.log(`this latest password:${(user.password)}`)
+      
         if (!isMatch) {
             errors.currentPassword = 'Incorrect current password.';
             return res.status(400).json({ success: false, message: errors.currentPassword, errors });

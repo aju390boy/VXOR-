@@ -20,6 +20,7 @@ async function (accessToken, refreshToken, profile, done) {
         lastname: profile.name.familyName,
         email: profile.emails[0].value,
         password: '', // or some default
+         profileImage: profile.photos[0].value  
       });
     }
 

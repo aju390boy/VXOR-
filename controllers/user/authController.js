@@ -64,7 +64,7 @@ exports.googleLoginSuccess = (req, res) => {
       _id: user._id,
       email: user.email,
     };
-    console.log("Session User:", req.session.user);
+   
 
      res.redirect('/user/home');
 };

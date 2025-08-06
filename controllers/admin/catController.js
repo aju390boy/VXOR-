@@ -56,9 +56,9 @@ exports.toggleCategoryStatus = async (req, res) => {
         category.isListed = !category.isListed;
         await category.save();
         if (category.isListed) {
-            req.session.message = { icon: 'success', title: 'Success', text: 'Category has been listed.' };
+            req.session.message = { icon: 'success', title: 'Success', text: 'Category has been Listed.' };
         } else {
-            req.session.message = { icon: 'error', title: 'Error', text: 'Category has been unlisted.' };
+            req.session.message = { icon: 'success', title: 'Success', text: 'Category has been Unlisted.' };
         }
         res.redirect('/admin/category');
     } catch (err) {

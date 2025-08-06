@@ -10,6 +10,10 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false, 
     },
+    profileImage: {
+        type: String,
+        default: '/images/default-profile.png'
+    },
   status: { type: String, enum: ['active', 'blocked'], default: 'active' },
   role: { type: String, enum: ['user', 'admin'], default: 'user' }
 },{timestamps:true});

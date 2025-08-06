@@ -60,8 +60,8 @@
     </aside>
 
     <%# Main Content Area %>
-    <main class="flex-1 px-4 md:px-6 py-4 bg-gray-900 flex justify-center">
-        <div id="profile-content" class="w-full max-w-2xl bg-gray-900 p-4 rounded-md shadow-md mt-0">
+    <main class="flex-1 px-1 md:px-1 py-1 bg-gray-900 flex justify-center ">
+        <div id="profile-content" class="w-full max-w-2xl bg-gray-900 p-1 rounded-md shadow-md md-12">
             <%- include('partials/_profileDetails', { user: user }) %>
         </div>
     </main>
@@ -132,57 +132,75 @@
         };
 
         // Function to attach listener to the profile update form
-        const attachProfileFormListener = () => {
-            const profileUpdateForm = document.getElementById('profile-update-form');
+       const attachProfileFormListener = () => {
+    const profileUpdateForm = document.getElementById('profile-update-form');
+    
+    // Select the file input and image preview elements
+    const profilePictureInput = document.getElementById('profile-picture-input');
+    const profileImagePreview = document.getElementById('profile-image-preview');
+    
+    // Check if the elements exist before adding listeners
+    if(profilePictureInput && profileImagePreview) {
+        profilePictureInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    profileImagePreview.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
 
-            if (profileUpdateForm) {
-                profileUpdateForm.addEventListener('submit', async (event) => {
-                    event.preventDefault();
+    if (profileUpdateForm) {
+        profileUpdateForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            
+            // CORRECT: Use FormData directly for file uploads
+            const formData = new FormData(profileUpdateForm);
+            
+            try {
+                const response = await fetch('/user/profile/update', {
+                    method: 'POST',
+                    // REMOVED: `headers: { 'Content-Type': 'application/json' }`
+                    // The browser will automatically set the correct 'multipart/form-data' header
+                    body: formData // CORRECT: Send the FormData object directly
+                });
 
-                    const formData = new FormData(profileUpdateForm);
-                    const data = Object.fromEntries(formData.entries());
+                const result = await response.json();
 
-                    try {
-                        const response = await fetch('/user/profile/update', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(data)
-                        });
+                if (response.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: result.message || 'Profile updated successfully!',
+                        customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
+                    });
+                    setTimeout(() => {
+                        loadSection('profile');
+                    }, 1500);
+                } else {
+                     Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: result.message || 'Failed to update profile. Please try again.',
+                        customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
+                    });
+                }
 
-                        const result = await response.json();
-
-                        if (response.ok) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success!',
-                                text: result.message || 'Profile updated successfully!',
-                                customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
-                            });
-                            // Re-load profile section to show fresh data after a short delay
-                            setTimeout(() => {
-                                loadSection('profile');
-                            }, 1500);
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Oops...',
-                                text: result.message || 'Failed to update profile. Please try again.',
-                                customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
-                            });
-                        }
-                    } catch (error) {
-                        console.error('Error submitting profile update:', error);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Network Error!',
-                            text: 'Could not connect to server. Please check your internet connection.',
-                            customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
-                        });
-                    }
+            } catch (error) {
+                console.error('Error submitting profile update:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Network Error!',
+                    text: 'Could not connect to server. Please check your internet connection.',
+                    customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
                 });
             }
-        };
-
+        });
+    }
+};
         // Function to attach listener to the change password form
         const attachChangePasswordFormListener = () => {
             const changePasswordForm = document.getElementById('change-password-form');
@@ -262,6 +280,73 @@
             document.querySelector('.sidebar-link[data-section="profile"]').click();
         }
     });
+
+    // Function to attach listener to the profile update form
+const attachProfileFormListener = () => {
+    const profileUpdateForm = document.getElementById('profile-update-form');
+    
+    // Add event listener for file input to show a preview
+    const profilePictureInput = document.getElementById('profile-picture-input');
+    const profileImagePreview = document.getElementById('profile-image-preview');
+    if(profilePictureInput && profileImagePreview) {
+        profilePictureInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    profileImagePreview.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    if (profileUpdateForm) {
+        profileUpdateForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            // Use FormData for file uploads
+            const formData = new FormData(profileUpdateForm);
+            
+            try {
+                const response = await fetch('/user/profile/update', {
+                    method: 'POST',
+                    body: formData // Send FormData directly
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: result.message || 'Profile updated successfully!',
+                        customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
+                    });
+                    // Re-load profile section to show fresh data
+                    setTimeout(() => {
+                        loadSection('profile');
+                    }, 1500);
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: result.message || 'Failed to update profile. Please try again.',
+                        customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
+                    });
+                }
+            } catch (error) {
+                console.error('Error submitting profile update:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Network Error!',
+                    text: 'Could not connect to server. Please check your internet connection.',
+                    customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
+                });
+            }
+        });
+    }
+};
 </script>
 
 <style>
@@ -307,7 +392,4 @@
 .swal2-error .swal2-x-mark-line-right {
     background-color: #e53e3e !important; /* Red for error */
 }
-
-/* Add these to your main CSS file (e.g., app.css or common.css) */
-/* Or place them directly in this EJS file within <style> tags as I did here for demonstration. */
 </style>

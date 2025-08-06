@@ -1,49 +1,86 @@
 <%# partials/_profileDetails.ejs %>
 
-<div class="w-full max-w-lg mx-auto md:mx-0 p-4 bg-white rounded-md shadow text-gray-900">
-    <%# IMPORTANT: Added id="profile-update-form" and REMOVED action and method attributes %>
-    <form id="profile-update-form">
-        <div class="flex flex-col items-center mb-2">
-            <div class="w-2 h-5 flex items-center justify-center rounded-full bg-gray-200 text-gray-500 text-3xl mb-1">
-                <i class="fa-solid fa-user-circle"></i>
-            </div>
-            <span class="text-blue-600 cursor-pointer hover:underline text-xs">Add photo</span>
-        </div>
+<div class= " w-full max-w-2xl mx-auto md:mx-0 px-5 mt-4 bg-gray-800 rounded-md shadow text-gray-200">
+    <form id="profile-update-form" enctype="multipart/form-data">
+        <input type="hidden" name="originalEmail" value="<%= user.email %>">
+        
+       <div class="flex flex-col items-center mt-2">
+    <%# Profile Image Display %>
+    <div class="relative w-28 h-28 mb-3 rounded-full overflow-hidden border-2 border-gray-600">
+        <%
+            const profileImageUrl = (user.profileImage && user.profileImage.length > 0)
+                ? user.profileImage
+                : '/images/family3.png';
+        %>
+        <img id="profile-image-preview" src="<%= profileImageUrl %>" alt="Profile" class="w-full h-full object-cover">
+    </div>
+    
+    <%# File Input and Trigger Button %>
+    <input type="file" id="profile-picture-input" name="profileImage" accept="image/*" class="hidden">
+    <label for="profile-picture-input" class="bg-blue-600 text-white text-xs px-3 py-1.5 rounded-md cursor-pointer hover:bg-blue-700 transition">
+        Change Photo
+    </label>
+    <span id="upload-status" class="text-xs text-gray-500 mt-1"></span>
+</div>
 
-        <div class="space-y-3">
+        <div class="space-y-1">
+            <%# User Details Inputs %>
             <div>
-                <label for="firstname" class="block text-xs font-medium text-gray-700">First Name</label>
+                <label for="firstname" class="block text-sm font-medium text-gray-400">First Name</label>
                 <input type="text" id="firstname" name="firstname"
-                    class="mt-1 block w-full px-3 py-1.5 bg-gray-50 border border-gray-300 rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-900"
+                    class="mt-1 block w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-200"
                     value="<%= user.firstname %>">
             </div>
             <div>
-                <label for="lastname" class="block text-xs font-medium text-gray-700">Last Name</label>
+                <label for="lastname" class="block text-sm font-medium text-gray-400">Last Name</label>
                 <input type="text" id="lastname" name="lastname"
-                    class="mt-1 block w-full px-3 py-1.5 bg-gray-50 border border-gray-300 rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-900"
+                    class="mt-1 block w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-200"
                     value="<%= user.lastname %>">
             </div>
             <div>
-                <label for="email" class="block text-xs font-medium text-gray-700">Email</label>
+                <label for="email" class="block text-sm font-medium text-gray-400">Email</label>
                 <input type="email" id="email" name="email"
-                    class="mt-1 block w-full px-3 py-1.5 bg-gray-50 border border-gray-300 rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-900"
+                    class="mt-1 block w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-200"
                     value="<%= user.email %>">
             </div>
             <div>
-                <label for="mobile" class="block text-xs font-medium text-gray-700">Mobile</label>
+                <label for="mobile" class="block text-sm font-medium text-gray-400">Mobile</label>
                 <input type="text" id="mobile" name="mobile"
-                    class="mt-1 block w-full px-3 py-1.5 bg-gray-50 border border-gray-300 rounded focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-900"
+                    class="mt-1 block w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-200"
                     value="<%= user.mobile || '' %>">
             </div>
         </div>
+        
+        <%# Display Default Address %>
+        <div class="mt-1 border-t border-gray-700 pt-4">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="text-lg font-bold text-white">Default Address</h3>
+                <a href="/user/profile/section/address" class="text-blue-500 hover:underline text-sm font-bold">
+                    Manage Addresses
+                </a>
+            </div>
+            <% if (user.defaultAddress) { %>
+                <div class="bg-gray-900 p-1 rounded-md border border-gray-700">
+                    <p class="text-sm font-semibold text-white"><%= user.defaultAddress.fullName %></p>
+                    <p class="text-xs text-gray-400 mt-1"><%= user.defaultAddress.street %>, <%= user.defaultAddress.city %></p>
+                    <p class="text-xs text-gray-400"><%= user.defaultAddress.state %>, <%= user.defaultAddress.zipCode %></p>
+                    <p class="text-xs text-gray-400">Mobile: <%= user.defaultAddress.mobile %></p>
+                </div>
+            <% } else { %>
+                <div class="text-center bg-gray-900 p-4 rounded-md border border-gray-700">
+                    <p class="text-sm text-gray-400">No default address set.</p>
+                    <a href="/user/profile/section/address" class="mt-1 inline-block bg-blue-600 text-white text-xs px-3 py-1.5 rounded-md hover:bg-blue-700 transition">
+                        Add an Address
+                    </a>
+                </div>
+            <% } %>
+        </div>
 
-        <div class="mt-4 text-center">
-            <button type="submit"
-                class="py-2 px-5 rounded-md bg-gray-800 text-white text-sm hover:bg-gray-900 transition-all">
+        <div class=" text-center">
+            <button type="submit" class="py-2 px-2 rounded-md bg-blue-600 text-white text-sm hover:bg-blue-700 transition-all">
                 Save Changes
             </button>
         </div>
-        <%# Message display area %>
-        <div id="profile-message" class="mt-3 text-center text-sm font-semibold"></div>
+        <div id="profile-message" class="mt-1 text-center text-sm font-semibold"></div>
     </form>
 </div>

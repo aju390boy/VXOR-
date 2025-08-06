@@ -27,13 +27,13 @@ router.route('/category')
 router.route('/productDetails')
     .get(isAuthenticated);
 
-router.get('/profile', isAuthenticated, profileController.getProfilePage);
+router.get('/profile',isAuthenticated,profileController.getProfilePage);
 
 // individual profile sections 
-router.get('/profile/section/:sectionName', isAuthenticated, profileController.getProfileSection);
+router.get('/profile/section/:sectionName',isAuthenticated, profileController.getProfileSection);
 // profile changing password
-router.post('/profile/change-password', isAuthenticated, profileController.changePassword);
-router.post('/profile/update', isAuthenticated, profileController.updateProfile);
+router.post('/profile/change-password',isAuthenticated,profileController.changePassword);
+router.post('/profile/update', isAuthenticated, profileController. upload.single('profileImage') ,profileController.updateProfile);
 
 
 
