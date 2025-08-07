@@ -30,9 +30,11 @@ exports.getProfilePage = async (req, res) => {
             return res.status(404).render('error', { message: 'User profile not found.' });
         }
 
+ const address={user_id:'123',name:'ajith',steetAddress:'efds334',city:'kochi',state:'kerala',pincode:12345}
         res.render('user/profile/profileMain', {
             title: 'My Profile',
             user: user,
+            address
         });
     } catch (error) {
         console.error("Error fetching profile page:", error);
@@ -86,9 +88,9 @@ exports.getProfileSection = async (req, res) => {
                 return res.status(404).send('<p class="text-red-400">Requested section not found.</p>');
         }
 
-     
+       const address={user_id:'123',name:'ajith',steetAddress:'efds334',city:'kochi',state:'kerala',pincode:12345}
        
-        res.render(templatePath, { ...data, layout: false }, (err, html) => {
+        res.render(templatePath, { ...data,address, layout: false }, (err, html) => {
             if (err) {
                 console.error(`Error rendering partial ${templatePath}:`, err);
                 return res.status(500).send('<p class="text-red-400">Error rendering section content.</p>');
