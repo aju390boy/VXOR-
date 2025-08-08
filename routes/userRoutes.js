@@ -34,6 +34,10 @@ router.get('/profile/section/:sectionName',isAuthenticated, profileController.ge
 // profile changing password
 router.post('/profile/change-password',isAuthenticated,profileController.changePassword);
 router.post('/profile/update', isAuthenticated, profileController. upload.single('profileImage') ,profileController.updateProfile);
+////profile address routes
+router.post('/profile/address/add', isAuthenticated, profileController.addAddress);
+router.post('/profile/address/edit/:addressId', isAuthenticated, profileController.editAddress);
+router.post('/profile/address/remove/:addressId', isAuthenticated, profileController.removeAddress);
 
 
 

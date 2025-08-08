@@ -67,13 +67,57 @@
     </main>
 </div>
 
-<%# SweetAlert2 CSS - Ensure this is linked! %>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-<%# SweetAlert2 JS - Keep this at the end of the file %>
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<%# Script for sidebar link handling %>
+
 <script>
+    // These functions must be defined globally for `onclick` attributes to work.
+
+    // A single, generic function to open any modal with an ID
+    function openModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                const modalContent = modal.querySelector('.transform');
+                if (modalContent) {
+                    modalContent.classList.remove('scale-95', 'opacity-0');
+                    modalContent.classList.add('scale-100', 'opacity-100');
+                }
+            }, 10);
+        }
+    }
+
+    // A single, generic function to close any modal with an ID
+    function closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            const modalContent = modal.querySelector('.transform');
+            if (modalContent) {
+                modalContent.classList.remove('scale-100', 'opacity-100');
+                modalContent.classList.add('scale-95', 'opacity-0');
+            }
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300); // Matches the transition duration
+        }
+    }
+
+    // This is the function called from the 'Edit Profile' button's onclick attribute.
+    // It uses the generic openModal function.
+    function openEditProfileModal() {
+        const profileModalImagePreview = document.getElementById('profile-modal-image-preview');
+        const profileImageStatic = document.getElementById('profile-image-preview');
+
+        if (profileImageStatic && profileModalImagePreview) {
+            profileModalImagePreview.src = profileImageStatic.src;
+        }
+
+        openModal('editProfileModal');
+    }
+
+    // All other logic that doesn't use the `onclick` attribute should be in here
     document.addEventListener('DOMContentLoaded', () => {
         const profileContentArea = document.getElementById('profile-content');
         const sidebarLinks = document.querySelectorAll('.sidebar-link');
@@ -96,8 +140,11 @@
                 profileContentArea.innerHTML = htmlContent;
 
                 // IMPORTANT: After new content is loaded, re-attach event listeners
-                attachProfileFormListener(); // This function will now handle both forms
-                attachChangePasswordFormListener(); // New function for password form
+                attachProfileFormListener();
+                attachChangePasswordFormListener();
+                attachAddAddressFormListener();
+                attachAddressButtonsListeners();
+                attachEditAddressFormListener();
             } catch (error) {
                 console.error('Error fetching profile section:', error);
                 Swal.fire({
@@ -131,41 +178,80 @@
             document.querySelectorAll(`#${formId} input`).forEach(input => input.classList.remove('border-red-500'));
         };
 
-        // Function to attach listener to the profile update form
-       const attachProfileFormListener = () => {
+        // Function to attach listener to the profile update form and modal logic
+        const attachProfileFormListener = () => {
     const profileUpdateForm = document.getElementById('profile-update-form');
-    
-    // Select the file input and image preview elements
+    const editProfileModal = document.getElementById('editProfileModal');
+
+    // --- Modal logic for closing and image preview ---
     const profilePictureInput = document.getElementById('profile-picture-input');
-    const profileImagePreview = document.getElementById('profile-image-preview');
-    
-    // Check if the elements exist before adding listeners
-    if(profilePictureInput && profileImagePreview) {
-        profilePictureInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
+    const profileModalImagePreview = document.getElementById('profile-modal-image-preview');
+    const addressSelect = document.getElementById('addressSelect');
+    const addressSpan = document.getElementById('addressSpan');
+    const addressIdInput = document.getElementById('addressId'); // Get the hidden addressId input
+
+    // Close modal when clicking outside of it
+    if (editProfileModal) {
+        editProfileModal.addEventListener('click', (event) => {
+            if (event.target === editProfileModal) {
+                closeModal('editProfileModal');
+            }
+        });
+    }
+
+    // Image preview logic for the modal
+    if (profilePictureInput && profileModalImagePreview) {
+        profilePictureInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
             if (file) {
                 const reader = new FileReader();
-                reader.onload = (event) => {
-                    profileImagePreview.src = event.target.result;
+                reader.onload = (e) => {
+                    profileModalImagePreview.src = e.target.result;
                 };
                 reader.readAsDataURL(file);
             }
         });
     }
 
+    // Address dropdown logic
+    let allAddresses = [];
+    const allAddressesElement = document.getElementById('allAddresses');
+    if (allAddressesElement) {
+        try {
+            allAddresses = JSON.parse(allAddressesElement.value);
+        } catch (e) {
+            console.error('Failed to parse addresses JSON:', e);
+        }
+    }
+
+    if (addressSelect && allAddresses.length > 0) {
+        addressSelect.addEventListener('change', (event) => {
+            const selectedAddressId = event.target.value;
+            const selectedAddress = allAddresses.find(addr => addr._id === selectedAddressId);
+            if (selectedAddress) {
+                addressSpan.textContent = selectedAddress.name;
+                addressIdInput.value = selectedAddress._id;
+            }
+        });
+    }
+
+    // --- Form submission logic ---
     if (profileUpdateForm) {
         profileUpdateForm.addEventListener('submit', async (event) => {
             event.preventDefault();
-            
-            // CORRECT: Use FormData directly for file uploads
+
             const formData = new FormData(profileUpdateForm);
             
+            // NEW LOGIC: Manually append the addressId to the formData
+            // This is the guaranteed fix for the address not being sent
+            if (addressIdInput && addressIdInput.value) {
+                formData.append('addressId', addressIdInput.value);
+            }
+
             try {
                 const response = await fetch('/user/profile/update', {
                     method: 'POST',
-                    // REMOVED: `headers: { 'Content-Type': 'application/json' }`
-                    // The browser will automatically set the correct 'multipart/form-data' header
-                    body: formData // CORRECT: Send the FormData object directly
+                    body: formData
                 });
 
                 const result = await response.json();
@@ -177,18 +263,20 @@
                         text: result.message || 'Profile updated successfully!',
                         customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
                     });
+
+                    closeModal('editProfileModal'); // Close the modal on success
+
                     setTimeout(() => {
                         loadSection('profile');
                     }, 1500);
                 } else {
-                     Swal.fire({
+                    Swal.fire({
                         icon: 'error',
                         title: 'Oops...',
                         text: result.message || 'Failed to update profile. Please try again.',
                         customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
                     });
                 }
-
             } catch (error) {
                 console.error('Error submitting profile update:', error);
                 Swal.fire({
@@ -201,10 +289,10 @@
         });
     }
 };
+
         // Function to attach listener to the change password form
         const attachChangePasswordFormListener = () => {
             const changePasswordForm = document.getElementById('change-password-form');
-
             if (changePasswordForm) {
                 changePasswordForm.addEventListener('submit', async (event) => {
                     event.preventDefault();
@@ -229,12 +317,8 @@
                                 text: result.message || 'Password updated successfully!',
                                 customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
                             });
-                            // Clear form fields after successful update
                             changePasswordForm.reset();
-                            // Optional: Reload section if you want to ensure state consistency
-                            // setTimeout(() => { loadSection('change-password'); }, 1500);
                         } else {
-                            // Display field-specific errors if available
                             if (result.errors) {
                                 for (const field in result.errors) {
                                     const errorElement = document.getElementById(`${field}Error`);
@@ -242,12 +326,11 @@
                                         errorElement.textContent = result.errors[field];
                                         const inputElement = changePasswordForm.querySelector(`[name="${field}"]`);
                                         if (inputElement) {
-                                            inputElement.classList.add('border-red-500'); // Highlight input field
+                                            inputElement.classList.add('border-red-500');
                                         }
                                     }
                                 }
                             }
-                            // Display general error message with SweetAlert
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Validation Error!',
@@ -268,6 +351,225 @@
             }
         };
 
+        // New function to attach listener to the Add Address button and form
+        const attachAddAddressFormListener = () => {
+            const addNewAddressBtn = document.getElementById('addNewAddressBtn');
+            const addAddressForm = document.getElementById('add-address-form');
+
+            if (addNewAddressBtn) {
+                addNewAddressBtn.addEventListener('click', () => {
+                    openModal('addAddressModal');
+                });
+            }
+
+            if (addAddressForm) {
+                addAddressForm.addEventListener('submit', async (event) => {
+                    event.preventDefault();
+                    document.querySelectorAll('#add-address-form .error-message').forEach(el => el.textContent = '');
+                    document.querySelectorAll('#add-address-form input').forEach(input => input.classList.remove('border-red-500'));
+
+                    const formData = new FormData(addAddressForm);
+                    const data = Object.fromEntries(formData.entries());
+
+                    try {
+                        const response = await fetch('/user/profile/address/add', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(data)
+                        });
+
+                        const result = await response.json();
+
+                        if (response.ok) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success!',
+                                text: result.message || 'Address added successfully!',
+                                customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
+                            });
+
+                            closeModal('addAddressModal');
+                            addAddressForm.reset();
+
+                            setTimeout(() => {
+                                loadSection('address');
+                            }, 1500);
+                        } else {
+                            if (result.errors) {
+                                for (const field in result.errors) {
+                                    const errorElement = document.getElementById(`${field}Error`);
+                                    if (errorElement) {
+                                        errorElement.textContent = result.errors[field];
+                                        addAddressForm.querySelector(`[name="${field}"]`).classList.add('border-red-500');
+                                    }
+                                }
+                            }
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Validation Error!',
+                                text: result.message || 'Please correct the errors in the form.',
+                                customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error submitting add address form:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Network Error!',
+                            text: 'Could not connect to server.',
+                            customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
+                        });
+                    }
+                });
+            }
+        };
+
+        // New function to attach listeners to edit and remove buttons
+        const attachAddressButtonsListeners = () => {
+            const editButtons = document.querySelectorAll('.edit-address-btn');
+            const removeButtons = document.querySelectorAll('.remove-address-btn');
+
+            // Add event listener for Edit buttons
+            editButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const addressData = JSON.parse(button.dataset.address);
+
+                    
+                    document.getElementById('editAddressId').value = addressData._id;
+                    document.getElementById('edit-name').value = addressData.name;
+                    document.getElementById('edit-mobile').value = addressData.mobile || '';
+                    document.getElementById('edit-address1').value = addressData.address1;
+                    document.getElementById('edit-address2').value = addressData.address2 || '';
+                    document.getElementById('edit-city').value = addressData.city;
+                    document.getElementById('edit-state').value = addressData.state;
+                    document.getElementById('edit-pincode').value = addressData.pincode;
+                    document.getElementById('edit-country').value = addressData.country;
+
+                    // Open the modal
+                    openModal('editAddressModal');
+                });
+            });
+
+            // Add event listener for Remove buttons
+            removeButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const addressId = button.dataset.addressId;
+                    Swal.fire({
+                        title: 'Are you sure?',
+                        text: "You won't be able to revert this!",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Yes, remove it!',
+                        cancelButtonText: 'No, cancel!',
+                        reverseButtons: true,
+                        customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button', cancelButton: 'swal-dark-button' }
+                    }).then(async (result) => {
+                        if (result.isConfirmed) {
+                            try {
+                                const response = await fetch(`/user/profile/address/remove/${addressId}`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                });
+
+                                const result = await response.json();
+
+                                if (response.ok) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Removed!',
+                                        text: result.message || 'Address has been removed.',
+                                        customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
+                                    });
+                                    // Reload the address section to show the updated list
+                                    setTimeout(() => {
+                                        loadSection('address');
+                                    }, 1500);
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Failed!',
+                                        text: result.message || 'Failed to remove address.',
+                                        customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
+                                    });
+                                }
+                            } catch (error) {
+                                console.error('Error removing address:', error);
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Network Error!',
+                                    text: 'Could not connect to server.',
+                                    customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
+                                });
+                            }
+                        }
+                    });
+                });
+            });
+        };
+
+        // Function to attach listener to the Edit Address form
+        const attachEditAddressFormListener = () => {
+            const editAddressForm = document.getElementById('edit-address-form');
+            if (editAddressForm) {
+                editAddressForm.addEventListener('submit', async (event) => {
+                    event.preventDefault();
+                    clearErrorMessages('edit-address-form');
+
+                    const addressId = document.getElementById('editAddressId').value;
+                    const formData = new FormData(editAddressForm);
+                    const data = Object.fromEntries(formData.entries());
+
+                    try {
+                        const response = await fetch(`/user/profile/address/edit/${addressId}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(data)
+                        });
+
+                        const result = await response.json();
+
+                        if (response.ok) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success!',
+                                text: result.message || 'Address updated successfully!',
+                                customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
+                            });
+
+                            closeModal('editAddressModal');
+                            setTimeout(() => {
+                                loadSection('address');
+                            }, 1500);
+                        } else {
+                            if (result.errors) {
+                                for (const field in result.errors) {
+                                    const errorElement = document.getElementById(`edit${field.charAt(0).toUpperCase() + field.slice(1)}Error`);
+                                    if (errorElement) {
+                                        errorElement.textContent = result.errors[field];
+                                        editAddressForm.querySelector(`[name="${field}"]`).classList.add('border-red-500');
+                                    }
+                                }
+                            }
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Validation Error!',
+                                text: result.message || 'Please correct the errors in the form.',
+                                customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error submitting edit address form:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Network Error!',
+                            text: 'Could not connect to server.',
+                            customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
+                        });
+                    }
+                });
+            }
+        };
+
         // Initial load of the default section and attach listeners
         const urlParams = new URLSearchParams(window.location.search);
         const defaultSection = urlParams.get('section') || 'profile';
@@ -276,77 +578,12 @@
         if (initialLink) {
             initialLink.click();
         } else {
-            // Fallback if the default section link is not found
-            document.querySelector('.sidebar-link[data-section="profile"]').click();
+            const fallbackLink = document.querySelector('.sidebar-link[data-section="profile"]');
+            if (fallbackLink) {
+                fallbackLink.click();
+            }
         }
     });
-
-    // Function to attach listener to the profile update form
-const attachProfileFormListener = () => {
-    const profileUpdateForm = document.getElementById('profile-update-form');
-    
-    // Add event listener for file input to show a preview
-    const profilePictureInput = document.getElementById('profile-picture-input');
-    const profileImagePreview = document.getElementById('profile-image-preview');
-    if(profilePictureInput && profileImagePreview) {
-        profilePictureInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    profileImagePreview.src = event.target.result;
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-    }
-
-    if (profileUpdateForm) {
-        profileUpdateForm.addEventListener('submit', async (event) => {
-            event.preventDefault();
-
-            // Use FormData for file uploads
-            const formData = new FormData(profileUpdateForm);
-            
-            try {
-                const response = await fetch('/user/profile/update', {
-                    method: 'POST',
-                    body: formData // Send FormData directly
-                });
-
-                const result = await response.json();
-
-                if (response.ok) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success!',
-                        text: result.message || 'Profile updated successfully!',
-                        customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
-                    });
-                    // Re-load profile section to show fresh data
-                    setTimeout(() => {
-                        loadSection('profile');
-                    }, 1500);
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Oops...',
-                        text: result.message || 'Failed to update profile. Please try again.',
-                        customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
-                    });
-                }
-            } catch (error) {
-                console.error('Error submitting profile update:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Network Error!',
-                    text: 'Could not connect to server. Please check your internet connection.',
-                    customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
-                });
-            }
-        });
-    }
-};
 </script>
 
 <style>

@@ -1,32 +1,218 @@
 <%# views/user/profile/partials/_address.ejs %>
-<div class="max-w-xl mx-auto md:mx-0 p-4 sm:p-6 bg-white rounded-lg shadow-md text-gray-900">
-    <h2 class="text-2xl font-bold mb-6 text-gray-900 border-b border-gray-200 pb-3">My Addresses</h2>
+<div class="max-w-xl mx-auto md:mx-0 p-6 bg-gray-950 rounded-2xl shadow-2xl text-gray-400 border border-gray-800">
+    <h2 class="text-3xl font-bold mb-6 text-white tracking-wide">My Addresses</h2>
 
-    <div class="space-y-4">
-        <% if (user && user.addresses && user.addresses.length > 0) { %>
-            <% user.addresses.forEach(address => { %>
-                <div class="border border-gray-200 p-4 rounded-md bg-gray-50">
-                    <p class="font-semibold"><%= address.fullName %></p>
-                    <p><%= address.streetAddress %>, <%= address.city %></p>
-                    <p><%= address.state %>, <%= address.zipCode %></p>
-                    <p>Phone: <%= address.phoneNumber %></p>
-                    <div class="mt-3 flex gap-2">
-                        <button class="text-blue-600 hover:underline text-sm">Edit</button>
-                        <button class="text-red-600 hover:underline text-sm">Remove</button>
+    <div class="space-y-6">
+        <% if (address && address.length > 0) { %>
+            <% address.forEach(singleAddress => { %>
+                <div class="border border-gray-700 p-6 rounded-xl bg-gray-900 transition-all duration-300 hover:shadow-lg hover:border-blue-500 relative">
+                    <!-- The address content with updated fields -->
+                    <p class="font-bold text-lg text-white"><%= singleAddress.name %></p>
+                    <p class="text-sm text-gray-300 mt-1"><%= singleAddress.mobile %></p>
+                    <p class="text-sm mt-2"><%= singleAddress.address1 %></p>
+                    <% if (singleAddress.address2) { %>
+                        <p class="text-sm"><%= singleAddress.address2 %></p>
+                    <% } %>
+                    <p class="text-sm"><%= singleAddress.city %>, <%= singleAddress.state %>, <%= singleAddress.pincode %></p>
+                    <% if (singleAddress.country) { %>
+                        <p class="text-sm"><%= singleAddress.country %></p>
+                    <% } %>
+
+                    <!-- Buttons with a premium look -->
+                    <div class="mt-4 flex gap-3">
+                        <!-- Edit Button -->
+                        <button 
+                            class="edit-address-btn font-medium text-sm text-white px-4 py-2 rounded-lg shadow-md transition-all duration-200 
+                                bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 
+                                focus:ring-blue-500 focus:ring-offset-gray-900" 
+                            type="button"
+                            data-address-id="<%= singleAddress._id %>"
+                            data-address="<%= JSON.stringify(singleAddress) %>"
+                        >
+                            Edit
+                        </button>
+                        
+                        <!-- Remove Button -->
+                        <button 
+                            class="remove-address-btn font-medium text-sm text-white px-4 py-2 rounded-lg shadow-md transition-all duration-200 
+                                bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 focus:outline-none focus:ring-2 focus:ring-offset-2 
+                                focus:ring-red-500 focus:ring-offset-gray-900" 
+                            type="button" 
+                            data-address-id="<%= singleAddress._id %>"
+                        >
+                            Remove
+                        </button>
                     </div>
                 </div>
             <% }); %>
         <% } else { %>
-            <p class="text-gray-600">No addresses added yet.</p>
+            <p class="text-gray-500 text-center">No addresses added yet.</p>
         <% } %>
     </div>
 
-    <div class="mt-6 text-center">
-        <button type="button" class="inline-flex justify-center py-2 px-6 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-            Add New Address
+    <!-- Add New Address Button -->
+    <div class="mt-8 text-center">
+        <button id="addNewAddressBtn" type="button" class="inline-flex justify-center items-center py-3 px-8 text-base font-semibold rounded-full text-white shadow-xl
+            bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 focus:ring-offset-gray-950
+            transition-all duration-300 transform hover:scale-105">
+            <i class="fa-solid fa-plus mr-2"></i> Add New Address
         </button>
     </div>
 </div>
 
-<%# Add client-side JS here for address management if needed, e.g., via a <script> block %>
-<%# The script variable from profileMain.ejs handles the injection for the whole partial %>
+<!-- add address modal -->
+<div id="addAddressModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-gray-900 bg-opacity-75 transition-opacity duration-300 ease-in-out">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="relative bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-auto p-6 md:p-8 transform scale-95 opacity-0 transition-all duration-300 ease-in-out">
+            
+            <button type="button" class="absolute top-4 right-4 text-gray-400 hover:text-gray-100 transition-colors duration-200" onclick="closeModal('addAddressModal')">
+                <i class="fa-solid fa-xmark fa-lg"></i>
+            </button>
+            
+            <h3 class="text-2xl font-bold text-white mb-6 border-b border-gray-700 pb-3">Add New Address</h3>
+
+            <form id="add-address-form" method="POST" action="/user/profile/address/add">
+                <div class="space-y-4">
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-300">Full Name</label>
+                        <input type="text" name="name" id="name" required class="mt-1 block w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                        <span id="nameError" class="text-sm text-red-500 error-message"></span>
+                    </div>
+
+                    <div>
+                        <label for="mobile" class="block text-sm font-medium text-gray-300">Mobile Number</label>
+                        <input type="tel" name="mobile" id="mobile" required class="mt-1 block w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                        <span id="mobileError" class="text-sm text-red-500 error-message"></span>
+                    </div>
+
+                    <div>
+                        <label for="address1" class="block text-sm font-medium text-gray-300">Address Line 1</label>
+                        <input type="text" name="address1" id="address1" required class="mt-1 block w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                        <span id="address1Error" class="text-sm text-red-500 error-message"></span>
+                    </div>
+                    
+                    <div>
+                        <label for="address2" class="block text-sm font-medium text-gray-300">Address Line 2 (Optional)</label>
+                        <input type="text" name="address2" id="address2" class="mt-1 block w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                        <span id="address2Error" class="text-sm text-red-500 error-message"></span>
+                    </div>
+
+                    <div>
+                        <label for="city" class="block text-sm font-medium text-gray-300">City</label>
+                        <input type="text" name="city" id="city" required class="mt-1 block w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                        <span id="cityError" class="text-sm text-red-500 error-message"></span>
+                    </div>
+
+                    <div>
+                        <label for="state" class="block text-sm font-medium text-gray-300">State</label>
+                        <input type="text" name="state" id="state" required class="mt-1 block w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                        <span id="stateError" class="text-sm text-red-500 error-message"></span>
+                    </div>
+
+                    <div>
+                        <label for="pincode" class="block text-sm font-medium text-gray-300">Pincode</label>
+                        <input type="text" name="pincode" id="pincode" required class="mt-1 block w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                        <span id="pincodeError" class="text-sm text-red-500 error-message"></span>
+                    </div>
+
+                    <input type="hidden" name="country" value="India">
+                </div>
+
+                <div class="mt-6 text-center">
+                    <button type="submit" class="inline-flex justify-center py-2 px-6 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Save Address
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- edit  address modal -->
+    <div id="editAddressModal" class="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-75 hidden transition-opacity duration-300 ease-out" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-center justify-center min-h-screen p-4 text-center sm:p-0">
+        <div class="relative bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:max-w-xl sm:w-full scale-95 opacity-0 duration-300 ease-out">
+            <div class="bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="flex items-start">
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-xl leading-6 font-bold text-white" id="modal-title">
+                                Edit Address
+                            </h3>
+                            <button onclick="closeModal('editAddressModal')" class="text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                <span class="sr-only">Close modal</span>
+                                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        <form id="edit-address-form" class="mt-5 space-y-4">
+                            <input type="hidden" name="addressId" id="editAddressId">
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="edit-name" class="block text-sm font-medium text-gray-400">Full Name</label>
+                                    <input type="text" name="name" id="edit-name" class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                                    <p class="mt-1 text-xs text-red-400 error-message" id="editNameError"></p>
+                                </div>
+                                <div>
+                                    <label for="edit-mobile" class="block text-sm font-medium text-gray-400">Mobile Number</label>
+                                    <input type="tel" name="mobile" id="edit-mobile" class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                                    <p class="mt-1 text-xs text-red-400 error-message" id="editMobileError"></p>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label for="edit-address1" class="block text-sm font-medium text-gray-400">Address Line 1</label>
+                                <input type="text" name="address1" id="edit-address1" class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                                <p class="mt-1 text-xs text-red-400 error-message" id="editAddress1Error"></p>
+                            </div>
+                            
+                            <div>
+                                <label for="edit-address2" class="block text-sm font-medium text-gray-400">Address Line 2 (Optional)</label>
+                                <input type="text" name="address2" id="edit-address2" class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                                <p class="mt-1 text-xs text-red-400 error-message" id="editAddress2Error"></p>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="edit-city" class="block text-sm font-medium text-gray-400">City</label>
+                                    <input type="text" name="city" id="edit-city" class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                                    <p class="mt-1 text-xs text-red-400 error-message" id="editCityError"></p>
+                                </div>
+                                <div>
+                                    <label for="edit-state" class="block text-sm font-medium text-gray-400">State</label>
+                                    <input type="text" name="state" id="edit-state" class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                                    <p class="mt-1 text-xs text-red-400 error-message" id="editStateError"></p>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="edit-pincode" class="block text-sm font-medium text-gray-400">Pincode</label>
+                                    <input type="text" name="pincode" id="edit-pincode" class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                                    <p class="mt-1 text-xs text-red-400 error-message" id="editPincodeError"></p>
+                                </div>
+                                <div>
+                                    <label for="edit-country" class="block text-sm font-medium text-gray-400">Country</label>
+                                    <input type="text" name="country" id="edit-country" class="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2">
+                                    <p class="mt-1 text-xs text-red-400 error-message" id="editCountryError"></p>
+                                </div>
+                            </div>
+
+                            <div class="mt-6 flex justify-end">
+                                <button type="button" onclick="closeModal('editAddressModal')" class="mr-3 inline-flex justify-center rounded-md border border-gray-600 px-4 py-2 text-sm font-medium text-gray-300 shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    Cancel
+                                </button>
+                                <button type="submit" class="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
