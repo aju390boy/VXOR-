@@ -14,6 +14,7 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: '/images/default-profile.png'
     },
+    defaultAddress:{type: mongoose.Schema.Types.ObjectId,ref: 'Address'},
   status: { type: String, enum: ['active', 'blocked'], default: 'active' },
   role: { type: String, enum: ['user', 'admin'], default: 'user' }
 },{timestamps:true});

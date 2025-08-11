@@ -112,15 +112,7 @@
         </svg>
     </div>
     <div>
-        <%
-            // Initialize defaultAddress as null
-            let defaultAddress = null;
-
-            // Check if addresses, user, and user.defaultAddressId are all defined before searching
-            if (addresses && addresses.length > 0 && user && user.defaultAddressId) {
-                defaultAddress = addresses.find(addr => addr._id.toString() === user.defaultAddressId.toString());
-            }
-        %>
+       
 
         <% if (defaultAddress) { %>
             <p class="text-xs text-black font-medium">Default Address</p>
@@ -176,81 +168,90 @@
             </svg>
         </button>
         <form id="profile-update-form" enctype="multipart/form-data">
-            <div class="flex flex-col items-center mb-0">
-                <div class="relative w-28 h-28 mb-1 rounded-full overflow-hidden border-2 border-gray-600">
-                    <img
-                        id="profile-modal-image-preview"
-                        src="<%= profileImageUrl %>"
-                        alt="Profile"
-                        class="w-full h-full object-cover"
-                    />
-                </div>
-                <input type="file" id="profile-picture-input" name="profileImage" accept="image/*" class="hidden">
-                <label for="profile-picture-input" class="bg-black text-white text-xs px-3 py-1.5 rounded-md cursor-pointer hover:bg-blue-700 transition">
-                    Change Photo
-                </label>
-                <span id="upload-status" class="text-xs text-gray-500 mt-1"></span>
-            </div>
+    <div class="flex flex-col items-center mb-0">
+        <div class="relative w-28 h-28 mb-1 rounded-full overflow-hidden border-2 border-gray-600">
+            <img
+                id="profile-modal-image-preview"
+                src="<%= profileImageUrl %>"
+                alt="Profile"
+                class="w-full h-full object-cover"
+            />
+        </div>
+        <input type="file" id="profile-picture-input" name="profileImage" accept="image/*" class="hidden">
+        <label for="profile-picture-input" class="bg-black text-white text-xs px-3 py-1.5 rounded-md cursor-pointer hover:bg-blue-700 transition">
+            Change Photo
+        </label>
+        <span id="upload-status" class="text-xs text-gray-500 mt-1"></span>
+    </div>
 
-            <div class="mb-0 ">
-                <label for="firstname" class="block text-sm font-medium text-gray-900">First Name</label>
-                <div class="relative h-5 w-full">
-                    <svg class="h-5 w-5 text-gray-500 absolute left-3 top-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>
-                    <input required type="text" id="firstname" name="firstname" class="w-full border border-gray-600 rounded-lg bg-white text-black p-2 pl-10" value="<%= user.firstname %>">
-                </div>
-            </div>
+    <div class="mb-0 ">
+        <label for="firstname" class="block text-sm font-medium text-gray-900">First Name</label>
+        <div class="relative h-5 w-full">
+            <svg class="h-5 w-5 text-gray-500 absolute left-3 top-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>
+            <input required type="text" id="firstname" name="firstname" class="w-full border border-gray-600 rounded-lg bg-white text-black p-2 pl-10" value="<%= user.firstname %>">
+        </div>
+    </div>
 
-            <div class="mb-0 ">
-                <label for="lastname" class="block text-sm font-medium text-gray-900">Last Name</label>
-                <div class="relative h-5 w-full">
-                    <svg class="h-5 w-5 text-gray-500 absolute left-3 top-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>
-                    <input required type="text" id="lastname" name="lastname" class="w-full border border-gray-600 rounded-lg bg-white text-black p-2 pl-10" value="<%= user.lastname %>">
-                </div>
-            </div>
+    <div class="mb-0 ">
+        <label for="lastname" class="block text-sm font-medium text-gray-900">Last Name</label>
+        <div class="relative h-5 w-full">
+            <svg class="h-5 w-5 text-gray-500 absolute left-3 top-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>
+            <input required type="text" id="lastname" name="lastname" class="w-full border border-gray-600 rounded-lg bg-white text-black p-2 pl-10" value="<%= user.lastname %>">
+        </div>
+    </div>
 
-            <div class="mb-0 ">
-                <label for="email" class="block text-sm font-medium text-gray-900">Email</label>
-                <div class="relative h-full w-full">
-                    <svg class="h-5 w-5 text-gray-900 absolute left-3 top-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path></svg>
-                    <input required type="email" id="email" name="email" class="w-full border border-gray-600 rounded-lg bg-white text-black p-2 pl-10" value="<%= user.email %>">
-                    <input type="hidden" name="originalEmail" value="<%= user.email %>">
-                </div>
-            </div>
+    <div class="mb-0 ">
+        <label for="email" class="block text-sm font-medium text-gray-900">Email</label>
+        <div class="relative h-full w-full">
+            <svg class="h-5 w-5 text-gray-900 absolute left-3 top-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path></svg>
+            <input required type="email" id="email" name="email" class="w-full border border-gray-600 rounded-lg bg-white text-black p-2 pl-10" value="<%= user.email %>">
+            <input type="hidden" name="originalEmail" value="<%= user.email %>">
+        </div>
+    </div>
 
-            <div class="mb-0">
-                <label for="mobile" class="block text-sm font-medium text-gray-900">Mobile</label>
-                <div class="relative h-5 w-full">
-                    <svg class="h-5 w-5 text-gray-500 absolute left-3 top-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path></svg>
-                    <input required name="mobile" type="text" id="mobile" class="w-full border border-gray-600 rounded-lg bg-white text-black p-2 pl-10" value="<%= user.mobile %>">
-                </div>
-            </div>
+    <div class="mb-0">
+        <label for="mobile" class="block text-sm font-medium text-gray-900">Mobile</label>
+        <div class="relative h-5 w-full">
+            <svg class="h-5 w-5 text-gray-500 absolute left-3 top-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path></svg>
+            <input required name="mobile" type="text" id="mobile" class="w-full border border-gray-600 rounded-lg bg-white text-black p-2 pl-10" value="<%= user.mobile %>">
+        </div>
+    </div>
 
-            <div class="mb-0">
-                <label for="addressSelect" class="block text-sm font-medium text-gray-900">Address</label>
-                <input type="hidden" id="allAddresses" value='<%- JSON.stringify(addresses) %>'>
-                <div class="flex items-center gap-2">
-                    <div class="relative h-full w-full pl-10 border border-gray-600 rounded-lg p-2 flex-1 bg-white text-black flex items-center">
-                        <svg class="h-5 w-5 text-gray-900 absolute left-3 top-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path></svg>
-                        <span id="addressSpan">
-                            <%= addresses && addresses.length ? addresses[0].name : "No Address set" %>
-                        </span>
-                        <input type="hidden" name="addressId" id="addressId" value='<%= addresses && addresses.length ?addresses[0]._id : '' %>'>
-                    </div>
-                    <% if (addresses && addresses.length ) { %>
-                        <select id="addressSelect" class="border border-gray-600 rounded-lg bg-white text-black p-2">
-                            <% addresses.forEach((addresses, index) => { %>
-                                <option value="<%= addresses._id %>" <% if (index === 0) { %>selected<% } %>><%= addresses.name %></option>
-                            <% }) %>
-                        </select>
-                    <% } else { %>
-                        <a href="/user/profile/section/address"><span class="text-sm text-black bg-white border border-gray-600 rounded-lg px-3 py-1">Add new+</span></a>
-                    <% } %>
-                </div>
-            </div>
+    <div class="mb-0">
+    <label for="addressSelect" class="block text-sm font-medium text-gray-900">Address</label>
+    <input type="hidden" id="allAddresses" value='<%- JSON.stringify(addresses) %>'>
+    <div class="flex items-center gap-2">
+        <div class="relative h-full w-full pl-10 border border-gray-600 rounded-lg p-2 flex-1 bg-white text-black flex items-center">
+            <svg class="h-5 w-5 text-gray-900 absolute left-3 top-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path></svg>
+            <span id="addressSpan">
+                <% if (user.defaultAddress) { %>
+                    <%= user.defaultAddress.name %>
+                <% } else if (addresses && addresses.length) { %>
+                    <%= addresses[0].name %>
+                <% } else { %>
+                    No Address set
+                <% } %>
+            </span>
+            <input type="hidden" name="addressId" id="addressId" value='<%= user.defaultAddress ? user.defaultAddress._id : (addresses && addresses.length ? addresses[0]._id : "") %>'>
+        </div>
+        <% if (addresses && addresses.length) { %>
+            <select id="addressSelect" class="border border-gray-600 rounded-lg bg-white text-black p-2">
+                <% addresses.forEach(addr => { %>
+                    <option value="<%= addr._id %>" <%= user.defaultAddress && addr._id.toString() === user.defaultAddress._id.toString() ? 'selected' : '' %>>
+                        <%= addr.name %>
+                    </option>
+                <% }) %>
+            </select>
+        <% } else { %>
+            <a href="/user/profile/section/address"><span class="text-sm text-black bg-white border border-gray-600 rounded-lg px-3 py-1">Add new+</span></a>
+        <% } %>
+    </div>
+</div>
 
-            <div class="flex justify-end mt-1">
-                <button id="save-btn" type="submit" class="px-4 py-1  text-black bg-gray-80 rounded-lg hover:bg-gray-300 transition">Save Changes</button>
-            </div>
-        </form>
+
+    <div class="flex justify-end mt-1">
+        <button id="save-btn" type="submit" class="px-4 py-1 text-black bg-gray-80 rounded-lg hover:bg-gray-300 transition">Save Changes</button>
+    </div>
+</form>
     </div>
 </div>

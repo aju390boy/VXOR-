@@ -10,7 +10,7 @@
 
 <div class="flex flex-col md:flex-row px-10 py-2 bg-gray-900 min-h-5 text-gray-400">
 
-    <%# Sidebar Navigation - NOW STICKY AND CONTENT-HEIGHT %>
+    
     <aside id="profile-sidebar" class="
         w-full md:w-1/4 lg:w-1/5
         p-4 md:p-6 border-r border-gray-800 bg-gray-900
@@ -52,7 +52,7 @@
                 </a>
             </li>
             <li class="mt-4 border-t border-gray-700 pt-4">
-                <a href="/logout" class="block py-2 px-3 rounded bg-red-600 text-white font-bold hover:bg-red-700 transition duration-200">
+                <a href="/logout" class="block py-2 px-3 rounded  text-white font-bold hover:bg-purple-900 transition duration-200">
                     <i class="fa-solid fa-right-from-bracket"></i> LOGOUT
                 </a>
             </li>
@@ -72,8 +72,6 @@
 
 
 <script>
-    // These functions must be defined globally for `onclick` attributes to work.
-
     // A single, generic function to open any modal with an ID
     function openModal(modalId) {
         const modal = document.getElementById(modalId);
@@ -107,16 +105,30 @@
     // This is the function called from the 'Edit Profile' button's onclick attribute.
     // It uses the generic openModal function.
     function openEditProfileModal() {
-        const profileModalImagePreview = document.getElementById('profile-modal-image-preview');
-        const profileImageStatic = document.getElementById('profile-image-preview');
+    const profileModalImagePreview = document.getElementById('profile-modal-image-preview');
+    const profileImageStatic = document.getElementById('profile-image-preview');
 
-        if (profileImageStatic && profileModalImagePreview) {
-            profileModalImagePreview.src = profileImageStatic.src;
-        }
-
-        openModal('editProfileModal');
+    if (profileImageStatic && profileModalImagePreview) {
+        profileModalImagePreview.src = profileImageStatic.src;
     }
 
+    // Attach the image preview listener here
+    const profilePictureInput = document.getElementById('profile-picture-input');
+    if (profilePictureInput && profileModalImagePreview) {
+        profilePictureInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    profileModalImagePreview.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    openModal('editProfileModal');
+}
     // All other logic that doesn't use the `onclick` attribute should be in here
     document.addEventListener('DOMContentLoaded', () => {
         const profileContentArea = document.getElementById('profile-content');
@@ -178,12 +190,13 @@
             document.querySelectorAll(`#${formId} input`).forEach(input => input.classList.remove('border-red-500'));
         };
 
+        //////////////////////////////////////////////////////////////////////////////////////////////////
         // Function to attach listener to the profile update form and modal logic
         const attachProfileFormListener = () => {
     const profileUpdateForm = document.getElementById('profile-update-form');
     const editProfileModal = document.getElementById('editProfileModal');
 
-    // --- Modal logic for closing and image preview ---
+    // Get references to all relevant elements
     const profilePictureInput = document.getElementById('profile-picture-input');
     const profileModalImagePreview = document.getElementById('profile-modal-image-preview');
     const addressSelect = document.getElementById('addressSelect');
@@ -230,24 +243,20 @@
             const selectedAddress = allAddresses.find(addr => addr._id === selectedAddressId);
             if (selectedAddress) {
                 addressSpan.textContent = selectedAddress.name;
+                // Update the hidden input field with the new address ID
                 addressIdInput.value = selectedAddress._id;
             }
         });
     }
 
-    // --- Form submission logic ---
+    // --- Form submission logic (THE FIX IS HERE) ---
     if (profileUpdateForm) {
         profileUpdateForm.addEventListener('submit', async (event) => {
             event.preventDefault();
 
             const formData = new FormData(profileUpdateForm);
             
-            // NEW LOGIC: Manually append the addressId to the formData
-            // This is the guaranteed fix for the address not being sent
-            if (addressIdInput && addressIdInput.value) {
-                formData.append('addressId', addressIdInput.value);
-            }
-
+           
             try {
                 const response = await fetch('/user/profile/update', {
                     method: 'POST',
@@ -289,6 +298,7 @@
         });
     }
 };
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         // Function to attach listener to the change password form
         const attachChangePasswordFormListener = () => {
@@ -426,86 +436,145 @@
 
         // New function to attach listeners to edit and remove buttons
         const attachAddressButtonsListeners = () => {
-            const editButtons = document.querySelectorAll('.edit-address-btn');
-            const removeButtons = document.querySelectorAll('.remove-address-btn');
+    const editButtons = document.querySelectorAll('.edit-address-btn');
+    const removeButtons = document.querySelectorAll('.remove-address-btn');
+    const setDefaultButtons = document.querySelectorAll('.set-default-btn'); // New: Select all "Set as Default" buttons
 
-            // Add event listener for Edit buttons
-            editButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    const addressData = JSON.parse(button.dataset.address);
+    // Add event listener for Edit buttons
+    editButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const addressData = JSON.parse(button.dataset.address);
 
-                    
-                    document.getElementById('editAddressId').value = addressData._id;
-                    document.getElementById('edit-name').value = addressData.name;
-                    document.getElementById('edit-mobile').value = addressData.mobile || '';
-                    document.getElementById('edit-address1').value = addressData.address1;
-                    document.getElementById('edit-address2').value = addressData.address2 || '';
-                    document.getElementById('edit-city').value = addressData.city;
-                    document.getElementById('edit-state').value = addressData.state;
-                    document.getElementById('edit-pincode').value = addressData.pincode;
-                    document.getElementById('edit-country').value = addressData.country;
+            document.getElementById('editAddressId').value = addressData._id;
+            document.getElementById('edit-name').value = addressData.name;
+            document.getElementById('edit-mobile').value = addressData.mobile || '';
+            document.getElementById('edit-address1').value = addressData.address1;
+            document.getElementById('edit-address2').value = addressData.address2 || '';
+            document.getElementById('edit-city').value = addressData.city;
+            document.getElementById('edit-state').value = addressData.state;
+            document.getElementById('edit-pincode').value = addressData.pincode;
+            document.getElementById('edit-country').value = addressData.country;
 
-                    // Open the modal
-                    openModal('editAddressModal');
-                });
-            });
+            // Open the modal
+            openModal('editAddressModal');
+        });
+    });
 
-            // Add event listener for Remove buttons
-            removeButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    const addressId = button.dataset.addressId;
-                    Swal.fire({
-                        title: 'Are you sure?',
-                        text: "You won't be able to revert this!",
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonText: 'Yes, remove it!',
-                        cancelButtonText: 'No, cancel!',
-                        reverseButtons: true,
-                        customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button', cancelButton: 'swal-dark-button' }
-                    }).then(async (result) => {
-                        if (result.isConfirmed) {
-                            try {
-                                const response = await fetch(`/user/profile/address/remove/${addressId}`, {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                });
+    // Add event listener for Remove buttons
+    removeButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const addressId = button.dataset.addressId;
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, remove it!',
+                cancelButtonText: 'No, cancel!',
+                reverseButtons: true,
+                customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button', cancelButton: 'swal-dark-button' }
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch(`/user/profile/address/remove/${addressId}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                        });
 
-                                const result = await response.json();
+                        const result = await response.json();
 
-                                if (response.ok) {
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: 'Removed!',
-                                        text: result.message || 'Address has been removed.',
-                                        customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
-                                    });
-                                    // Reload the address section to show the updated list
-                                    setTimeout(() => {
-                                        loadSection('address');
-                                    }, 1500);
-                                } else {
-                                    Swal.fire({
-                                        icon: 'error',
-                                        title: 'Failed!',
-                                        text: result.message || 'Failed to remove address.',
-                                        customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
-                                    });
-                                }
-                            } catch (error) {
-                                console.error('Error removing address:', error);
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Network Error!',
-                                    text: 'Could not connect to server.',
-                                    customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
-                                });
-                            }
+                        if (response.ok) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Removed!',
+                                text: result.message || 'Address has been removed.',
+                                customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
+                            });
+                            setTimeout(() => {
+                                loadSection('address');
+                            }, 1500);
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Failed!',
+                                text: result.message || 'Failed to remove address.',
+                                customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
+                            });
                         }
-                    });
-                });
+                    } catch (error) {
+                        console.error('Error removing address:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Network Error!',
+                            text: 'Could not connect to server.',
+                            customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
+                        });
+                    }
+                }
             });
-        };
+        });
+    });
+
+    // New: Add event listener for "Set as Default" buttons
+    setDefaultButtons.forEach(button => {
+        button.addEventListener('click', async () => {
+            const addressId = button.dataset.addressId;
+
+            // Confirm with the user
+            Swal.fire({
+                title: 'Set as default?',
+                text: "This address will be your primary shipping address.",
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, set as default!',
+                cancelButtonText: 'Cancel',
+                reverseButtons: true,
+                customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button', cancelButton: 'swal-dark-button' }
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch(`/user/profile/address/set-default/${addressId}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                        });
+                        const result = await response.json();
+
+                        if (response.ok) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success!',
+                                text: result.message || 'Default address updated.',
+                                customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
+                            });
+                            // Reload the address section to show the updated default address
+                            setTimeout(() => {
+                                loadSection('address');
+                            }, 1500);
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error!',
+                                text: result.message || 'Failed to set default address.',
+                                customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error setting default address:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Network Error!',
+                            text: 'Could not connect to server.',
+                            customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
+                        });
+                    }
+                }
+            });
+        });
+    });
+};
+
 
         // Function to attach listener to the Edit Address form
         const attachEditAddressFormListener = () => {

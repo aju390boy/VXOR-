@@ -3,10 +3,49 @@
     <h2 class="text-3xl font-bold mb-6 text-white tracking-wide">My Addresses</h2>
 
     <div class="space-y-6">
-        <% if (address && address.length > 0) { %>
-            <% address.forEach(singleAddress => { %>
+        <% if (defaultAddress) { %>
+            <!-- Dedicated card for the default address with only the Edit button -->
+            <div class="border-2 border-blue-600 p-6 rounded-xl bg-gray-800 transition-all duration-300 shadow-xl relative">
+                <span class="absolute top-0 right-0 mt-4 mr-4 bg-blue-600 text-white text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">
+                    Default
+                </span>
+                <p class="font-bold text-lg text-white"><%= defaultAddress.name %></p>
+                <p class="text-sm text-gray-300 mt-1"><%= defaultAddress.mobile %></p>
+                <p class="text-sm mt-2"><%= defaultAddress.address1 %></p>
+                <% if (defaultAddress.address2) { %>
+                    <p class="text-sm"><%= defaultAddress.address2 %></p>
+                <% } %>
+                <p class="text-sm"><%= defaultAddress.city %>, <%= defaultAddress.state %>, <%= defaultAddress.pincode %></p>
+                <% if (defaultAddress.country) { %>
+                    <p class="text-sm"><%= defaultAddress.country %></p>
+                <% } %>
+                
+                <!-- Buttons for the default address (only Edit is visible) -->
+                <div class="mt-4 flex gap-3">
+                    <button 
+                        class="edit-address-btn font-medium text-sm text-white px-4 py-2 rounded-lg shadow-md transition-all duration-200 
+                            bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 
+                            focus:ring-blue-500 focus:ring-offset-gray-900" 
+                        type="button"
+                        data-address-id="<%= defaultAddress._id %>"
+                        data-address="<%= JSON.stringify(defaultAddress) %>"
+                    >
+                        Edit
+                    </button>
+                </div>
+            </div>
+        <% } %>
+
+        <% if (addresses && addresses.length > 0) { %>
+            <% addresses.forEach(singleAddress => { %>
+                <% 
+                    // Skip the default address to avoid showing it twice
+                    if (defaultAddress && singleAddress._id.toString() === defaultAddress._id.toString()) {
+                        return;
+                    } 
+                %>
+                <!-- Card for non-default addresses with all buttons -->
                 <div class="border border-gray-700 p-6 rounded-xl bg-gray-900 transition-all duration-300 hover:shadow-lg hover:border-blue-500 relative">
-                    <!-- The address content with updated fields -->
                     <p class="font-bold text-lg text-white"><%= singleAddress.name %></p>
                     <p class="text-sm text-gray-300 mt-1"><%= singleAddress.mobile %></p>
                     <p class="text-sm mt-2"><%= singleAddress.address1 %></p>
@@ -18,7 +57,7 @@
                         <p class="text-sm"><%= singleAddress.country %></p>
                     <% } %>
 
-                    <!-- Buttons with a premium look -->
+                    <!-- Buttons for non-default addresses -->
                     <div class="mt-4 flex gap-3">
                         <!-- Edit Button -->
                         <button 
@@ -42,10 +81,21 @@
                         >
                             Remove
                         </button>
+                        
+                        <!-- Set as Default Button -->
+                        <button 
+                            class="set-default-btn font-medium text-sm text-white px-4 py-2 rounded-lg shadow-md transition-all duration-200 
+                                bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 
+                                focus:ring-teal-500 focus:ring-offset-gray-900" 
+                            type="button"
+                            data-address-id="<%= singleAddress._id %>"
+                        >
+                            Set as Default
+                        </button>
                     </div>
                 </div>
             <% }); %>
-        <% } else { %>
+        <% } else if (!defaultAddress) { %>
             <p class="text-gray-500 text-center">No addresses added yet.</p>
         <% } %>
     </div>
@@ -59,6 +109,8 @@
         </button>
     </div>
 </div>
+
+
 
 <!-- add address modal -->
 <div id="addAddressModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-gray-900 bg-opacity-75 transition-opacity duration-300 ease-in-out">

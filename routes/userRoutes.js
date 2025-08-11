@@ -38,6 +38,7 @@ router.post('/profile/update', isAuthenticated, profileController. upload.single
 router.post('/profile/address/add', isAuthenticated, profileController.addAddress);
 router.post('/profile/address/edit/:addressId', isAuthenticated, profileController.editAddress);
 router.post('/profile/address/remove/:addressId', isAuthenticated, profileController.removeAddress);
+router.post('/profile/address/set-default/:addressId',isAuthenticated, profileController.setDefaultAddress);
 
 
 
