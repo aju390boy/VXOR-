@@ -1,4 +1,8 @@
+<!-- This is your updated productDetail.ejs file -->
 <% title = product.title || 'Product Details'; -%>
+
+<!-- Don't forget to link your custom animation stylesheet here -->
+
 
 <div class="detail-container">
     <div class="detail-image">
@@ -55,10 +59,10 @@
                 <div class="color-selector-wrapper">
                     <% product.colorVariants.forEach((colorVar, index) => { %>
                         <span class="color-dot <%= index === 0 ? 'active-color' : '' %>"
-                              data-color-name="<%= colorVar.colorName %>"
-                              data-color-index="<%= index %>"
-                              style="background-color: <%= colorVar.colorName === 'black' ? '#000' : colorVar.colorName %>;"
-                              title="<%= colorVar.colorName %>">
+                                data-color-name="<%= colorVar.colorName %>"
+                                data-color-index="<%= index %>"
+                                style="background-color: <%= colorVar.colorName === 'black' ? '#000' : colorVar.colorName %>;"
+                                title="<%= colorVar.colorName %>">
                         </span>
                     <% }) %>
                 </div>
@@ -80,9 +84,62 @@
             <span class="quantity-value" id="quantityValue" data-max-stock="0">1</span> <button class="quantity-btn plus">+</button>
         </div>
 
-       <button id="add-cart-btn" class="add-cart-btn">ADD TO CART</button>
+        <button id="add-cart-btn" class="add-cart-btn">
+          <span>
+            <div class="caddie">
+              <div class="caddie__top-support"></div>
+              <div class="caddie__top"></div>
+              <div class="caddie__body"></div>
+              <div class="caddie__trou"></div>
+              <div class="caddie__trou2"></div>
+              <div class="caddie__body-left"></div>
+              <div class="caddie__roue"></div>
+              <div class="caddie__roue2"></div>
+              <div class="caddie__trou3"></div>
+            </div>
+            Add to cart
+          </span>
+          <div>
+            <div>
+              <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+            </div>
+          </div>
+          <div>
+            <div></div>
+            <div></div>
+          </div>
+          <div>
+            <div>
+              <div></div>
+              <div></div>
+            </div>
+          </div>
+          <div>
+            <div>$<%= product.display_price.toFixed(2) %></div>
+          </div>
+          <div>
+            <div>Canceled</div>
+          </div>
+        </button>
         <p class="shipping-info">+ FREE SHIPPING ON ORDERS ₹50+</p>
     </div>
+</div>
+
+<!-- Simple custom modal for alerts. This replaces SweetAlert. -->
+<div id="custom-alert-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+  <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+    <div class="mt-3 text-center">
+      <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title"></h3>
+      <div class="mt-2 px-7 py-3">
+        <p class="text-sm text-gray-500" id="modal-message"></p>
+      </div>
+      <div class="items-center px-4 py-3">
+        <button id="ok-button" class="px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300">
+          OK
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <hr class="detail-separator">
@@ -97,394 +154,369 @@
     <% if (product.warranty) { %>
         <p>Warranty: <%= product.warranty %> year(s)</p>
     <% } %>
-    </div>
+</div>
 <div id="reviews-content" class="tab-content" style="display: none;">
     <p>Customer reviews will be displayed here.</p>
 </div>
 
+<!-- This is the updated script block that integrates the animation logic with the fetch call -->
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener("DOMContentLoaded", () => {
+        const productData = <%- JSON.stringify(product) %>;
+        const mainImage = document.getElementById('mainImage');
+        const thumbnailWrapper = document.getElementById('thumbnailWrapper');
+        const quantityValueSpan = document.getElementById('quantityValue');
+        const minusBtn = document.querySelector('.quantity-btn.minus');
+        const plusBtn = document.querySelector('.quantity-btn.plus');
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const displayPriceSpan = document.getElementById('displayPrice');
+        const originalPriceSpan = document.getElementById('originalPrice');
+        const discountPercentSpan = document.getElementById('discountPercent');
+        const saveAmountSpan = document.getElementById('saveAmount');
+        const stockStatusSpan = document.getElementById('stockStatus');
+        const selectedColorNameSpan = document.getElementById('selectedColorName');
+        const sizeButtonsWrapper = document.getElementById('sizeButtonsWrapper');
+        const colorDots = document.querySelectorAll('.color-dot');
+        const addToCartBtn = document.getElementById('add-cart-btn');
 
-    // Pass the full product data (especially colorVariants) to client-side JS
-    const productData = <%- JSON.stringify(product) %>;
+        let currentSelectedColorIndex = 0; // Default to the first color variant
+        let currentSelectedSize = null;
+        let currentQuantity = 1;
 
-    const mainImage = document.getElementById('mainImage');
-    const thumbnailWrapper = document.getElementById('thumbnailWrapper');
-    const quantityValueSpan = document.getElementById('quantityValue');
-    const minusBtn = document.querySelector('.quantity-btn.minus');
-    const plusBtn = document.querySelector('.quantity-btn.plus');
-    const tabButtons = document.querySelectorAll('.tab-button');
-    const tabContents = document.querySelectorAll('.tab-content');
-
-    const displayPriceSpan = document.getElementById('displayPrice');
-    const originalPriceSpan = document.getElementById('originalPrice');
-    const discountPercentSpan = document.getElementById('discountPercent');
-    const saveAmountSpan = document.getElementById('saveAmount');
-    const stockStatusSpan = document.getElementById('stockStatus');
-    const selectedColorNameSpan = document.getElementById('selectedColorName');
-    const sizeButtonsWrapper = document.getElementById('sizeButtonsWrapper');
-    const colorDots = document.querySelectorAll('.color-dot');
-    
-    // Get the "Add to Cart" button
-    const addToCartBtn = document.getElementById('add-cart-btn');
-
-    let currentSelectedColorIndex = 0; // Default to the first color variant
-    let currentSelectedSize = null;
-    let currentQuantity = 1;
-
-    // --- Helper Functions ---
-
-    function updateThumbnails(images) {
-        thumbnailWrapper.innerHTML = ''; // Clear existing thumbnails
-        if (images && images.length > 0) {
-            images.forEach((imgSrc, index) => {
-                const thumb = document.createElement('img');
-                thumb.classList.add('thumbnail');
-                if (index === 0) {
-                    thumb.classList.add('active-thumb');
-                }
-                thumb.src = imgSrc;
-                thumb.alt = `Thumbnail ${index}`;
-                thumbnailWrapper.appendChild(thumb);
-            });
-            mainImage.src = images[0]; // Set main image to the first of the new set
-            attachThumbnailListeners(); // Re-attach listeners after new elements
-        } else {
-            mainImage.src = '/images/placeholder.png'; // Fallback
-        }
-    }
-
-    function attachThumbnailListeners() {
-        document.querySelectorAll('.thumbnail').forEach(thumb => {
-            thumb.removeEventListener('click', handleThumbnailClick); // Prevent duplicate listeners
-            thumb.addEventListener('click', handleThumbnailClick);
-        });
-    }
-
-    function handleThumbnailClick() {
-        mainImage.src = this.src;
-        document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active-thumb'));
-        this.classList.add('active-thumb');
-    }
-
-    function updateSizeButtons(sizes) {
-        sizeButtonsWrapper.innerHTML = ''; // Clear existing size buttons
-        if (sizes && sizes.length > 0) {
-            sizes.forEach(size => {
-                const button = document.createElement('button');
-                button.classList.add('size-button');
-                button.textContent = size;
-                button.dataset.size = size;
-                sizeButtonsWrapper.appendChild(button);
-            });
-            attachSizeButtonListeners(); // Re-attach listeners
-        }
-    }
-
-    function attachSizeButtonListeners() {
-        document.querySelectorAll('.size-button').forEach(button => {
-            button.removeEventListener('click', handleSizeButtonClick); // Prevent duplicate listeners
-            button.addEventListener('click', handleSizeButtonClick);
-        });
-    }
-
-    function handleSizeButtonClick() {
-        document.querySelectorAll('.size-button').forEach(btn => btn.classList.remove('active-size'));
-        this.classList.add('active-size');
-        currentSelectedSize = this.dataset.size;
-        updatePriceAndStock(); // Update price and stock based on selected size
-    }
-
-    function updatePriceAndStock() {
-        const selectedColorVariant = productData.colorVariants[currentSelectedColorIndex];
-        let priceFound = false;
-        let stockFound = false;
-
-        if (selectedColorVariant && selectedColorVariant.variants && currentSelectedSize) {
-            const selectedVariant = selectedColorVariant.variants.find(v => v.size === currentSelectedSize);
-            if (selectedVariant) {
-                // Update display price
-                displayPriceSpan.textContent = `₹${selectedVariant.price.toFixed(2)}`;
-                priceFound = true;
-
-                // Update regular price / discount (if regular_price exists in variant data)
-                const initialProductRegularPrice = productData.regular_price; // The highest price found by controller for default variant
-
-                if (initialProductRegularPrice > selectedVariant.price) {
-                    originalPriceSpan.textContent = `₹${initialProductRegularPrice.toFixed(2)}`;
-                    originalPriceSpan.style.display = 'inline';
-                    const discount = ((1 - (selectedVariant.price / initialProductRegularPrice)) * 100).toFixed(0);
-                    discountPercentSpan.textContent = `(${discount}% Off)`;
-                    discountPercentSpan.style.display = 'inline';
-                    saveAmountSpan.textContent = `You save ₹${(initialProductRegularPrice - selectedVariant.price).toFixed(2)}`;
-                    saveAmountSpan.style.display = 'block';
-                } else {
-                    originalPriceSpan.style.display = 'none';
-                    discountPercentSpan.style.display = 'none';
-                    saveAmountSpan.style.display = 'none';
-                }
-
-
-                // Update stock status
-                if (selectedVariant.stock > 0) {
-                    stockStatusSpan.textContent = `IN STOCK (${selectedVariant.stock} available)`;
-                    stockStatusSpan.style.color = 'green';
-                    quantityValueSpan.dataset.maxStock = selectedVariant.stock; // Set max stock for quantity selector
-                } else {
-                    stockStatusSpan.textContent = 'OUT OF STOCK';
-                    stockStatusSpan.style.color = 'red';
-                    quantityValueSpan.dataset.maxStock = 0;
-                }
-                stockFound = true;
-            }
+        // Custom modal functions
+        function showModal(title, message) {
+            const modal = document.getElementById('custom-alert-modal');
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-message').textContent = message;
+            modal.classList.remove('hidden');
         }
 
-        // If no price/stock found for the selection, display defaults/unavailable
-        if (!priceFound) {
-            displayPriceSpan.textContent = `₹0.00`;
-            originalPriceSpan.style.display = 'none';
-            discountPercentSpan.style.display = 'none';
-            saveAmountSpan.style.display = 'none';
-        }
-        if (!stockFound) {
-            stockStatusSpan.textContent = 'Unavailable';
-            stockStatusSpan.style.color = 'orange';
-            quantityValueSpan.dataset.maxStock = 0;
+        function hideModal() {
+            const modal = document.getElementById('custom-alert-modal');
+            modal.classList.add('hidden');
         }
 
-        // Reset quantity if it exceeds new max stock
-        if (currentQuantity > parseInt(quantityValueSpan.dataset.maxStock)) {
-            currentQuantity = Math.max(1, parseInt(quantityValueSpan.dataset.maxStock));
-            quantityValueSpan.textContent = currentQuantity;
-        }
-        updateQuantityButtons(); // Enable/disable quantity buttons
-    }
+        document.getElementById('ok-button').addEventListener('click', hideModal);
 
-
-    // --- Event Listeners ---
-
-    // Initial thumbnail setup
-    attachThumbnailListeners();
-
-    // Color dot click handler
-    colorDots.forEach(dot => {
-        dot.addEventListener('click', () => {
-            colorDots.forEach(d => d.classList.remove('active-color'));
-            dot.classList.add('active-color');
-
-            currentSelectedColorIndex = parseInt(dot.dataset.colorIndex);
-            selectedColorNameSpan.textContent = dot.dataset.colorName;
-
-            const selectedColorVariant = productData.colorVariants[currentSelectedColorIndex];
-
-            // Update images
-            const newImages = selectedColorVariant.images.map(img => `/uploads/products/${img}`);
-            updateThumbnails(newImages);
-
-            // Update available sizes for the new color
-            const newSizes = selectedColorVariant.variants.map(v => v.size);
-            updateSizeButtons(newSizes);
-
-            // Auto-select first available size for the new color, if any
-            if (newSizes.length > 0) {
-                currentSelectedSize = newSizes[0];
-                const initialSizeButton = document.querySelector(`.size-button[data-size="${currentSelectedSize}"]`);
-                if (initialSizeButton) {
-                    initialSizeButton.classList.add('active-size');
-                }
+        // --- Helper Functions ---
+        function updateThumbnails(images) {
+            thumbnailWrapper.innerHTML = ''; // Clear existing thumbnails
+            if (images && images.length > 0) {
+                images.forEach((imgSrc, index) => {
+                    const thumb = document.createElement('img');
+                    thumb.classList.add('thumbnail');
+                    if (index === 0) {
+                        thumb.classList.add('active-thumb');
+                    }
+                    // The EJS template provides the full path, so use it directly.
+                    thumb.src = `/uploads/products/${imgSrc}`;
+                    thumb.alt = `Thumbnail ${index}`;
+                    thumbnailWrapper.appendChild(thumb);
+                });
+                mainImage.src = `/uploads/products/${images[0]}`; // Set main image to the first of the new set
+                attachThumbnailListeners(); // Re-attach listeners after new elements
             } else {
-                currentSelectedSize = null;
+                mainImage.src = '/images/placeholder.png'; // Fallback
             }
-
-            updatePriceAndStock(); // Update price and stock based on new color and (potentially new) size
-        });
-    });
-
-    // Quantity selector
-    minusBtn.addEventListener('click', () => {
-        let currentQuantity = parseInt(quantityValueSpan.textContent);
-        if (currentQuantity > 1) {
-            quantityValueSpan.textContent = currentQuantity - 1;
-        }
-        updateQuantityButtons();
-    });
-
-    plusBtn.addEventListener('click', () => {
-        let currentQuantity = parseInt(quantityValueSpan.textContent);
-        const maxStock = parseInt(quantityValueSpan.dataset.maxStock);
-        if (maxStock > 0 && currentQuantity < maxStock) { // Check against max stock
-            quantityValueSpan.textContent = currentQuantity + 1;
-        }
-        updateQuantityButtons();
-    });
-
-    function updateQuantityButtons() {
-        const currentQuantity = parseInt(quantityValueSpan.textContent);
-        const maxStock = parseInt(quantityValueSpan.dataset.maxStock);
-
-        if (currentQuantity <= 1) {
-            minusBtn.disabled = true;
-            minusBtn.style.opacity = 0.5;
-            minusBtn.style.cursor = 'not-allowed';
-        } else {
-            minusBtn.disabled = false;
-            minusBtn.style.opacity = 1;
-            minusBtn.style.cursor = 'pointer';
         }
 
-        if (currentQuantity >= maxStock) {
-            plusBtn.disabled = true;
-            plusBtn.style.opacity = 0.5;
-            plusBtn.style.cursor = 'not-allowed';
-        } else {
-            plusBtn.disabled = false;
-            plusBtn.style.opacity = 1;
-            plusBtn.style.cursor = 'pointer';
-        }
-    }
-
-
-    // Tab functionality (already good)
-    tabButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            tabButtons.forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
-
-            tabContents.forEach(content => content.style.display = 'none');
-            document.getElementById(button.dataset.tab + '-content').style.display = 'block';
-        });
-    });
-
-    // --- Initial Load Setup ---
-    // Set first thumbnail as active by default on load (handled by EJS now)
-    // If no sizes are pre-selected in EJS, select the first size available for the default color
-    const initialSizesForDefaultColor = productData.colorVariants && productData.colorVariants.length > 0
-        ? productData.colorVariants[0].variants.map(v => v.size)
-        : [];
-
-    if (initialSizesForDefaultColor.length > 0) {
-        currentSelectedSize = initialSizesForDefaultColor[0];
-        const initialSizeButton = document.querySelector(`.size-button[data-size="${currentSelectedSize}"]`);
-        if (initialSizeButton) {
-            initialSizeButton.classList.add('active-size');
-        }
-    }
-    attachSizeButtonListeners(); // Attach listeners for initial size buttons
-    updatePriceAndStock(); // Set initial price and stock based on default color/size
-
-
-    // --- Image Zoom Feature ---
-    let zoomLevel = 1;
-    const maxZoom = 3; // Maximum zoom level
-    const zoomStep = 0.5; // How much to zoom in/out with each step
-
-    mainImage.style.transformOrigin = '0% 0%'; // Set initial origin
-    mainImage.style.transition = 'transform 0.1s ease-out'; // Smooth transition
-
-    mainImage.addEventListener('mousemove', (e) => {
-        if (zoomLevel > 1) {
-            const rect = mainImage.getBoundingClientRect();
-            const x = (e.clientX - rect.left) / rect.width;
-            const y = (e.clientY - rect.top) / rect.height;
-
-            mainImage.style.transformOrigin = `${x * 100}% ${y * 100}%`;
-            mainImage.style.transform = `scale(${zoomLevel})`;
-        }
-    });
-
-    mainImage.addEventListener('mouseleave', () => {
-        if (zoomLevel > 1) {
-            mainImage.style.transform = `scale(1)`;
-            zoomLevel = 1; // Reset zoom when mouse leaves
-        }
-    });
-
-    mainImage.addEventListener('wheel', (e) => {
-        e.preventDefault(); // Prevent page scroll
-
-        if (e.deltaY < 0) { // Scrolling up (zoom in)
-            zoomLevel = Math.min(zoomLevel + zoomStep, maxZoom);
-        } else { // Scrolling down (zoom out)
-            zoomLevel = Math.max(zoomLevel - zoomStep, 1);
+        function attachThumbnailListeners() {
+            document.querySelectorAll('.thumbnail').forEach(thumb => {
+                thumb.removeEventListener('click', handleThumbnailClick);
+                thumb.addEventListener('click', handleThumbnailClick);
+            });
         }
 
-        if (zoomLevel === 1) {
-            mainImage.style.transform = `scale(1)`; // Ensure no scaling if reset to 1
-        } else {
-            // Apply zoom based on current mouse position for natural feel
-            const rect = mainImage.getBoundingClientRect();
-            const x = (e.clientX - rect.left) / rect.width;
-            const y = (e.clientY - rect.top) / rect.height;
-            mainImage.style.transformOrigin = `${x * 100}% ${y * 100}%`;
-            mainImage.style.transform = `scale(${zoomLevel})`;
+        function handleThumbnailClick() {
+            mainImage.src = this.src;
+            document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active-thumb'));
+            this.classList.add('active-thumb');
         }
-    }, { passive: false }); // Use passive: false to allow preventDefault
 
-    // --- ADD TO CART FUNCTIONALITY ---
-    if (addToCartBtn) {
-        addToCartBtn.addEventListener('click', async () => {
-            // Get the current selected values from the script's state
-            const quantity = parseInt(quantityValueSpan.textContent, 10);
-            const productId = productData._id;
-            const colorName = productData.colorVariants[currentSelectedColorIndex].colorName;
-            const size = currentSelectedSize;
-
-            try {
-                console.log('Sending data to backend:', { productId, colorName, size, quantity });
-
-                const response = await fetch('/user/cart', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        // You may need to include an authorization token here
-                    },
-                    body: JSON.stringify({
-                        productId,
-                        colorName,
-                        size,
-                        quantity
-                    })
+        function updateSizeButtons(sizes) {
+            sizeButtonsWrapper.innerHTML = ''; // Clear existing size buttons
+            if (sizes && sizes.length > 0) {
+                sizes.forEach(size => {
+                    const button = document.createElement('button');
+                    button.classList.add('size-button');
+                    button.textContent = size;
+                    button.dataset.size = size;
+                    sizeButtonsWrapper.appendChild(button);
                 });
+                attachSizeButtonListeners(); // Re-attach listeners
+            }
+        }
 
-                const data = await response.json();
+        function attachSizeButtonListeners() {
+            document.querySelectorAll('.size-button').forEach(button => {
+                button.removeEventListener('click', handleSizeButtonClick);
+                button.addEventListener('click', handleSizeButtonClick);
+            });
+        }
 
-                if (response.ok) {
-                    console.log('Product added to cart:', data.message);
-                    Swal.fire({
-                        title: 'Success!',
-                        text: data.message,
-                        icon: 'success',
-                        confirmButtonText: 'View Cart'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            window.location.href = '/user/cart';
-                        }
-                    });
-                } else {
-                    console.error('Failed to add to cart:', data.message);
-                    Swal.fire({
-                        title: 'Error!',
-                        text: `Error: ${data.message}`,
-                        icon: 'error',
-                        confirmButtonText: 'OK'
-                    });
+        function handleSizeButtonClick() {
+            document.querySelectorAll('.size-button').forEach(btn => btn.classList.remove('active-size'));
+            this.classList.add('active-size');
+            currentSelectedSize = this.dataset.size;
+            updatePriceAndStock(); // Update price and stock based on selected size
+        }
+
+        function updatePriceAndStock() {
+            const selectedColorVariant = productData.colorVariants[currentSelectedColorIndex];
+            let priceFound = false;
+            let stockFound = false;
+
+            if (selectedColorVariant && selectedColorVariant.variants && currentSelectedSize) {
+                const selectedVariant = selectedColorVariant.variants.find(v => v.size === currentSelectedSize);
+                if (selectedVariant) {
+                    displayPriceSpan.textContent = `₹${selectedVariant.price.toFixed(2)}`;
+                    priceFound = true;
+                    const initialProductRegularPrice = productData.regular_price;
+
+                    if (initialProductRegularPrice && initialProductRegularPrice > selectedVariant.price) {
+                        originalPriceSpan.textContent = `₹${initialProductRegularPrice.toFixed(2)}`;
+                        originalPriceSpan.style.display = 'inline';
+                        const discount = ((1 - (selectedVariant.price / initialProductRegularPrice)) * 100).toFixed(0);
+                        discountPercentSpan.textContent = `(${discount}% Off)`;
+                        discountPercentSpan.style.display = 'inline';
+                        saveAmountSpan.textContent = `You save ₹${(initialProductRegularPrice - selectedVariant.price).toFixed(2)}`;
+                        saveAmountSpan.style.display = 'block';
+                    } else {
+                        originalPriceSpan.style.display = 'none';
+                        discountPercentSpan.style.display = 'none';
+                        saveAmountSpan.style.display = 'none';
+                    }
+
+                    if (selectedVariant.stock > 0) {
+                        stockStatusSpan.textContent = `IN STOCK (${selectedVariant.stock} available)`;
+                        stockStatusSpan.style.color = 'green';
+                        quantityValueSpan.dataset.maxStock = selectedVariant.stock;
+                    } else {
+                        stockStatusSpan.textContent = 'OUT OF STOCK';
+                        stockStatusSpan.style.color = 'red';
+                        quantityValueSpan.dataset.maxStock = 0;
+                    }
+                    stockFound = true;
                 }
-            } catch (error) {
-                console.error('Network error:', error);
-                Swal.fire({
-                    title: 'Error!',
-                    text: 'An unexpected error occurred. Please try again.',
-                    icon: 'error',
-                    confirmButtonText: 'OK'
-                });
+            }
+            if (!priceFound) {
+                displayPriceSpan.textContent = `₹0.00`;
+                originalPriceSpan.style.display = 'none';
+                discountPercentSpan.style.display = 'none';
+                saveAmountSpan.style.display = 'none';
+            }
+            if (!stockFound) {
+                stockStatusSpan.textContent = 'Unavailable';
+                stockStatusSpan.style.color = 'orange';
+                quantityValueSpan.dataset.maxStock = 0;
+            }
+
+            if (currentQuantity > parseInt(quantityValueSpan.dataset.maxStock)) {
+                currentQuantity = Math.max(1, parseInt(quantityValueSpan.dataset.maxStock));
+                quantityValueSpan.textContent = currentQuantity;
+            }
+            updateQuantityButtons();
+        }
+
+        // --- Event Listeners ---
+        // Initial setup for the first color variant
+        if (productData && productData.colorVariants && productData.colorVariants.length > 0) {
+            const initialImages = productData.colorVariants[0].images;
+            updateThumbnails(initialImages);
+            const initialSizes = productData.colorVariants[0].variants.map(v => v.size);
+            updateSizeButtons(initialSizes);
+            if (initialSizes.length > 0) {
+                currentSelectedSize = initialSizes[0];
+            }
+            const initialSizeButton = document.querySelector(`.size-button[data-size="${currentSelectedSize}"]`);
+            if (initialSizeButton) {
+                initialSizeButton.classList.add('active-size');
+            }
+            updatePriceAndStock();
+        }
+
+        colorDots.forEach(dot => {
+            dot.addEventListener('click', () => {
+                colorDots.forEach(d => d.classList.remove('active-color'));
+                dot.classList.add('active-color');
+                
+                // --- FIX: Use camelCase for dataset properties ---
+                currentSelectedColorIndex = parseInt(dot.dataset.colorIndex);
+                selectedColorNameSpan.textContent = dot.dataset.colorName;
+
+                const selectedColorVariant = productData.colorVariants[currentSelectedColorIndex];
+                const newImages = selectedColorVariant.images;
+                updateThumbnails(newImages);
+
+                const newSizes = selectedColorVariant.variants.map(v => v.size);
+                updateSizeButtons(newSizes);
+
+                if (newSizes.length > 0) {
+                    currentSelectedSize = newSizes[0];
+                    const initialSizeButton = document.querySelector(`.size-button[data-size="${currentSelectedSize}"]`);
+                    if (initialSizeButton) {
+                        initialSizeButton.classList.add('active-size');
+                    }
+                } else {
+                    currentSelectedSize = null;
+                }
+                updatePriceAndStock();
+            });
+        });
+
+        minusBtn.addEventListener('click', () => {
+            let currentQuantity = parseInt(quantityValueSpan.textContent);
+            if (currentQuantity > 1) {
+                quantityValueSpan.textContent = currentQuantity - 1;
+            }
+            updateQuantityButtons();
+        });
+
+        plusBtn.addEventListener('click', () => {
+            let currentQuantity = parseInt(quantityValueSpan.textContent);
+            const maxStock = parseInt(quantityValueSpan.dataset.maxStock);
+            if (maxStock > 0 && currentQuantity < maxStock) {
+                quantityValueSpan.textContent = currentQuantity + 1;
+            }
+            updateQuantityButtons();
+        });
+
+        function updateQuantityButtons() {
+            const currentQuantity = parseInt(quantityValueSpan.textContent);
+            const maxStock = parseInt(quantityValueSpan.dataset.maxStock);
+
+            if (currentQuantity <= 1) {
+                minusBtn.disabled = true;
+                minusBtn.style.opacity = 0.5;
+                minusBtn.style.cursor = 'not-allowed';
+            } else {
+                minusBtn.disabled = false;
+                minusBtn.style.opacity = 1;
+                minusBtn.style.cursor = 'pointer';
+            }
+
+            if (currentQuantity >= maxStock) {
+                plusBtn.disabled = true;
+                plusBtn.style.opacity = 0.5;
+                plusBtn.style.cursor = 'not-allowed';
+            } else {
+                plusBtn.disabled = false;
+                plusBtn.style.opacity = 1;
+                plusBtn.style.cursor = 'pointer';
+            }
+        }
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                tabContents.forEach(content => content.style.display = 'none');
+                document.getElementById(button.dataset.tab + '-content').style.display = 'block';
+            });
+        });
+
+        // --- Image Zoom Feature ---
+        let zoomLevel = 1;
+        const maxZoom = 3;
+        const zoomStep = 0.5;
+
+        mainImage.style.transformOrigin = '0% 0%';
+        mainImage.style.transition = 'transform 0.1s ease-out';
+
+        mainImage.addEventListener('mousemove', (e) => {
+            if (zoomLevel > 1) {
+                const rect = mainImage.getBoundingClientRect();
+                const x = (e.clientX - rect.left) / rect.width;
+                const y = (e.clientY - rect.top) / rect.height;
+                mainImage.style.transformOrigin = `${x * 100}% ${y * 100}%`;
+                mainImage.style.transform = `scale(${zoomLevel})`;
             }
         });
-    }
 
-});
+        mainImage.addEventListener('mouseleave', () => {
+            if (zoomLevel > 1) {
+                mainImage.style.transform = `scale(1)`;
+                zoomLevel = 1;
+            }
+        });
 
+        mainImage.addEventListener('wheel', (e) => {
+            e.preventDefault();
+
+            if (e.deltaY < 0) {
+                zoomLevel = Math.min(zoomLevel + zoomStep, maxZoom);
+            } else {
+                zoomLevel = Math.max(zoomLevel - zoomStep, 1);
+            }
+
+            if (zoomLevel === 1) {
+                mainImage.style.transform = `scale(1)`;
+            } else {
+                const rect = mainImage.getBoundingClientRect();
+                const x = (e.clientX - rect.left) / rect.width;
+                const y = (e.clientY - rect.top) / rect.height;
+                mainImage.style.transformOrigin = `${x * 100}% ${y * 100}%`;
+                mainImage.style.transform = `scale(${zoomLevel})`;
+            }
+        }, { passive: false });
+
+        // --- ADD TO CART FUNCTIONALITY with new animation and modal ---
+        if (addToCartBtn) {
+            addToCartBtn.addEventListener("click", async () => {
+                const quantity = parseInt(quantityValueSpan.textContent, 10);
+                const maxStock = parseInt(quantityValueSpan.dataset.maxStock);
+                const productId = productData._id;
+                const colorName = productData.colorVariants[currentSelectedColorIndex].colorName;
+                const size = currentSelectedSize;
+
+                if (!size) {
+                    showModal('Error', 'Please select a size before adding to cart.');
+                    return;
+                }
+                
+                if (maxStock <= 0) {
+                    showModal('Error', 'This item is out of stock.');
+                    return;
+                }
+                
+                try {
+                    if (!addToCartBtn.classList.contains("tapis-roulant")) {
+                        addToCartBtn.classList.add("tapis-roulant");
+                    }
+
+                    const response = await fetch('/user/cart', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ productId, colorName, size, quantity })
+                    });
+                     
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        if (!addToCartBtn.classList.contains("added")) {
+                            addToCartBtn.classList.add("added");
+                            addToCartBtn.style.pointerEvents = "none";
+                            setTimeout(() => {
+                                addToCartBtn.classList.remove("added");
+                                addToCartBtn.classList.remove("tapis-roulant");
+                                addToCartBtn.style.pointerEvents = "initial";
+                                showModal('Success!', data.message);
+                            }, 3500);
+                        }
+                    } else {
+                        showModal('Error!', data.message);
+                        addToCartBtn.classList.remove("tapis-roulant");
+                    }
+                } catch (error) {
+                    console.error('Network error:', error);
+                    showModal('Error!', 'An unexpected error occurred. Please try again.');
+                    addToCartBtn.classList.remove("tapis-roulant");
+                }
+            });
+        }
+    });
 </script>
-
 <style>
 /* Add this to your CSS file, or directly in a <style> tag in productDetail.ejs */
 .zoomable-image {
