@@ -80,7 +80,7 @@
             <span class="quantity-value" id="quantityValue" data-max-stock="0">1</span> <button class="quantity-btn plus">+</button>
         </div>
 
-        <button class="add-cart-btn">ADD TO CART</button>
+       <button id="add-cart-btn" class="add-cart-btn">ADD TO CART</button>
         <p class="shipping-info">+ FREE SHIPPING ON ORDERS ₹50+</p>
     </div>
 </div>
@@ -103,6 +103,8 @@
 </div>
 
 <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
     // Pass the full product data (especially colorVariants) to client-side JS
     const productData = <%- JSON.stringify(product) %>;
 
@@ -122,6 +124,9 @@
     const selectedColorNameSpan = document.getElementById('selectedColorName');
     const sizeButtonsWrapper = document.getElementById('sizeButtonsWrapper');
     const colorDots = document.querySelectorAll('.color-dot');
+    
+    // Get the "Add to Cart" button
+    const addToCartBtn = document.getElementById('add-cart-btn');
 
     let currentSelectedColorIndex = 0; // Default to the first color variant
     let currentSelectedSize = null;
@@ -203,9 +208,6 @@
                 priceFound = true;
 
                 // Update regular price / discount (if regular_price exists in variant data)
-                // For simplicity, we'll assume regular_price is the 'maxPriceForDefaultVariant' from controller for now,
-                // or you might add a 'regularPrice' field to individual size variants in your schema.
-                // For now, let's keep the discount calculation based on what's available
                 const initialProductRegularPrice = productData.regular_price; // The highest price found by controller for default variant
 
                 if (initialProductRegularPrice > selectedVariant.price) {
@@ -239,10 +241,10 @@
 
         // If no price/stock found for the selection, display defaults/unavailable
         if (!priceFound) {
-             displayPriceSpan.textContent = `₹0.00`;
-             originalPriceSpan.style.display = 'none';
-             discountPercentSpan.style.display = 'none';
-             saveAmountSpan.style.display = 'none';
+            displayPriceSpan.textContent = `₹0.00`;
+            originalPriceSpan.style.display = 'none';
+            discountPercentSpan.style.display = 'none';
+            saveAmountSpan.style.display = 'none';
         }
         if (!stockFound) {
             stockStatusSpan.textContent = 'Unavailable';
@@ -286,7 +288,10 @@
             // Auto-select first available size for the new color, if any
             if (newSizes.length > 0) {
                 currentSelectedSize = newSizes[0];
-                document.querySelector(`.size-button[data-size="${currentSelectedSize}"]`).classList.add('active-size');
+                const initialSizeButton = document.querySelector(`.size-button[data-size="${currentSelectedSize}"]`);
+                if (initialSizeButton) {
+                    initialSizeButton.classList.add('active-size');
+                }
             } else {
                 currentSelectedSize = null;
             }
@@ -351,23 +356,22 @@
     });
 
     // --- Initial Load Setup ---
-    document.addEventListener('DOMContentLoaded', () => {
-        // Set first thumbnail as active by default on load (handled by EJS now)
-        // If no sizes are pre-selected in EJS, select the first size available for the default color
-        const initialSizesForDefaultColor = productData.colorVariants && productData.colorVariants.length > 0
-            ? productData.colorVariants[0].variants.map(v => v.size)
-            : [];
+    // Set first thumbnail as active by default on load (handled by EJS now)
+    // If no sizes are pre-selected in EJS, select the first size available for the default color
+    const initialSizesForDefaultColor = productData.colorVariants && productData.colorVariants.length > 0
+        ? productData.colorVariants[0].variants.map(v => v.size)
+        : [];
 
-        if (initialSizesForDefaultColor.length > 0) {
-            currentSelectedSize = initialSizesForDefaultColor[0];
-            const initialSizeButton = document.querySelector(`.size-button[data-size="${currentSelectedSize}"]`);
-            if (initialSizeButton) {
-                initialSizeButton.classList.add('active-size');
-            }
+    if (initialSizesForDefaultColor.length > 0) {
+        currentSelectedSize = initialSizesForDefaultColor[0];
+        const initialSizeButton = document.querySelector(`.size-button[data-size="${currentSelectedSize}"]`);
+        if (initialSizeButton) {
+            initialSizeButton.classList.add('active-size');
         }
-        attachSizeButtonListeners(); // Attach listeners for initial size buttons
-        updatePriceAndStock(); // Set initial price and stock based on default color/size
-    });
+    }
+    attachSizeButtonListeners(); // Attach listeners for initial size buttons
+    updatePriceAndStock(); // Set initial price and stock based on default color/size
+
 
     // --- Image Zoom Feature ---
     let zoomLevel = 1;
@@ -415,6 +419,70 @@
             mainImage.style.transform = `scale(${zoomLevel})`;
         }
     }, { passive: false }); // Use passive: false to allow preventDefault
+
+    // --- ADD TO CART FUNCTIONALITY ---
+    if (addToCartBtn) {
+        addToCartBtn.addEventListener('click', async () => {
+            // Get the current selected values from the script's state
+            const quantity = parseInt(quantityValueSpan.textContent, 10);
+            const productId = productData._id;
+            const colorName = productData.colorVariants[currentSelectedColorIndex].colorName;
+            const size = currentSelectedSize;
+
+            try {
+                console.log('Sending data to backend:', { productId, colorName, size, quantity });
+
+                const response = await fetch('/user/cart', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        // You may need to include an authorization token here
+                    },
+                    body: JSON.stringify({
+                        productId,
+                        colorName,
+                        size,
+                        quantity
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    console.log('Product added to cart:', data.message);
+                    Swal.fire({
+                        title: 'Success!',
+                        text: data.message,
+                        icon: 'success',
+                        confirmButtonText: 'View Cart'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = '/user/cart';
+                        }
+                    });
+                } else {
+                    console.error('Failed to add to cart:', data.message);
+                    Swal.fire({
+                        title: 'Error!',
+                        text: `Error: ${data.message}`,
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            } catch (error) {
+                console.error('Network error:', error);
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'An unexpected error occurred. Please try again.',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            }
+        });
+    }
+
+});
+
 </script>
 
 <style>

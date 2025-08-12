@@ -35,7 +35,7 @@ const formatProductForListing = (product) => {
 exports.getAllProducts = async (req, res) => {
     try {
         const { category, brand, price, rating, color, size, sort } = req.query;
-        console.log({ category, brand, price, rating, color, size, sort });
+       
 
         let queryObj = { isDeleted: false, isListed: true }; 
         let pipeline = [{ $match: queryObj }];
