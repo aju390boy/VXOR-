@@ -2,6 +2,7 @@ const User = require('../../model/user.js');
 const Otp = require('../../model/otp.js'); 
 
 const isAuthenticated = async (req, res, next) => {
+    console.log("middlew are hittedddd")
     if (req.session && req.session.user && req.session.user._id) {
         try {
             const user = await User.findById(req.session.user._id).lean();
@@ -12,25 +13,30 @@ const isAuthenticated = async (req, res, next) => {
                     res.clearCookie('connect.sid');
                     return res.redirect(`/login?error=${encodeURIComponent(logoutMessage)}`);
                 });
-                return;
-            }
-            if (user.status !== "active") {
-                const logoutMessage = 'Your account has been deactivated or blocked. Please contact support.';
-                req.session.destroy(err => {
-                    if (err) console.error("Error destroying session (account status):", err);
-                    res.clearCookie('connect.sid');
-                    return res.redirect(`/login?error=${encodeURIComponent(logoutMessage)}`);
-                });
-                return;
-            }
-            if (!user.isVerified) {
+                  console.log("Error.......error middleware1")
+                  return;
+                }
+                if (user.status !== "active") {
+                    console.log("Error.......error middleware3")
+                    const logoutMessage = 'Your account has been deactivated or blocked. Please contact support.';
+                    req.session.destroy(err => {
+                        if (err) console.error("Error destroying session (account status):", err);
+                        res.clearCookie('connect.sid');
+                        return res.redirect(`/login?error=${encodeURIComponent(logoutMessage)}`);
+                    });
+                    return;
+                }
+                if (!user.isVerified) {
+                console.log("Error.......error middleware2")
                 const emailParam = user.email ? `email=${encodeURIComponent(user.email)}` : '';
                 const redirectToUrl = `/verify-otp?${emailParam}&context=signup&error=${encodeURIComponent('Your account is not verified. Please verify your email.')}`;
                 return res.redirect(redirectToUrl);
             }
             req.user = user;
+              console.log("Error.......error middleware")
             return next();
         } catch (error) {
+           
             console.error("Error fetching user from session in isAuthenticated middleware:", error);
             const errorMessage = 'An error occurred during authentication. Please log in again.';
             req.session.destroy(err => {
@@ -41,6 +47,7 @@ const isAuthenticated = async (req, res, next) => {
             return;
         }
     } else {
+       
         const errorMessage = 'Please log in to access this page.';
         req.session.returnTo = req.originalUrl;
         return res.redirect(`/login?error=${encodeURIComponent(errorMessage)}`);

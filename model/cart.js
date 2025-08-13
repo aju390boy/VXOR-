@@ -19,7 +19,7 @@ const cartItemSchema = new mongoose.Schema({
         required: true, 
         min: 1 
     }
-}, { _id: false }); // _id: false prevents Mongoose from automatically adding an _id to subdocuments
+}); // _id: false prevents Mongoose from automatically adding an _id to subdocuments
 
 // Main Cart Schema
 const cartSchema = new mongoose.Schema({

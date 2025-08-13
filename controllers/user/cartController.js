@@ -68,20 +68,20 @@ exports.getCart = async (req, res) => {
     const userId = req.user._id;
     const TAX_RATE = 0.05; 
     
-    // Check for an existing session message to display (from a previous redirect)
-    // We store it in a temporary variable and immediately clear the session.
     const message = req.session.message;
     req.session.message = null;
 
     try {
-        const cart = await Cart.findOne({ userId }).populate({
-            path: 'items.productId',
-            select: 'title description colorVariants isListed category_id brand_id isDeleted',
-            populate: [ 
-                { path: 'category_id', select: 'isListed' },
-                { path: 'brand_id', select: 'isListed' }
-            ]
-        });
+        const cart = await Cart.findOne({ userId })
+            .populate({
+                path: 'items.productId',
+                select: 'title description colorVariants isListed category_id brand_id isDeleted',
+                populate: [ 
+                    { path: 'category_id', select: 'isListed' },
+                    { path: 'brand_id', select: 'isListed' }
+                ]
+            })
+            .lean();
 
         if (!cart) {
             return res.render('user/cart', {
@@ -93,63 +93,50 @@ exports.getCart = async (req, res) => {
             });
         }
         
-        let foundInvalidItem = false;
-        let validCartItems = [];
-
-        // Check each item and remove invalid ones directly from the cart
-        for (const item of cart.items) {
-            const product = item.productId;
-            if (!product || product.isDeleted || !product.isListed || !product.category_id.isListed || !product.brand_id.isListed) {
-                // Mark the item for removal from the database
-                cart.items.pull(item._id); 
-                foundInvalidItem = true;
-            } else {
-                // If valid, add to the temporary array
-                validCartItems.push(item);
-            }
-        }
-
-        // Determine the message to show.
-        // If we found an invalid item on this request, we create a NEW message.
-        // Otherwise, we use any existing message from a previous request.
-        let finalMessage = message;
-        if (foundInvalidItem) {
-            // This is the message for the *current* page load, not a future one.
-            finalMessage = {
-                icon: 'error',
-                title: 'Item Removed',
-                text: 'One or more items in your cart were removed because they are no longer available.'
-            };
-            // Now that we've determined the message, save the updated cart
-            // to permanently remove the invalid items.
-            await cart.save();
-        }
-
         let subtotal = 0;
-        const cartItemsForEJS = validCartItems.map(item => {
+        const cartItemsForEJS = cart.items.map(item => {
             const product = item.productId;
+            
+            if (!product) {
+                return null;
+            }
+
             const colorVariant = product.colorVariants.find(c => c.colorName === item.colorName);
             const sizeVariant = colorVariant ? colorVariant.variants.find(s => s.size === item.size) : null;
             
             const price = sizeVariant ? sizeVariant.price : 0;
-            const itemTotal = price * item.quantity;
-            subtotal += itemTotal;
+            const stock = sizeVariant ? sizeVariant.stock : 0;
 
+            // CORRECTED LOGIC: Added a check for stock > 0
+            const isAvailable = !product.isDeleted && 
+                                product.isListed && 
+                                product.category_id && 
+                                product.category_id.isListed && 
+                                product.brand_id && 
+                                product.brand_id.isListed &&
+                                stock > 0; // The new condition
+
+            // Only add to subtotal if the product is actually available
+            if (isAvailable) {
+                const itemTotal = price * item.quantity;
+                subtotal += itemTotal;
+            }
             const imagePath = colorVariant && colorVariant.images && colorVariant.images.length > 0 
                 ? `/uploads/products/${colorVariant.images[0]}` 
                 : '/images/placeholder.png';
 
             return {
-                id: item._id, 
+                id: item._id.toString(),
                 name: product.title,
                 image: imagePath,
                 size: item.size,
                 colorName: item.colorName,
                 price: price,
                 quantity: item.quantity,
-                stock: sizeVariant ? sizeVariant.stock : 0,
+                stock: stock,
+                isAvailable: isAvailable
             };
-        });
+        }).filter(item => item !== null);
 
         const tax = subtotal * TAX_RATE;
         const total = subtotal + tax;
@@ -159,7 +146,7 @@ exports.getCart = async (req, res) => {
             subtotal: subtotal.toFixed(2),
             tax: tax.toFixed(2),
             total: total.toFixed(2),
-            message: finalMessage // Pass the new or existing message
+            message: message 
         });
 
     } catch (error) {
@@ -168,19 +155,27 @@ exports.getCart = async (req, res) => {
     }
 };
 
+
 /**
  * @desc    Update the quantity of a specific item in the cart
  * @route   PATCH /api/cart/update
  * @access  Private
  */
-exports.updateCartItemQuantity = async (req, res) => {
+exports.updateCartQunty = async (req, res) => {
+    // console.log("User from authentication middleware:", req.user); 
+    // Ensure the user is authenticated before proceeding
+    if (!req.user || !req.user._id) {
+        return res.status(401).json({ message: 'Unauthorized. Please log in.' });
+    }
+
     const userId = req.user._id;
-    const { itemId, quantity } = req.body;
+    const { itemId } = req.params;
+    const { quantity: newQuantity } = req.body;
 
     try {
         const cart = await Cart.findOne({ userId });
         if (!cart) {
-            return res.status(404).json({ message: 'Cart not found.' });
+            return res.status(404).json({ message: 'Cart not found for this user.' });
         }
 
         const itemToUpdate = cart.items.find(item => item._id.toString() === itemId);
@@ -188,12 +183,33 @@ exports.updateCartItemQuantity = async (req, res) => {
             return res.status(404).json({ message: 'Item not found in cart.' });
         }
         
-        if (quantity < 1) {
+        // Basic quantity validation
+        if (newQuantity < 1) {
             return res.status(400).json({ message: 'Quantity cannot be less than 1.' });
         }
 
-        itemToUpdate.quantity = quantity;
+        // Fetch the product with all its variant information
+        const product = await Product.findById(itemToUpdate.productId);
+        if (!product) {
+            return res.status(404).json({ message: 'Product not found.' });
+        }
+
+        // CORRECTED LOGIC: Find the variant using colorName and size, which are stored in the cart item
+        const colorVariant = product.colorVariants.find(cv => cv.colorName === itemToUpdate.colorName);
+        const sizeVariant = colorVariant?.variants.find(sv => sv.size === itemToUpdate.size);
+        
+        // Check if the variant was found and if the new quantity exceeds its stock
+        if (!sizeVariant) {
+            return res.status(404).json({ message: 'Product variant not found.' });
+        }
+        if (newQuantity > sizeVariant.stock) {
+            return res.status(400).json({ message: `The selected quantity exceeds available stock (${sizeVariant.stock}).` });
+        }
+
+        // Update the item quantity and save
+        itemToUpdate.quantity = newQuantity;
         await cart.save();
+        
         res.status(200).json({ message: 'Cart item quantity updated successfully.', cart });
         
     } catch (error) {
@@ -204,21 +220,33 @@ exports.updateCartItemQuantity = async (req, res) => {
 
 /**
  * @desc    Remove a specific item from the cart
- * @route   DELETE /api/cart/:itemId
+ * @route   DELETE /api/cart/remove-item/:itemId
  * @access  Private
  */
-exports.removeCartItem = async (req, res) => {
+exports.removeCartItm = async (req, res) => {
+    console.log("User from authentication middleware:", req.user);
+    // Ensure the user is authenticated before proceeding
+    if (!req.user || !req.user._id) {
+        return res.status(401).json({ message: 'Unauthorized. Please log in.' });
+    } 
+ 
     const userId = req.user._id;
     const { itemId } = req.params;
 
     try {
         const cart = await Cart.findOne({ userId });
         if (!cart) {
-            return res.status(404).json({ message: 'Cart not found.' });
+            return res.status(404).json({ message: 'Cart not found for this user.' });
         }
 
         // Filter out the item to be removed
+        const initialItemCount = cart.items.length;
         cart.items = cart.items.filter(item => item._id.toString() !== itemId);
+
+        // Check if an item was actually removed
+        if (cart.items.length === initialItemCount) {
+            return res.status(404).json({ message: 'Item not found in cart.' });
+        }
 
         await cart.save();
         res.status(200).json({ message: 'Item removed from cart successfully.', cart });

@@ -8,6 +8,7 @@ const adminRoutes = require('./routes/adminRoutes.js');
 const userRoutes = require('./routes/userRoutes.js');
 const authRoutes = require('./routes/authRoutes.js')
 const passport = require('passport');
+const morgan=require('morgan')
 const expressLayouts = require('express-ejs-layouts');
 require('./config/passport');
 require('dotenv').config();
@@ -17,6 +18,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view cache', false);
 app.use(expressLayouts)
 
+app.use(morgan('dev'))
 app.set('layout', 'layout/userMain'); 
 
 app.use(express.static('public'));
@@ -37,7 +39,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use('/', authRoutes);
-app.use('/user', userRoutes)
+app.use('/user', userRoutes);
 app.use('/admin', adminRoutes);
 app.use('/*splat',(req,res)=>{
     res.render('user/error',{layout:false})

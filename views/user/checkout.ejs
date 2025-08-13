@@ -1,0 +1,168 @@
+<div class="bg-gray-900 min-h-screen text-white">
+    <!-- toast alert -->
+    <div id="toast-container" class="fixed top-0 left-1/2 -translate-x-1/2 mt-4 z-50">
+        <div id="toast-alert" class="hidden max-w-sm w-full rounded-xl shadow-lg p-2 transition-all duration-300">
+            <div class="flex items-center space-x-3">
+                <!-- Success Icon -->
+                <svg id="toast-icon-success" class="h-8 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <!-- Error Icon -->
+                <svg id="toast-icon-error" class="hidden h-8 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                <div class="flex-1">
+                    <p id="toast-message" class="text-sm font-extrabold"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Breadcrumb -->
+    <div class="px-6 py-4 text-gray-400 text-sm">
+        <a href="/" class="hover:text-white">Home</a> <span class="mx-2">›</span> Checkout
+    </div>
+
+    <div class="px-6 py-8 flex flex-col lg:flex-row gap-8">
+        <!-- Left Side: Default Address -->
+        <div class="flex-1 bg-gray-800 p-6 rounded-lg shadow-lg">
+            <h2 class="text-2xl font-semibold mb-6">Default Address</h2>
+            <% if (address) { %>
+                <div class="text-gray-300 space-y-3 mb-6 leading-relaxed">
+                    <p><span class="font-semibold">Name:</span> <%= address.name %></p>
+                    <p><span class="font-semibold">Address 1:</span> <%= address.address1 %></p>
+                    <p><span class="font-semibold">Address 2:</span> <%= address.address2 %></p>
+                    <p><span class="font-semibold">City:</span> <%= address.city %></p>
+                    <p><span class="font-semibold">State:</span> <%= address.state %></p>
+                    <p><span class="font-semibold">Mobile:</span> <%= address.mobile %></p>
+                    <p><span class="font-semibold">Pincode:</span> <%= address.pincode %></p>
+                </div>
+                <button class="bg-indigo-600 hover:bg-indigo-700 px-5 py-2 rounded-lg font-medium transition">
+                    Edit Address
+                </button>
+            <% } else { %>
+                <div class="text-gray-300 mb-6">
+                    <p>No default address found. Please add one to proceed with your order.</p>
+                </div>
+                <!-- ===================================================================== -->
+                <!-- The "Add Address" button is now a link to a new address form.         -->
+                <!-- You will need to create a route and page for this (e.g., /user/add-address). -->
+                <!-- ===================================================================== -->
+                <a href="/user/add-address" class="inline-block bg-indigo-600 hover:bg-indigo-700 px-5 py-2 rounded-lg font-medium transition">
+                    Add Address
+                </a>
+            <% } %>
+        </div>
+
+        <!-- Right Side: Your Order -->
+        <div class="lg:w-1/3 bg-gray-800 p-6 rounded-lg shadow-lg">
+            <h3 class="text-xl font-semibold mb-6">Your Order</h3>
+
+            <!-- Cart Items -->
+            <div class="space-y-4 mb-6">
+                <% if (cartItems && cartItems.length > 0) { %>
+                    <% cartItems.forEach(item => { %>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <img src="<%= item.product.image %>" alt="<%= item.product.name %>" class="w-16 h-16 rounded object-cover border border-gray-700" />
+                                <div>
+                                    <p class="text-sm font-medium"><%= item.product.name %></p>
+                                    <p class="text-xs text-gray-400">Qty: <%= item.quantity %></p>
+                                </div>
+                            </div>
+                            <span class="text-sm font-semibold">₹<%= (item.product.price * item.quantity).toLocaleString() %></span>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <p class="text-gray-300">Your cart is empty.</p>
+                <% } %>
+            </div>
+
+            <a href="/user/cart" class="block mb-6 text-sm text-indigo-400 hover:underline">Edit Cart</a>
+
+            <!-- Price Details -->
+            <div class="space-y-3 text-gray-300">
+                <div class="flex justify-between">
+                    <span>Subtotal</span>
+                    <span>₹<%= subtotal.toLocaleString() %></span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Shipping</span>
+                    <span class="text-green-400">Free</span>
+                </div>
+
+                <!-- Coupon Input -->
+                <div class="flex gap-2 mt-3">
+                    <input type="text" placeholder="Coupon code"
+                        class="flex-1 bg-gray-700 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    <button class="bg-indigo-600 hover:bg-indigo-700 px-4 rounded-lg font-medium transition">Apply</button>
+                </div>
+
+                <div class="flex justify-between">
+                    <span>Coupon Discount</span>
+                    <span>- ₹<%= couponDiscount.toLocaleString() %></span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Tax</span>
+                    <span>₹<%= tax.toLocaleString() %></span>
+                </div>
+                <div class="border-t border-gray-700"></div>
+                <div class="flex justify-between text-lg font-bold">
+                    <span>Total</span>
+                    <span>₹<%= total.toLocaleString() %></span>
+                </div>
+            </div>
+
+            <!-- ===================================================================== -->
+            <!-- Conditionally disable the button and change its style.                -->
+            <!-- The 'Place Order' button is now disabled if the cart is empty or no   -->
+            <!-- address exists. -->
+            <!-- ===================================================================== -->
+            <% const isDisabled = !address || !cartItems || cartItems.length === 0; %>
+            <button class="w-full mt-6 py-3 rounded-lg font-semibold transition
+                <%= isDisabled ? 'bg-gray-500 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700' %>"
+                <%= isDisabled ? 'disabled' : '' %>>
+                Place Order
+            </button>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+    // Get the toast message data passed from the server
+    const toastData = <%- JSON.stringify(toastMessage) %>;
+
+    // Get the toast elements
+    const toastContainer = document.getElementById('toast-container');
+    const toastAlert = document.getElementById('toast-alert');
+    const toastIconSuccess = document.getElementById('toast-icon-success');
+    const toastIconError = document.getElementById('toast-icon-error');
+    const toastMessageText = document.getElementById('toast-message');
+
+    // Function to show the toast
+    function showToast(icon, text) {
+        toastMessageText.textContent = text;
+        toastAlert.classList.remove('hidden');
+
+        if (icon === 'success') {
+            toastAlert.classList.add('bg-green-600');
+            toastIconSuccess.classList.remove('hidden');
+            toastIconError.classList.add('hidden');
+        } else if (icon === 'error') {
+            toastAlert.classList.add('bg-red-600');
+            toastIconSuccess.classList.add('hidden');
+            toastIconError.classList.remove('hidden');
+        }
+        
+        // Hide the toast after 5 seconds
+        setTimeout(() => {
+            toastAlert.classList.add('hidden');
+        }, 5000);
+    }
+
+    // Check if a toast message exists and show it
+    if (toastData && toastData.text) {
+        showToast(toastData.icon, toastData.text);
+    }
+</script>
