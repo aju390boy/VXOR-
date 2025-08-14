@@ -60,9 +60,9 @@
     </aside>
 
     <%# Main Content Area %>
-    <main class="flex-1 px-1 md:px-1 py-1 bg-gray-900 flex justify-center ">
+     <main id="main-content-area" class="flex-1 px-1 md:px-1 py-1 bg-gray-900 flex justify-center ">
         <div id="profile-content" class="w-full max-w-2xl bg-gray-900 p-1 rounded-md shadow-md md-12">
-            <%- include('partials/_profileDetails', { user: user }) %>
+           <%- include('partials/_profileDetails', { user: user, addresses: addresses }) %>
         </div>
     </main>
 </div>
@@ -517,62 +517,92 @@
 
     // New: Add event listener for "Set as Default" buttons
     setDefaultButtons.forEach(button => {
-        button.addEventListener('click', async () => {
-            const addressId = button.dataset.addressId;
+    button.addEventListener('click', async () => {
+        const addressId = button.dataset.addressId;
 
-            // Confirm with the user
-            Swal.fire({
-                title: 'Set as default?',
-                text: "This address will be your primary shipping address.",
-                icon: 'info',
-                showCancelButton: true,
-                confirmButtonText: 'Yes, set as default!',
-                cancelButtonText: 'Cancel',
-                reverseButtons: true,
-                customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button', cancelButton: 'swal-dark-button' }
-            }).then(async (result) => {
-                if (result.isConfirmed) {
-                    try {
-                        const response = await fetch(`/user/profile/address/set-default/${addressId}`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
+        // Confirm with the user using a SweetAlert modal
+        Swal.fire({
+            title: 'Set as default?',
+            text: "This address will be your primary shipping address.",
+            icon: 'info',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, set as default!',
+            cancelButtonText: 'Cancel',
+            reverseButtons: true,
+            customClass: {
+                popup: 'swal-dark-bg',
+                title: 'swal-dark-title',
+                content: 'swal-dark-content',
+                confirmButton: 'swal-dark-button',
+                cancelButton: 'swal-dark-button'
+            }
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    // Send the request to your server-side endpoint
+                    const response = await fetch(`/user/profile/address/set-default/${addressId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    });
+
+                    // Parse the JSON response from the server
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        // Display a success message
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: result.message || 'Default address updated.',
+                            customClass: {
+                                popup: 'swal-dark-bg',
+                                title: 'swal-dark-title',
+                                content: 'swal-dark-content',
+                                confirmButton: 'swal-dark-button'
+                            }
                         });
-                        const result = await response.json();
 
-                        if (response.ok) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success!',
-                                text: result.message || 'Default address updated.',
-                                customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
-                            });
-                            // Reload the address section to show the updated default address
-                            setTimeout(() => {
-                                loadSection('address');
-                            }, 1500);
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error!',
-                                text: result.message || 'Failed to set default address.',
-                                customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
-                            });
-                        }
-                    } catch (error) {
-                        console.error('Error setting default address:', error);
+                        // Reload the page to ensure all data is fresh and the UI is correctly updated.
+                        // This is more reliable than reloading a single section.
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
+
+                    } else {
+                        // Display an error message if the server responds with a non-200 status
                         Swal.fire({
                             icon: 'error',
-                            title: 'Network Error!',
-                            text: 'Could not connect to server.',
-                            customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
+                            title: 'Error!',
+                            text: result.message || 'Failed to set default address.',
+                            customClass: {
+                                popup: 'swal-dark-bg',
+                                title: 'swal-dark-title',
+                                content: 'swal-dark-content',
+                                confirmButton: 'swal-dark-button'
+                            }
                         });
                     }
+                } catch (error) {
+                    console.error('Error setting default address:', error);
+                    // Display a network error message if the fetch fails
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Network Error!',
+                        text: 'Could not connect to server.',
+                        customClass: {
+                            popup: 'swal-dark-bg',
+                            title: 'swal-dark-title',
+                            content: 'swal-dark-content',
+                            confirmButton: 'swal-dark-button'
+                        }
+                    });
                 }
-            });
+            }
         });
     });
+});
 };
 
 

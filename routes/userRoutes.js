@@ -8,6 +8,9 @@ const productDetailController = require('../controllers/user/productDetailContro
 const profileController = require('../controllers/user/profileController.js');
 const cartController = require('../controllers/user/cartController.js');
 const checkoutController = require('../controllers/user/checkoutController.js');
+const placeorderController = require('../controllers/user/placeorderController.js');
+const successController = require('../controllers/user/successController.js');
+const orderdetailController = require('../controllers/user/orderdetailController..js');
 
 router.route('/home')
   .get(userController.getHome);
@@ -50,8 +53,14 @@ router.route('/cart')
 router.patch('/cart/update-quantity/:itemId', isAuthenticated, cartController.updateCartQunty);
 router.delete('/cart/remove-item/:itemId', isAuthenticated, cartController.removeCartItm);
 
-
+////checkout////place order////success////
 router.get('/checkout',isAuthenticated,checkoutController.getCheckout);
+router.post('/place-order/cod',isAuthenticated,placeorderController.placeOrder);
+router.get('/success',isAuthenticated,successController.getSuccess);
+
+router.get('/order-detail', isAuthenticated, orderdetailController.getOrderDetail);
+
+
 
 
       

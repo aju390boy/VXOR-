@@ -11,7 +11,19 @@ const orderSchema = new mongoose.Schema({
   status: { type: String, enum: ['pending', 'shipped', 'delivered', 'cancelled'], default: 'pending' },
   coupon_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Coupon' },
   total_amount: { type: Number },
-  payment_status: { type: String, enum: ['pending', 'paid', 'failed'], default: 'pending' }
+payment_status: {
+          type: String,
+          enum: [
+            'PROCESSING',
+            'PACKED',
+            'SHIPPED',
+            'DELIVERED',
+            'RETURN REQUESTED',
+            'CANCELLED',
+            'RETURNED',
+          ],
+          default: 'PROCESSING',
+        },
 }, { timestamps: true });
 
 const Order = mongoose.model('Order', orderSchema);

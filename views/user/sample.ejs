@@ -1,0 +1,281 @@
+
+    <style>
+        .progress-line {
+            height: 2px;
+            background-color: #e5e7eb;
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            z-index: 0;
+        }
+        .progress-line-active {
+            height: 2px;
+            background-color: #000;
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 0;
+            z-index: 1;
+            transition: width 0.5s ease-in-out;
+        }
+        .step-active, .step-completed {
+            background-color: #000;
+            color: white;
+            border-color: #000;
+        }
+        .step-pending {
+            background-color: white;
+            color: #6b7280;
+            border: 2px solid #e5e7eb;
+        }
+        body, .container {
+            font-family: 'Poppins', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        h1, h2, h3 {
+            font-family: 'Playfair Display', 'Poppins', serif;
+            font-weight: 600;
+        }
+        p, span, button {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 400;
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+        .btn-cancel {
+            background-color: #ef4444;
+            color: white;
+        }
+        .btn-cancel:hover {
+            background-color: #dc2626;
+        }
+        #cancelModal, #returnModal {
+            z-index: 50;
+        }
+        .status-returned-requested {
+            background-color: #facc15;
+            color: #78350f;
+        }
+    </style>
+
+   <div class="flex flex-col items-center min-h-screen  p-4 sm:p-8">
+
+        <!-- Title and description -->
+        <div class="text-center mb-10 mt-5">
+            <h1 class="text-3xl font-extrabold text-gray-900 mb-2 mt-10">Order Trackingg</h1>
+            <p class="text-lg text-gray-600">Track your order status and delivery information</p>
+        </div>
+
+        <!-- The main grid layout for the order details -->
+        <div class="w-full max-w-7xl grid grid-cols-1 md:grid-cols-3 gap-6">
+
+            <!-- Left column for order items and address -->
+            <div class="md:col-span-2 space-y-6">
+
+                <!-- Order Items -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-800">Order Details</h2>
+                    <% if (order && order.items) { %>
+                        <% order.items.forEach((item, index) => { %>
+                            <!-- Card for each individual item -->
+                            <div class="flex items-start mb-4 p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                                <!-- Item Image -->
+                                <img src="<%= item.image || 'https://placehold.co/96x96/e5e7eb/7f8287?text=No+Image' %>" alt="<%= item.title %>" class="w-24 h-24 object-cover rounded-md mr-4">
+
+                                <!-- Item Details -->
+                                <div class="flex-grow">
+                                    <h3 class="text-lg font-medium text-gray-900"><%= item.title %></h3>
+                                    <p class="text-sm text-gray-600">Size: <%= item.size || 'N/A' %></p>
+                                    <p class="text-sm text-gray-600">Quantity: <%= item.quantity %></p>
+                                    <p class="text-base font-semibold text-gray-800">₹<%= item.price.toFixed(2) %></p>
+                                </div>
+
+                                <!-- Status and Expected Delivery -->
+                                <div class="flex flex-col items-end text-right">
+                                    <span class="text-sm font-bold px-3 py-1 rounded-full text-white bg-blue-600 mb-1">
+                                        <%= item.status.replace('REQUESTED', '').charAt(0).toUpperCase() + item.status.replace('REQUESTED', '').slice(1).toLowerCase() %>
+                                    </span>
+                                    <span class="text-xs text-gray-500">
+                                        Expected by <%= new Date(order.expectedDelivery || Date.now()).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' }) %>
+                                    </span>
+                                </div>
+                            </div>
+                        <% }) %>
+                    <% } %>
+                </div>
+
+                <!-- Delivery Address -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-800">Delivery Address</h2>
+                    <% if (order.shippingAddress) { %>
+                        <div class="text-gray-700 space-y-1">
+                            <p class="font-semibold text-lg"><%= order.shippingAddress.name %></p>
+                            <p><%= order.shippingAddress.street_address %></p>
+                            <p><%= order.shippingAddress.district %>, <%= order.shippingAddress.state %></p>
+                            <p><%= order.shippingAddress.pincode %>, <%= order.shippingAddress.country %></p>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+
+            <!-- Right column for order summary -->
+            <div class="md:col-span-1">
+                <div class="bg-white rounded-lg shadow-md p-6 sticky top-8">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-800">Order Summary</h2>
+                    <div class="divide-y divide-gray-200">
+                        <!-- Subtotal -->
+                        <div class="flex justify-between py-2">
+                            <span class="text-gray-600">Subtotal</span>
+                            <span class="font-medium text-gray-900">₹<%= order.subtotal ? order.subtotal.toFixed(2) : '0.00' %></span>
+                        </div>
+                        <!-- Discount -->
+                        <% if (order.discount > 0) { %>
+                            <div class="flex justify-between py-2">
+                                <span class="text-gray-600">Discount</span>
+                                <span class="font-medium text-red-500">- ₹<%= order.discount.toFixed(2) %></span>
+                            </div>
+                        <% } %>
+                        <!-- Offer Applied -->
+                        <% if (order.totalOfferApplied) { %>
+                            <div class="flex justify-between py-2">
+                                <span class="text-gray-600">Offer Applied</span>
+                                <span class="font-medium text-red-500">- ₹<%= order.totalOfferApplied.toFixed(2) %></span>
+                            </div>
+                        <% } %>
+                        <!-- Coupon Discount -->
+                        <% if (order.couponDiscount) { %>
+                            <div class="flex justify-between py-2">
+                                <span class="text-gray-600">Coupon Applied</span>
+                                <span class="font-medium text-red-500">- ₹<%= order.couponDiscount.toFixed(2) %></span>
+                            </div>
+                        <% } %>
+                        <!-- Tax -->
+                        <div class="flex justify-between py-2">
+                            <span class="text-gray-600">Tax</span>
+                            <span class="font-medium text-gray-900">₹<%= order.taxAmount ? order.taxAmount.toFixed(2) : '0.00' %></span>
+                        </div>
+                        <!-- Shipping -->
+                        <div class="flex justify-between py-2">
+                            <span class="text-gray-600">Shipping</span>
+                            <span class="font-medium text-gray-900">₹<%= order.shippingCost ? order.shippingCost.toFixed(2) : '0.00' %></span>
+                        </div>
+                        <!-- Total -->
+                        <div class="flex justify-between items-center py-2">
+                            <span class="text-lg font-bold text-gray-900">Total</span>
+                            <span class="text-xl font-bold text-blue-600">₹<%= order.totalAmount ? order.totalAmount.toFixed(2) : '0.00' %></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- Progress Bar Animation Logic ---
+        // These steps and icons are defined to match the image you provided.
+        const progressSteps = ['PROCESSING', 'PACKED', 'SHIPPED', 'DELIVERED', 'RETURNED', 'CANCELLED'];
+        
+        const updateProgressBars = () => {
+            const items = document.querySelectorAll('[data-item-index]');
+            items.forEach(itemContainer => {
+                const itemIndex = itemContainer.dataset.itemIndex;
+                const statusSpan = itemContainer.closest('.p-6').querySelector('.px-3.py-1');
+                if (!statusSpan) return;
+                const currentStatus = statusSpan.textContent.trim().toUpperCase();
+
+                const progressBar = document.getElementById(`progress-line-${itemIndex}`);
+                const activeStepIndex = progressSteps.indexOf(currentStatus);
+                if (activeStepIndex !== -1) {
+                    // The width is calculated based on the position of the active step
+                    const widthPercentage = (activeStepIndex / (progressSteps.length - 1)) * 100;
+                    progressBar.style.width = `${widthPercentage}%`;
+                }
+            });
+        };
+        
+        // Update progress bars on page load
+        updateProgressBars();
+
+        // --- Modal Logic ---
+        const cancelModal = document.getElementById('cancelModal');
+        const returnModal = document.getElementById('returnModal');
+
+        const btnCloseCancel = document.getElementById('btnCloseCancel');
+        const btnCloseReturn = document.getElementById('btnCloseReturn');
+
+        // Functions to open and close modals
+        const openModal = (modal) => { modal.classList.remove('hidden'); };
+        const closeModal = (modal) => { modal.classList.add('hidden'); };
+
+        // Attach listeners to open buttons
+        document.querySelectorAll('.cancel-item').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const orderId = e.target.dataset.orderId;
+                const itemId = e.target.dataset.itemId;
+                document.getElementById('cancelOrderId').value = orderId;
+                document.getElementById('cancelItemId').value = itemId;
+                openModal(cancelModal);
+            });
+        });
+
+        document.querySelectorAll('.return-item').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const orderId = e.target.dataset.orderId;
+                const itemId = e.target.dataset.itemId;
+                document.getElementById('returnOrderId').value = orderId;
+                document.getElementById('returnItemId').value = itemId;
+                openModal(returnModal);
+            });
+        });
+
+        // Attach listeners to close buttons
+        btnCloseCancel.addEventListener('click', () => closeModal(cancelModal));
+        btnCloseReturn.addEventListener('click', () => closeModal(returnModal));
+        
+        // Close modals on outside click
+        window.addEventListener('click', (event) => {
+            if (event.target === cancelModal) {
+                closeModal(cancelModal);
+            }
+            if (event.target === returnModal) {
+                closeModal(returnModal);
+            }
+        });
+        
+        // --- Form Submission Logic ---
+        // You'll need to replace this with your actual backend API calls.
+        
+        document.getElementById('cancelForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const orderId = document.getElementById('cancelOrderId').value;
+            const itemId = document.getElementById('cancelItemId').value;
+            const reason = document.getElementById('cancel-note').value;
+            
+            console.log(`Canceling item ${itemId} from order ${orderId}. Reason: ${reason}`);
+            // await fetch(`/api/cancel-item`, { method: 'POST', body: JSON.stringify({ orderId, itemId, reason }) });
+            closeModal(cancelModal);
+            // window.location.reload(); 
+        });
+
+        document.getElementById('returnForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const orderId = document.getElementById('returnOrderId').value;
+            const itemId = document.getElementById('returnItemId').value;
+            const reason = document.getElementById('returnNote').value;
+            
+            console.log(`Requesting return for item ${itemId} from order ${orderId}. Reason: ${reason}`);
+            // await fetch(`/api/return-item`, { method: 'POST', body: JSON.stringify({ orderId, itemId, reason }) });
+            closeModal(returnModal);
+            // window.location.reload(); 
+        });
+    });
+    </script>
+

@@ -6,6 +6,9 @@ const multer = require('multer');
 const path=require('path');
 const Address=require('../../model/address.js');
 const fs = require('fs').promises;
+const mongoose = require('mongoose');
+const Order = require('../../model/order.js');
+const { log } = require('console');
 
 
 const storage = multer.diskStorage({
@@ -23,8 +26,8 @@ exports.upload = multer({ storage: storage });
 
 exports.getProfilePage = async (req, res) => {
     try {
-        // Corrected: Populate the defaultAddress field with a string
-        const user = await User.findById(req.user._id).populate('defaultAddress').lean();
+        // Fetch the user data
+        const user = await User.findById(req.user._id).lean();
 
         if (!user) {
             console.error("User not found in DB for ID:", req.user._id);
@@ -34,13 +37,17 @@ exports.getProfilePage = async (req, res) => {
         // Fetch all addresses associated with the user
         const addresses = await Address.find({ user_id: req.user._id }).lean();
         
-        // Pass both the user and addresses data to the EJS template
+        // Find the default address from the list of addresses using the isDefault flag.
+        // This replaces the old logic of populating a field on the User model.
+        const defaultAddress = addresses.find(address => address.isDefault);
+
+        // Pass both the user, all addresses, and the identified default address data to the EJS template
         res.render('user/profile/profileMain', {
             title: 'My Profile',
             user: user,
             addresses: addresses || [], // Ensure addresses is an array, even if empty
-            // Pass the default address from the populated user object
-            defaultAddress: user.defaultAddress
+            defaultAddress: defaultAddress ,// Pass the correctly identified default address
+             
         });
     } catch (error) {
         console.error("Error fetching profile page:", error);
@@ -49,16 +56,17 @@ exports.getProfilePage = async (req, res) => {
 };
 
 
+
 exports.getProfileSection = async (req, res) => {
     const { sectionName } = req.params;
-    const user = req.user; 
+    const user = req.user;
     try {
-        let data = { user: null }; 
+        let data = { user: null };
         let templatePath = '';
 
         if (user && user._id) {
-            // Correctly populate defaultAddress for all sections that might need it
-            data.user = await User.findById(user._id).populate('defaultAddress').lean(); 
+            // Fetch the user without trying to populate a non-existent defaultAddress field.
+            data.user = await User.findById(user._id).lean();
             if (!data.user) {
                 console.error("User not found for dynamic section:", user._id);
                 return res.status(404).send('<p class="text-red-400">User data not available for this section.</p>');
@@ -70,42 +78,60 @@ exports.getProfileSection = async (req, res) => {
 
         switch (sectionName) {
             case 'profile':
-                // Fetch addresses for the profile section to display a summary
+                // Fetch all addresses for the profile section
                 const addressesForProfile = await Address.find({ user_id: user._id }).lean();
-                data.addresses = addressesForProfile; 
-                data.defaultAddress = data.user.defaultAddress;
+                data.addresses = addressesForProfile;
+                // Correctly find the default address from the fetched addresses
+                data.defaultAddress = addressesForProfile.find(address => address.isDefault);
                 templatePath = 'user/profile/partials/_profileDetails';
                 break;
-            case 'orders':
             case 'wishlist':
-            case 'cart':
             case 'wallet':
                 templatePath = 'user/profile/partials/_comingSoon';
                 data.message = `${sectionName.charAt(0).toUpperCase() + sectionName.slice(1)} Section is coming soon!`;
                 break;
+                 case 'orders':
+    const orders = await Order.find({ user_id: user._id })
+        .sort({ createdAt: -1 })
+        .populate({
+            path: 'products.product_id',
+            // Select the product's title and the entire colorVariants array
+            select: 'title colorVariants'
+        })
+        .lean();
+    
+    // Process the orders data to select the correct image for each item
+    // The image path is now in order.products[i].product_id.colorVariants[j].images[k]
+    // The front-end template will need to handle this nested structure.
+
+    data.orders = orders;
+    templatePath = 'user/profile/partials/_orderList';
+    break;
             case 'address':
-                // FETCH ADDRESSES HERE for the address section
+                // Fetch all addresses for the address section
                 const addresses = await Address.find({ user_id: user._id }).lean();
-                data.addresses = addresses; // Use 'addresses' for consistency
+                data.addresses = addresses;
+                // Correctly find the default address from the fetched addresses
+                data.defaultAddress = addresses.find(address => address.isDefault);
                 templatePath = 'user/profile/partials/_address';
-                // Add the default address to the data object
-                data.defaultAddress = data.user.defaultAddress;
                 break;
             case 'change-password':
                 templatePath = 'user/profile/partials/_changePasswordForm';
-                data = {}; 
+                data = {};
                 break;
             default:
                 return res.status(404).send('<p class="text-red-400">Requested section not found.</p>');
         }
-        
-        // Render with the new defaultAddress
-        res.render(templatePath, { ...data, layout: false }, (err, html) => {
+        console.log(data.orders&&data.orders[0].products[0].product_id.colorVariants)
+        // console.log(data.orders[0].products)
+       
+        // Render with the updated data
+        res.render(templatePath, { ...data,  layout: false }, (err, html) => {
             if (err) {
                 console.error(`Error rendering partial ${templatePath}:`, err);
                 return res.status(500).send('<p class="text-red-400">Error rendering section content.</p>');
             }
-            res.send(html); 
+            res.send(html);
         });
 
     } catch (error) {
@@ -118,16 +144,56 @@ exports.updateProfile = async (req, res) => {
     try {
         const userId = req.user._id;
 
-        // Fetch the user first to get their current state, including the profile image path
+        // Fetch the user first to get their current state for image deletion and other checks
         const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({ message: "User not found." });
         }
 
-        // Get all fields from the request body, including the 'defaultAddress'
         const { firstname, lastname, email, mobile, originalEmail, addressId } = req.body;
         
-        // 1. Check for email change FIRST before any other actions
+        // --- FORM VALIDATION ---
+        const errors = {};
+        
+        if (!firstname || firstname.trim() === '') {
+            errors.firstname = "First name is required.";
+        } else if (firstname.trim().length < 2) {
+            errors.firstname = "First name must be at least 2 characters long.";
+        }
+
+        if (!lastname || lastname.trim() === '') {
+            errors.lastname = "Last name is required.";
+        } else if (lastname.trim().length < 2) {
+            errors.lastname = "Last name must be at least 2 characters long.";
+        }
+
+        if (!email || email.trim() === '') {
+            errors.email = "Email is required.";
+        } else if (!/^\S+@\S+\.\S+$/.test(email)) {
+            errors.email = "Please enter a valid email address.";
+        }
+
+        if (mobile && mobile.trim() !== '' && !/^\d{10}$/.test(mobile)) {
+            errors.mobile = "Mobile number must be 10 digits long.";
+        }
+
+        // Check if the addressId is a valid ObjectId if provided
+        if (addressId && !mongoose.Types.ObjectId.isValid(addressId)) {
+            errors.addressId = "Invalid address ID provided.";
+        }
+        
+        // Return validation errors if any exist
+        if (Object.keys(errors).length > 0) {
+            // Delete the newly uploaded file if validation fails
+            if (req.file) {
+                const newImagePath = path.join(__dirname, '..', '..', 'public', req.file.path);
+                await fs.unlink(newImagePath).catch(err => console.error("Error deleting new file after validation error:", err.message));
+            }
+            return res.status(400).json({ message: "Validation failed.", errors });
+        }
+        // --- END OF VALIDATION ---
+
+        // Check for email change before any database actions
         if (email !== originalEmail) {
             if (req.file) {
                 const newImagePath = path.join(__dirname, '..', '..', 'public', req.file.path);
@@ -136,7 +202,7 @@ exports.updateProfile = async (req, res) => {
             return res.status(400).json({ message: "Changing email requires verification. This feature is not yet fully implemented." });
         }
         
-        // 2. Initialize update data with body fields
+        // Initialize update data with validated body fields
         let updateData = {
             firstname,
             lastname,
@@ -144,15 +210,25 @@ exports.updateProfile = async (req, res) => {
             mobile: mobile || null,
         };
 
-        // 3. Corrected: Add the 'addressId' to the update data if it exists in the request body
-        // The field name should be 'defaultAddress' to match the schema
+        // Handle default address update logic
         if (addressId) {
-            updateData.defaultAddress = addressId;
+            // Find the current default address and set its `isDefault` flag to false
+            await Address.findOneAndUpdate(
+                { user_id: userId, isDefault: true },
+                { $set: { isDefault: false } }
+            );
+
+            // Set the new address as the default
+            await Address.findByIdAndUpdate(
+                addressId,
+                { $set: { isDefault: true } },
+                { new: true }
+            );
         }
 
-        // 4. Handle profile image upload if a new file is provided
+        // Handle profile image upload if a new file is provided
         if (req.file) {
-            // Delete the old profile image if it exists and is not the default
+            // Delete the old profile image if it exists and is not the default image
             if (user.profileImage && user.profileImage !== '/images/default-profile.png') {
                 const oldImagePath = path.join(__dirname, '..', '..', 'public', user.profileImage);
                 try {
@@ -165,7 +241,7 @@ exports.updateProfile = async (req, res) => {
             updateData.profileImage = `/uploads/profileImages/${req.file.filename}`;
         }
         
-        // 5. Update the user document in the database
+        // Update the user document with the basic profile details
         const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true, runValidators: true });
         
         if (!updatedUser) {
@@ -186,37 +262,46 @@ exports.updateProfile = async (req, res) => {
         res.status(500).json({ message: "Internal server error." });
     }
 };
-
 // --- NEW FUNCTION: To set an address as default ---
 exports.setDefaultAddress = async (req, res) => {
     try {
         const { addressId } = req.params;
         const userId = req.user._id;
 
-        // Verify the address belongs to the current user
+        // Step 1: Find the address to be set as default and verify it belongs to the user.
+        // We'll update this one last to ensure it's the final default.
         const address = await Address.findOne({ _id: addressId, user_id: userId });
         if (!address) {
             return res.status(404).json({ message: 'Address not found or unauthorized.' });
         }
 
-        // Update the user's default address ID
-        const updatedUser = await User.findByIdAndUpdate(
-            userId,
-            { defaultAddress: addressId },
+        // Step 2: Clear the 'isDefault' flag for ALL other addresses of this user.
+        // This is crucial to ensure only one address is ever the default.
+        await Address.updateMany(
+            { user_id: userId, _id: { $ne: addressId } },
+            { $set: { isDefault: false } }
+        );
+
+        // Step 3: Set the 'isDefault' flag to true for the selected address.
+        const updatedAddress = await Address.findByIdAndUpdate(
+            addressId,
+            { $set: { isDefault: true } },
             { new: true, runValidators: true }
         );
 
-        if (!updatedUser) {
-            return res.status(404).json({ message: "User not found." });
+        if (!updatedAddress) {
+            return res.status(404).json({ message: "Address not found during update." });
         }
 
-        res.status(200).json({ message: 'Default address updated successfully!', user: updatedUser });
+        // If both updates are successful, send a success response.
+        res.status(200).json({ message: 'Default address updated successfully!', address: updatedAddress });
 
     } catch (error) {
         console.error('Error setting default address:', error);
         res.status(500).json({ message: 'Failed to set default address. Please try again.' });
     }
 };
+
 
 
 exports.changePassword = async (req, res) => {

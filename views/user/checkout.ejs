@@ -24,58 +24,111 @@
 
     <div class="px-6 py-8 flex flex-col lg:flex-row gap-8">
         <!-- Left Side: Default Address -->
-        <div class="flex-1 bg-gray-800 p-6 rounded-lg shadow-lg">
-            <h2 class="text-2xl font-semibold mb-6">Default Address</h2>
-            <% if (address) { %>
-                <div class="text-gray-300 space-y-3 mb-6 leading-relaxed">
-                    <p><span class="font-semibold">Name:</span> <%= address.name %></p>
-                    <p><span class="font-semibold">Address 1:</span> <%= address.address1 %></p>
-                    <p><span class="font-semibold">Address 2:</span> <%= address.address2 %></p>
-                    <p><span class="font-semibold">City:</span> <%= address.city %></p>
-                    <p><span class="font-semibold">State:</span> <%= address.state %></p>
-                    <p><span class="font-semibold">Mobile:</span> <%= address.mobile %></p>
-                    <p><span class="font-semibold">Pincode:</span> <%= address.pincode %></p>
+        <div class="flex-1 bg-gray-900 text-white p-8 rounded-2xl shadow-2xl">
+    <h2 class="text-3xl font-bold mb-6 pb-4 border-b-2 border-purple-900">Shipping Address</h2>
+    
+    <% if (address) { %>
+        <div class="space-y-8 mb-8">
+            <!-- Name -->
+            <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 flex  items-center">
+                <span class="text-gray-400 font-semibold">Name:</span>
+                <span class="text-white mx-4"><%= address.name %></span>
+            </div>
+
+            <!-- Address 1 -->
+            <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 flex  items-center">
+                <span class="text-gray-400 font-semibold">Address 1:</span>
+                <span class="text-white text-right mx-4"><%= address.address1 %></span>
+            </div>
+
+            <!-- Address 2 (if it exists) -->
+            <% if (address.address2 && address.address2.trim() !== '') { %>
+                <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 flex  items-center">
+                    <span class="text-gray-400 font-semibold">Address 2:</span>
+                    <span class="text-white text-right mx-4"><%= address.address2 %></span>
                 </div>
-                <button class="bg-indigo-600 hover:bg-indigo-700 px-5 py-2 rounded-lg font-medium transition">
-                    Edit Address
-                </button>
-            <% } else { %>
-                <div class="text-gray-300 mb-6">
-                    <p>No default address found. Please add one to proceed with your order.</p>
-                </div>
-                <!-- ===================================================================== -->
-                <!-- The "Add Address" button is now a link to a new address form.         -->
-                <!-- You will need to create a route and page for this (e.g., /user/add-address). -->
-                <!-- ===================================================================== -->
-                <a href="/user/add-address" class="inline-block bg-indigo-600 hover:bg-indigo-700 px-5 py-2 rounded-lg font-medium transition">
-                    Add Address
-                </a>
             <% } %>
+
+            <!-- City, State, Pincode -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 flex  items-center">
+                    <span class="text-gray-400 font-semibold">City:</span>
+                    <span class="text-white mx-4"><%= address.city %></span>
+                </div>
+                <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 flex  items-center">
+                    <span class="text-gray-400 font-semibold">State:</span>
+                    <span class="text-white mx-4"><%= address.state %></span>
+                </div>
+                <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 flex items-center">
+                    <span class="text-gray-400 font-semibold">Pincode:</span>
+                    <span class="text-white mx-4"><%= address.pincode %></span>
+                </div>
+            </div>
+
+            <!-- Mobile -->
+            <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 flex  items-center">
+                <span class="text-gray-400 font-semibold">Mobile:</span>
+                <span class="text-white mx-4"><%= address.mobile %></span>
+            </div>
         </div>
+
+        <a href="/user/profile?section=address" class="block w-full">
+            <button class="w-full bg-purple-900 hover:bg-purple-700 px-5 py-3 rounded-xl font-medium transition-colors duration-200">
+                Edit Address
+            </button>
+        </a>
+    <% } else { %>
+        <div class="text-center text-gray-400 mb-8 p-6 bg-gray-800 rounded-xl border border-gray-700">
+            <p>No default address found.</p>
+            <p>Please add one to proceed with your order.</p>
+        </div>
+        <a href="/user/profile" class="inline-block w-full">
+            <button class="w-full bg-purple-900 hover:purple-700 px-5 py-3 rounded-xl font-medium transition-colors duration-200">
+                Add Address
+            </button>
+        </a>
+    <% } %>
+</div>
 
         <!-- Right Side: Your Order -->
         <div class="lg:w-1/3 bg-gray-800 p-6 rounded-lg shadow-lg">
             <h3 class="text-xl font-semibold mb-6">Your Order</h3>
 
             <!-- Cart Items -->
-            <div class="space-y-4 mb-6">
-                <% if (cartItems && cartItems.length > 0) { %>
-                    <% cartItems.forEach(item => { %>
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <img src="<%= item.product.image %>" alt="<%= item.product.name %>" class="w-16 h-16 rounded object-cover border border-gray-700" />
-                                <div>
-                                    <p class="text-sm font-medium"><%= item.product.name %></p>
-                                    <p class="text-xs text-gray-400">Qty: <%= item.quantity %></p>
-                                </div>
-                            </div>
-                            <span class="text-sm font-semibold">₹<%= (item.product.price * item.quantity).toLocaleString() %></span>
-                        </div>
-                    <% }) %>
-                <% } else { %>
-                    <p class="text-gray-300">Your cart is empty.</p>
-                <% } %>
+           <div class="space-y-4 mb-6">
+    <% if (cartItems && cartItems.length > 0) { %>
+        <% cartItems.forEach(item => { %>
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <%
+                        // We need a fallback image path in case something goes wrong
+                        let imageUrl = '/images/placeholder.png'; 
+                        
+                        // Find the color variant for the current item
+                        const colorVariant = item.productId.colorVariants.find(c => c.colorName === item.colorName);
+                        
+                        // If we found the color and it has images, build the correct path
+                        if (colorVariant && colorVariant.images && colorVariant.images.length > 0) {
+                            imageUrl = `/uploads/products/${colorVariant.images[0]}`;
+                        }
+                    %>
+                    <img src="<%= imageUrl %>" alt="<%= item.productId.title %>" class="w-12 h-16 rounded object-cover border border-gray-700" />
+                    <div>
+                        <p class="text-sm font-medium"><%= item.productId.title %></p>
+                        <p class="text-xs text-gray-400">Qty: <%= item.quantity %></p>
+                    </div>
+                </div>
+                <%
+                    const itemPrice = item.productId.colorVariants.find(c => c.colorName === item.colorName)?.variants.find(s => s.size === item.size)?.price || 0;
+                %>
+                <span class="text-sm font-semibold">₹<%= (itemPrice * item.quantity).toLocaleString() %></span>
             </div>
+        <% }) %>
+    <% } else { %>
+        <p class="text-gray-300">Your cart is empty.</p>
+    <% } %>
+</div>
+
 
             <a href="/user/cart" class="block mb-6 text-sm text-indigo-400 hover:underline">Edit Cart</a>
 
@@ -94,7 +147,7 @@
                 <div class="flex gap-2 mt-3">
                     <input type="text" placeholder="Coupon code"
                         class="flex-1 bg-gray-700 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-                    <button class="bg-indigo-600 hover:bg-indigo-700 px-4 rounded-lg font-medium transition">Apply</button>
+                    <button class="bg-purple-900 hover:bg-purple-700 px-4 rounded-lg font-medium transition">Apply</button>
                 </div>
 
                 <div class="flex justify-between">
@@ -112,13 +165,8 @@
                 </div>
             </div>
 
-            <!-- ===================================================================== -->
-            <!-- Conditionally disable the button and change its style.                -->
-            <!-- The 'Place Order' button is now disabled if the cart is empty or no   -->
-            <!-- address exists. -->
-            <!-- ===================================================================== -->
             <% const isDisabled = !address || !cartItems || cartItems.length === 0; %>
-            <button class="w-full mt-6 py-3 rounded-lg font-semibold transition
+            <button id="place-order-btn" type="button" class="w-full mt-8 py-3 rounded-lg font-semibold transition
                 <%= isDisabled ? 'bg-gray-500 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700' %>"
                 <%= isDisabled ? 'disabled' : '' %>>
                 Place Order
@@ -130,8 +178,9 @@
 
 
 <script>
-    // Get the toast message data passed from the server
-    const toastData = <%- JSON.stringify(toastMessage) %>;
+    // Get the toast message data passed from the server.
+    // Use a fallback object if 'toastMessage' is not defined.
+    const toastData = <%- JSON.stringify(typeof toastMessage !== 'undefined' ? toastMessage : {}) %>;
 
     // Get the toast elements
     const toastContainer = document.getElementById('toast-container');
@@ -144,6 +193,9 @@
     function showToast(icon, text) {
         toastMessageText.textContent = text;
         toastAlert.classList.remove('hidden');
+        
+        // Remove existing color classes before adding new ones
+        toastAlert.classList.remove('bg-green-600', 'bg-red-600');
 
         if (icon === 'success') {
             toastAlert.classList.add('bg-green-600');
@@ -161,8 +213,78 @@
         }, 5000);
     }
 
-    // Check if a toast message exists and show it
+    // Check if a toast message exists and show it on page load
     if (toastData && toastData.text) {
         showToast(toastData.icon, toastData.text);
     }
+    
+    // Dynamically get the data from your EJS template.
+    // Use fallback values (`null` for address, `[]` for cartItems) to prevent the EJS compiler error.
+    const address = <%- JSON.stringify(typeof address !== 'undefined' ? address : null) %>;
+    const cartItems = <%- JSON.stringify(typeof cartItems !== 'undefined' ? cartItems : []) %>;
+    
+    // Get the button element
+    const placeOrderBtn = document.getElementById('place-order-btn');
+
+    // This function will be called when the button is clicked
+    async function handlePlaceOrder() {
+        // Check if the button is already disabled to prevent multiple submissions
+        if (placeOrderBtn.disabled) {
+            console.log("Button is disabled, cannot place order.");
+            return;
+        }
+        
+        // Disable the button to prevent multiple submissions
+        placeOrderBtn.disabled = true;
+        placeOrderBtn.classList.add('bg-gray-500', 'cursor-not-allowed');
+        placeOrderBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
+
+        try {
+            // Check if address exists before getting the ID
+            const addressId = address ? address._id : null;
+            if (!addressId) {
+                console.error("Address ID not found. Cannot place order.");
+                showToast('error', 'Please select a valid address.');
+                return;
+            }
+            
+            // Send the POST request to the server
+            const response = await fetch('/user/place-order/cod', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json' // Tell the server we are sending JSON data
+                },
+                body: JSON.stringify({
+                    addressId: addressId, 
+                    cartItems: cartItems
+                })
+            });
+
+            // Check for a successful response (e.g., status code 200)
+            if (response.ok) {
+                const result = await response.json();
+                console.log('Order placed successfully:', result);
+                showToast('success', result.message || 'Order placed successfully!');
+                 window.location.href = result.redirectUrl;
+                // Redirect or update the UI after a successful order
+            } else {
+                // Handle errors from the server
+                const errorData = await response.json();
+                console.error('Failed to place order:', errorData);
+                showToast('error', errorData.message || 'An error occurred. Please try again.');
+            }
+        } catch (error) {
+            // Handle network or other unexpected errors
+            console.error('An error occurred:', error);
+            showToast('error', 'Network error. Please check your connection.');
+        } finally {
+            // Re-enable the button after the request is complete
+            placeOrderBtn.disabled = false;
+            placeOrderBtn.classList.remove('bg-gray-500', 'cursor-not-allowed');
+            placeOrderBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+        }
+    }
+
+    // Add an event listener to the button to call our function on click
+    document.getElementById('place-order-btn').addEventListener('click', handlePlaceOrder);
 </script>
