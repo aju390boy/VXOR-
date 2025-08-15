@@ -76,7 +76,7 @@
 }
 .status-PROCESSING{
   background-color: #717473;
-  color: black;
+  color: white;
   font-weight: 500;
 }
 
@@ -209,6 +209,7 @@
             noDataState.classList.add('hidden');
 
             const searchQuery = searchInput.value;
+            console.log(`searchQuery:${searchQuery}`)
             const status = statusFilter.value;
             const sort = sortSelect.value;
             
@@ -272,7 +273,7 @@
             }).format(order.total_amount);
             
             // Get the dynamic status class for styling
-            const statusClass = getStatusClass(order.payment_status);
+            const statusClass = getStatusClass(order.status);
 
             row.innerHTML = `
                 <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${order._id}</td>
@@ -287,14 +288,14 @@
                     <!-- The select dropdown for changing status -->
                     <select data-order-id="${order._id}" class="status-select bg-gray-200 text-gray-800 text-sm rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-purple-500">
                         ${statusOptions.map(status => `
-                            <option value="${status}" ${order.payment_status === status ? 'selected' : ''}>
+                            <option value="${status}" ${order.status === status ? 'selected' : ''}>
                                 ${status}
                             </option>
                         `).join('')}
                     </select>
                     <!-- Display the status visually with a colored span -->
                     <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium status-${statusClass} mt-2">
-                        ${order.payment_status}
+                        ${order.status}
                     </span>
                 </td>
                 
@@ -338,7 +339,7 @@
                 const response = await fetch(`/admin/api/orders/${orderId}/status`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ payment_status: newStatus })
+                    body: JSON.stringify({ status: newStatus })
                 });
                 
                 if (response.ok) {
@@ -364,13 +365,21 @@
             nextPageBtn.disabled = currentPage >= totalPages;
         };
 
+        const debounce = (func, delay) => {
+        let timeoutId;
+        return (...args) => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+                func.apply(this, args);
+            }, delay);
+        };
+    };
+
         // Event Listeners for Controls
-        searchInput.addEventListener('keyup', (e) => {
-            if (e.key === 'Enter') {
-                currentPage = 1;
-                fetchAndRenderOrders();
-            }
-        });
+        searchInput.addEventListener('keyup', debounce(() => {
+        currentPage = 1;
+        fetchAndRenderOrders();
+    }, 500)); // 500ms delay
         statusFilter.addEventListener('change', () => {
             currentPage = 1;
             fetchAndRenderOrders();

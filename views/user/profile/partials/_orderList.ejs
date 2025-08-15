@@ -17,9 +17,11 @@
                     <tr class="text-left text-sm font-semibold text-gray-100">
                         <th class="py-4 px-4 whitespace-nowrap">Order ID</th>
                         <th class="py-4 px-4 whitespace-nowrap">Product</th>
+                        <th class="py-4 px-4 whitespace-nowrap">Title</th>
                         <th class="py-4 px-4 whitespace-nowrap">Date</th>
                         <th class="py-4 px-4 whitespace-nowrap">Total</th>
                         <th class="py-4 px-4 whitespace-nowrap">Status</th>
+                        <th class="py-4 px-4 whitespace-nowrap">Payment Status</th>
                     </tr>
                 </thead>
                 <tbody id="ordersTableBody" class="divide-y divide-gray-800">
@@ -45,17 +47,22 @@
                                     %>
                                     <a href="/user/order-detail?order_id=<%= order._id %>" class="flex items-center space-x-4">
                                         <img src="<%= imagePath %>" alt="<%= altText %>" class="w-16 h-16 object-cover rounded-xl shadow-lg border border-gray-700">
-                                        <span class="font-medium text-white text-base hover:underline"><%= product.title %></span>
                                     </a>
                                 <% } else { %>
                                     <span class="text-gray-500">No Product</span>
                                 <% } %>
                             </td>
+                           <td class=" text-white text-base hover:underline"><%= order.products[0].product_id.title %></td>
                             <td class="py-4 px-4 text-sm font-light whitespace-nowrap"><%= new Date(order.createdAt).toLocaleDateString() %></td>
                             <td class="py-4 px-4 text-base font-bold text-green-400 whitespace-nowrap">₹<%= order.total_amount.toFixed(2) %></td>
                             <td class="py-4 px-4">
                                 <span class="px-3 py-1 rounded-full text-xs font-semibold uppercase <%= order.status === 'delivered' ? 'bg-green-600' : order.status === 'cancelled' ? 'bg-red-600' : 'bg-yellow-600' %> text-white">
                                     <%= order.status %>
+                                </span>
+                            </td>
+                            <td class="py-4 px-4">
+                                <span class="px-3 py-1 rounded-full text-xs font-semibold uppercase <%= order.status === 'delivered' ? 'bg-green-600' : order.status === 'cancelled' ? 'bg-red-600' : 'bg-yellow-600' %> text-white">
+                                    <%= order.payment_status %>
                                 </span>
                             </td>
                         </tr>

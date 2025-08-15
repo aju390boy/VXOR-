@@ -8,10 +8,10 @@ const orderSchema = new mongoose.Schema({
     price: { type: Number }
   }],
   address_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Address' },
-  status: { type: String, enum: ['pending', 'shipped', 'delivered', 'cancelled'], default: 'pending' },
+  payment_status: { type: String, enum: ['COMPLETED','PENDING','REFUNDED','FAILED','PROCESSING'], default: 'PENDING' },
   coupon_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Coupon' },
   total_amount: { type: Number },
-payment_status: {
+status: {
           type: String,
           enum: [
             'PROCESSING',

@@ -1,5 +1,7 @@
 const Order  = require('../../model/order.js')
 const User = require('../../model/user.js')
+const Product = require('../../model/product.js')
+const mongoose = require('mongoose')
 
 
 exports.renderOrdersPage = async (req, res) => {
@@ -35,29 +37,60 @@ exports.renderOrdersPage = async (req, res) => {
  * @access Private (Admin only)
  */
 exports.getOrders = async (req, res) => {
-    const { page = 1, limit = 10, search, status, sort } = req.query;
+     const { page = 1, limit = 10, search, status, sort } = req.query;
 
-    const query = {};
-    if (status) {
+     const query = {};
+     if (status) {
         // Use 'payment_status' to filter
-        query.payment_status = status;
-    }
-    if (search) {
-        // Search by User name/email
+        query.status = status;
+     }
+
+
+        if (search) {
+    // If the search term is a valid ObjectId, search for that exact order.
+    // This is the fastest and safest way to search by ID.
+    if (mongoose.isValidObjectId(search)) {
+        query._id = search;
+    } else {
+        // If the search term is not a valid ObjectId, perform a broad search
+        // on the user and product fields using a regular expression.
+
+        const searchRegex = { $regex: search, $options: 'i' };
+
+        // Find matching users based on name or email
         const userSearch = await User.find({
             $or: [
-                { firstname: { $regex: search, $options: 'i' } },
-                { lastname: { $regex: search, $options: 'i' } },
-                { email: { $regex: search, $options: 'i' } }
+                { firstname: searchRegex },
+                { lastname: searchRegex },
+                { email: searchRegex }
             ]
-        }).select('_id');
+        }).select('_id').lean();
         
-        // Search by Order ID (_id) or User ID
-        query.$or = [
-            { _id: { $regex: search, $options: 'i' } },
-            { user_id: { $in: userSearch.map(user => user._id) } }
-        ];
+        // Find matching products based on title
+        const productSearch = await Product.find({
+            title: searchRegex
+        }).select('_id').lean();
+
+        // Create an array of conditions for the combined $or query
+        const orConditions = [];
+        
+        if (userSearch.length > 0) {
+            orConditions.push({ user_id: { $in: userSearch.map(user => user._id) } });
+        }
+        if (productSearch.length > 0) {
+            orConditions.push({ 'products.product_id': { $in: productSearch.map(product => product._id) } });
+        }
+        
+        // If any string matches were found, apply the combined query.
+        if (orConditions.length > 0) {
+            query.$or = orConditions;
+        } else {
+            // If no users or products matched, don't return any orders.
+            query._id = null;
+        }
     }
+}
+
     
     const sortOptions = {};
     // Use 'createdAt' for sorting by date
@@ -103,14 +136,40 @@ exports.getOrders = async (req, res) => {
  */
 exports.updateOrderStatus = async (req, res) => {
     const { orderId } = req.params;
-    // Use 'payment_status' to update the correct field
-    const { payment_status } = req.body;
+    // The new status from the request body
+    const { status } = req.body;
+    
+    // Determine the new payment_status based on the order's status
+    let newPaymentStatus = null;
+    switch (status) {
+        case 'DELIVERED':
+            newPaymentStatus = 'COMPLETED';
+            break;
+        case 'RETURNED':
+            newPaymentStatus = 'REFUNDED';
+            break;
+        case 'CANCELLED':
+            newPaymentStatus = 'FAILED';
+            break;
+        case 'RETURN REQUESTED':
+            newPaymentStatus = 'PROCESSING';
+            break;
+        default:
+            // For other statuses like PACKED, SHIPPED, etc., no payment status change is needed.
+            break;
+    }
+
+    // Create the update object. It will always update the status, and
+    // will conditionally update payment_status if it's been set.
+    const updateObject = { status: status };
+    if (newPaymentStatus) {
+        updateObject.payment_status = newPaymentStatus;
+    }
     
     try {
         const order = await Order.findOneAndUpdate(
-            // Use _id for the query
             { _id: orderId },
-            { $set: { payment_status: payment_status } },
+            { $set: updateObject },
             { new: true, runValidators: true }
         );
 

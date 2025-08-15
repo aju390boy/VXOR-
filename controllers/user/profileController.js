@@ -104,7 +104,7 @@ exports.getProfileSection = async (req, res) => {
     // The image path is now in order.products[i].product_id.colorVariants[j].images[k]
     // The front-end template will need to handle this nested structure.
 
-    data.orders = orders;
+    data.orders = orders
     templatePath = 'user/profile/partials/_orderList';
     break;
             case 'address':

@@ -75,8 +75,8 @@ exports.placeOrder = async (req, res) => {
                 price: item.productId.colorVariants.find(c => c.colorName === item.colorName)?.variants.find(s => s.size === item.size)?.price
             })),
             total_amount: total_amount,
-            status: 'pending', // Use the lowercase enum value
-            payment_status: 'pending', // Use the lowercase enum value
+            status: 'PROCESSING', // Use the lowercase enum value
+            payment_status: 'PENDING', // Use the lowercase enum value
             // coupon_id: ...
         });
 
