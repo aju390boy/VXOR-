@@ -4,7 +4,7 @@ const Product = require('../../model/product.js');
 
 exports.getDashboard = async (req, res) => {
   try {
-    const orders = await Order.find({ status: 'Delivered' });
+    const orders = await Order.find({ payment_status: 'Delivered' });
     const totalSales = orders.reduce((sum, order) => sum + order.totalAmount, 0);
     const customerCount = await User.countDocuments();
     const orderCount = await Order.countDocuments();
@@ -17,6 +17,7 @@ exports.getDashboard = async (req, res) => {
       orderCount,
       recentOrders,
       bestSelling,
+      orders,
       layout:false
     });
   } catch (error) {

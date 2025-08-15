@@ -54,10 +54,10 @@
             <tbody>
               <% recentOrders.forEach(order => { %>
                 <tr>
-                  <td>#<%= order.title.toString().slice(-4) %></td>
-                  <td><%= order.firstname %></td> <!-- Adjust according to your schema -->
-                  <td>₹<%= order.offer_price %></td>
-                  <td><%= order.status %></td>
+                  
+                  
+                  
+                  <td><%= order.payment_status %></td>
                 </tr>
               <% }) %>
             </tbody>

@@ -1,72 +1,410 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Admin - Orders</title>
-  <link rel="stylesheet" href="/styles/admin/orders.css">
-  <link rel="stylesheet" href="/styles/admin/adminnavbar.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Orders</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+   <link rel="stylesheet" href="/styles/admin/adminnavbar.css">
   <link rel="stylesheet" href="/styles/admin/adminsidebar.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar styles for a clean theme */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9; /* Light background */
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8; /* Gray thumb */
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+        .main-content-div{
+          margin-left: 240px;
+          margin-top: 50px;
+        }
+        .status-PROCESSING {
+    background-color: #e2e8f0; /* Light gray */
+    color: #475569; /* Slate gray */
+    font-weight: 500;
+}
+
+.status-PACKED {
+    background-color: #fde68a; /* Light yellow */
+    color: #92400e; /* Dark orange */
+    font-weight: 500;
+}
+
+.status-SHIPPED {
+    background-color: #a5b4fc; /* Light indigo */
+    color: #4338ca; /* Dark indigo */
+    font-weight: 500;
+}
+
+.status-DELIVERED {
+    background-color: #a7f3d0; /* Light green */
+    color: #065f46; /* Dark green */
+    font-weight: 500;
+}
+
+.status-RETURNED {
+    background-color: #fca5a5; /* Light red */
+    color: #b91c1c; /* Dark red */
+    font-weight: 500;
+}
+
+.status-CANCELLED {
+    background-color: #fee2e2; /* Light red */
+    color: #b91c1c; /* Dark red */
+    font-weight: 500;
+}
+
+.status-RETURN-REQUESTED {
+    background-color: #fef08a; /* Light yellow */
+    color: #854d0e; /* Dark yellow */
+    font-weight: 500;
+}
+.status-PROCESSING{
+  background-color: #717473;
+  color: black;
+  font-weight: 500;
+}
+
+
+    </style>
 </head>
-<body>
+<body class="bg-gray-100 text-gray-800 min-h-screen">
+    
+    <!-- Overall Layout Container -->
+    <div class="flex h-screen">
+        <!-- Sidebar - Fixed on the left -->
+        <%- include('../partials/admin/adminsidebar', { current: 'orders' }) %>
 
-  <%- include('../partials/admin/adminnavbar') %>
-  
-  <div class="admin-wrapper">
-    <%- include('../partials/admin/adminsidebar', { current: 'orders' }) %>
+        <!-- Main Content Area (Navbar and Order Management) -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Navbar - Fixed on top -->
+            <%- include('../partials/admin/adminnavbar') %>
+            
+            <!-- Main Content Wrapper -->
+            <main class="main-content-div flex-1 w-[85%] overflow-x-hidden overflow-y-auto bg-gray-100 p-4 md:p-8">
+               <div class="breadcrumb mb-4 text-gray-500">Admin > Orders</div>
+                <header class="mb-8">
+                    <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-2">ORDERS MANAGEMENT</h1>
+                    <p class="text-gray-700">View, manage, and track all customer orders.</p>
+                </header>
 
-    <div class="admin-main">
-      <div class="breadcrumb">Admin > Orders</div>
+                <!-- Search, Sort, and Filter Controls -->
+                <div class="bg-white rounded-xl p-4 md:p-6 shadow-lg border border-gray-200 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                        <div class="md:col-span-2">
+                            <label for="order-search" class="block text-sm font-medium text-gray-700">Search Orders</label>
+                            <input type="text" id="order-search" placeholder="Search by Order ID or User"
+                                class="mt-1 block w-full bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:ring-purple-500 focus:border-purple-500 text-sm px-4 py-2 text-gray-800">
+                        </div>
+                        <div>
+                            <label for="order-status-filter" class="block text-sm font-medium text-gray-700">Filter by Status</label>
+                            <select id="order-status-filter" class="mt-1 block w-full bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:ring-purple-500 focus:border-purple-500 text-sm px-4 py-2 text-gray-800">
+                                <option value="" >All Statuses</option>
+                                <option value="PROCESSING">PROCESSING</option>
+                                <option value="PACKED">PACKED</option>
+                                <option value="SHIPPED">SHIPPED</option>
+                                <option value="DELIVERED">DELIVERED</option>
+                                <option value="RETURN REQUESTED">RETURN REQUESTED</option>
+                                <option value="CANCELLED">CANCELLED</option>
+                                <option value="RETURNED">RETURNED</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="order-sort" class="block text-sm font-medium text-gray-700">Sort by</label>
+                            <select id="order-sort" class="mt-1 block w-full bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:ring-purple-500 focus:border-purple-500 text-sm px-4 py-2 text-gray-800">
+                                <option value="date-desc">Order Date (Newest)</option>
+                                <option value="date-asc">Order Date (Oldest)</option>
+                            </select>
+                        </div>
+                        <div class="col-span-full mt-4 md:mt-0">
+                            <button id="clear-search-btn" class="w-full md:w-auto px-4 py-2 bg-purple-900 text-white font-medium rounded-lg shadow-sm hover:bg-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors">
+                                Clear Filters
+                            </button>
+                        </div>
+                    </div>
+                </div>
 
-      <div class="orders-section">
-        <div class="orders-header">
-          <h2>Orders</h2>
-          <input type="text" placeholder="🔍 Search orders" class="order-search" />
+                <!-- Orders Table -->
+                <div class="bg-white rounded-xl p-4 md:p-6 shadow-lg border border-gray-200 overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Order ID</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Order Date</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">User</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Amount</th>
+                                <th scope="col" class="status-row px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orders-table-body" class="divide-y divide-gray-200">
+                            <!-- Orders will be dynamically injected here by JavaScript -->
+                        </tbody>
+                    </table>
+                    <!-- Loading and No Data states -->
+                    <div id="loading-state" class="text-center py-8 text-gray-500">
+                        <p>Loading orders...</p>
+                    </div>
+                    <div id="no-data-state" class="text-center py-8 text-gray-500 hidden">
+                        <p>No orders found matching your criteria.</p>
+                    </div>
+                </div>
+
+                <!-- Pagination Controls -->
+                <div id="pagination-controls" class="flex justify-between items-center mt-6">
+                    <button id="prev-page-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                        Previous
+                    </button>
+                    <span id="page-info" class="text-sm text-gray-500">Page 1 of 1</span>
+                    <button id="next-page-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                        Next
+                    </button>
+                </div>
+            </main>
         </div>
-
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Order</th>
-              <th>Date</th>
-              <th>Total</th>
-              <th>Status</th>
-              <th>Order ID</th>
-            </tr>
-          </thead>
-          <tbody>
-  <% if (typeof orders === 'undefined' || orders.length === 0) { %>
-    <tr>
-      <td colspan="6" style="text-align:center; color:gray;">No orders available.</td>
-    </tr>
-  <% } else { %>
-    <% orders.forEach(function(order, index) { %>
-      <tr>
-        <td><img src="<%= order.image %>" alt="<%= order.name %>" /></td>
-        <td><%= order.name %></td>
-        <td><%= order.date %></td>
-        <td>₹<%= order.total.toLocaleString() %></td>
-        <td><%= order.status %></td>
-        <td><%= order.orderId %></td>
-      </tr>
-    <% }) %>
-  <% } %>
-</tbody>
-
-        </table>
-
-        <div class="pagination">
-          <span>&lt;</span>
-          <span class="active">1</span>
-          <span>2</span>
-          <span>...</span>
-          <span>24</span>
-          <span>&gt;</span>
-        </div>
-      </div>
     </div>
-  </div>
+
+    <!-- JavaScript for dynamic functionality -->
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // DOM Elements
+        const searchInput = document.getElementById('order-search');
+        const statusFilter = document.getElementById('order-status-filter');
+        const sortSelect = document.getElementById('order-sort');
+        const clearBtn = document.getElementById('clear-search-btn');
+        const ordersTableBody = document.getElementById('orders-table-body');
+        const loadingState = document.getElementById('loading-state');
+        const noDataState = document.getElementById('no-data-state');
+        const prevPageBtn = document.getElementById('prev-page-btn');
+        const nextPageBtn = document.getElementById('next-page-btn');
+        const pageInfoSpan = document.getElementById('page-info');
+
+        // Application State
+        let currentPage = 1;
+        const pageSize = 2; // Adjusted for better testing on a small screen
+        let totalOrders = 0;
+        const statusOptions = ["PROCESSING", "PACKED", "SHIPPED", "DELIVERED", "RETURN REQUESTED", "CANCELLED", "RETURNED"];
+
+        /**
+         * Fetches and renders orders based on current state.
+         */
+        const fetchAndRenderOrders = async () => {
+            loadingState.classList.remove('hidden');
+            ordersTableBody.innerHTML = '';
+            noDataState.classList.add('hidden');
+
+            const searchQuery = searchInput.value;
+            const status = statusFilter.value;
+            const sort = sortSelect.value;
+            
+            try {
+                const response = await fetch(`/admin/api/orders?page=${currentPage}&limit=${pageSize}&search=${searchQuery}&status=${status}&sort=${sort}`);
+                if (!response.ok) {
+                    throw new Error("Failed to fetch orders.");
+                }
+                const data = await response.json();
+                
+                totalOrders = data.total;
+                const orders = data.orders;
+                
+                if (orders.length > 0) {
+                    orders.forEach(order => {
+                        const row = createOrderRow(order);
+                        ordersTableBody.appendChild(row);
+                    });
+                    ordersTableBody.classList.remove('hidden');
+                } else {
+                    ordersTableBody.classList.add('hidden');
+                    noDataState.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error("Failed to fetch orders:", error);
+                noDataState.innerHTML = '<p class="text-red-400">Failed to load orders. Please try again.</p>';
+                noDataState.classList.remove('hidden');
+            } finally {
+                loadingState.classList.add('hidden');
+                updatePaginationControls();
+            }
+        };
+        
+        /**
+         * Creates a valid CSS class name from a status string.
+         * @param {string} status - The status from the order data.
+         * @returns {string} The formatted CSS class name.
+         */
+        const getStatusClass = (status) => {
+            // Replaces spaces and converts to uppercase for consistency
+            return status.toUpperCase().replace(/\s/g, '-');
+        };
+
+        /**
+         * Creates a single table row for an order.
+         * @param {object} order - The order data object.
+         * @returns {HTMLElement} - The created table row element.
+         */
+        const createOrderRow = (order) => {
+            const row = document.createElement('tr');
+            row.classList.add('hover:bg-gray-100', 'transition-colors', 'duration-200');
+            
+            // Use the 'createdAt' timestamp from the schema for the order date
+            const formattedDate = new Date(order.createdAt).toLocaleDateString('en-IN', {
+                day: 'numeric', month: 'short', year: 'numeric'
+            });
+            
+            // Use 'total_amount' from the schema
+            const formattedTotal = new Intl.NumberFormat('en-IN', {
+                style: 'currency', currency: 'INR'
+            }).format(order.total_amount);
+            
+            // Get the dynamic status class for styling
+            const statusClass = getStatusClass(order.payment_status);
+
+            row.innerHTML = `
+                <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${order._id}</td>
+                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">${formattedDate}</td>
+                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                    ${order.user_id.firstname} ${order.user_id.lastname}<br>
+                    <span class="text-xs text-gray-400">${order.user_id.email}</span>
+                </td>
+                <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${formattedTotal}</td>
+                
+                <td class="px-4 py-4 whitespace-nowrap">
+                    <!-- The select dropdown for changing status -->
+                    <select data-order-id="${order._id}" class="status-select bg-gray-200 text-gray-800 text-sm rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-purple-500">
+                        ${statusOptions.map(status => `
+                            <option value="${status}" ${order.payment_status === status ? 'selected' : ''}>
+                                ${status}
+                            </option>
+                        `).join('')}
+                    </select>
+                    <!-- Display the status visually with a colored span -->
+                    <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium status-${statusClass} mt-2">
+                        ${order.payment_status}
+                    </span>
+                </td>
+                
+                <td class="px-4 py-4 whitespace-nowrap text-sm font-medium">
+                    <button data-order-id="${order._id}" class="view-btn text-purple-600 hover:text-purple-800 transition-colors">View</button>
+                </td>
+            `;
+            
+            // Add event listener for the status change dropdown
+            const statusSelect = row.querySelector('.status-select');
+            statusSelect.addEventListener('change', (e) => {
+                const newStatus = e.target.value;
+                changeOrderStatus(order._id, newStatus);
+            });
+
+            // Add event listener for the view button
+            const viewBtn = row.querySelector('.view-btn');
+            viewBtn.addEventListener('click', () => {
+                alert(`Viewing details for Order ID: ${order._id}`);
+                // You would replace this with a redirect or a modal
+                // Example: window.location.href = `/admin/orders/${order._id}`;
+            });
+
+            return row;
+        };
+
+        /**
+         * Handles the order status change action.
+         * @param {string} orderId - The ID of the order.
+         * @param {string} newStatus - The new status to set.
+         */
+        const changeOrderStatus = async (orderId, newStatus) => {
+            const isConfirmed = confirm(`Are you sure you want to change status of Order ID ${orderId} to ${newStatus}?`);
+            if (!isConfirmed) {
+                // Revert the UI state if the user cancels
+                fetchAndRenderOrders();
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/admin/api/orders/${orderId}/status`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ payment_status: newStatus })
+                });
+                
+                if (response.ok) {
+                    alert(`Status for Order ID ${orderId} successfully changed to ${newStatus}.`);
+                    // Re-fetch and re-render the page to get fresh data
+                    fetchAndRenderOrders();
+                } else {
+                    throw new Error("Failed to update status.");
+                }
+            } catch (error) {
+                console.error("Error updating status:", error);
+                alert("An error occurred while updating the status. Please try again.");
+            }
+        };
+        
+        /**
+         * Updates the pagination button states and page info.
+         */
+        const updatePaginationControls = () => {
+            const totalPages = Math.ceil(totalOrders / pageSize);
+            pageInfoSpan.textContent = `Page ${currentPage} of ${totalPages || 1}`;
+            prevPageBtn.disabled = currentPage === 1;
+            nextPageBtn.disabled = currentPage >= totalPages;
+        };
+
+        // Event Listeners for Controls
+        searchInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') {
+                currentPage = 1;
+                fetchAndRenderOrders();
+            }
+        });
+        statusFilter.addEventListener('change', () => {
+            currentPage = 1;
+            fetchAndRenderOrders();
+        });
+        sortSelect.addEventListener('change', () => {
+            currentPage = 1;
+            fetchAndRenderOrders();
+        });
+        clearBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            statusFilter.value = '';
+            sortSelect.value = 'date-desc';
+            currentPage = 1;
+            fetchAndRenderOrders();
+        });
+
+        // Pagination button event listeners
+        prevPageBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                fetchAndRenderOrders();
+            }
+        });
+        nextPageBtn.addEventListener('click', () => {
+            if (currentPage * pageSize < totalOrders) {
+                currentPage++;
+                fetchAndRenderOrders();
+            }
+        });
+
+        // Initial data fetch on page load
+        fetchAndRenderOrders();
+    });
+</script>
 
 </body>
 </html>

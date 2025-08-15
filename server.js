@@ -45,6 +45,6 @@ app.use('/*splat',(req,res)=>{
     res.render('user/error',{layout:false})
 })
 app.listen(3000, () => {
-    console.log('server is running on http://localhost:3000/login')
+    console.log('server is running on http://localhost:3000/admin/login')
     connect();
 })
