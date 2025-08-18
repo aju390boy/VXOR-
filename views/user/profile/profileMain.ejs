@@ -273,7 +273,7 @@
                         customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
                     });
 
-                    closeModal('editProfileModal'); // Close the modal on success
+                    closeModal('editProfileModal'); 
 
                     setTimeout(() => {
                         loadSection('profile');
@@ -306,7 +306,7 @@
             if (changePasswordForm) {
                 changePasswordForm.addEventListener('submit', async (event) => {
                     event.preventDefault();
-                    clearErrorMessages('change-password-form'); // Clear previous errors
+                    clearErrorMessages('change-password-form'); 
 
                     const formData = new FormData(changePasswordForm);
                     const data = Object.fromEntries(formData.entries());
@@ -361,7 +361,7 @@
             }
         };
 
-        // New function to attach listener to the Add Address button and form
+       
         const attachAddAddressFormListener = () => {
             const addNewAddressBtn = document.getElementById('addNewAddressBtn');
             const addAddressForm = document.getElementById('add-address-form');
@@ -434,13 +434,13 @@
             }
         };
 
-        // New function to attach listeners to edit and remove buttons
+        
         const attachAddressButtonsListeners = () => {
     const editButtons = document.querySelectorAll('.edit-address-btn');
     const removeButtons = document.querySelectorAll('.remove-address-btn');
-    const setDefaultButtons = document.querySelectorAll('.set-default-btn'); // New: Select all "Set as Default" buttons
+    const setDefaultButtons = document.querySelectorAll('.set-default-btn'); 
 
-    // Add event listener for Edit buttons
+   
     editButtons.forEach(button => {
         button.addEventListener('click', () => {
             const addressData = JSON.parse(button.dataset.address);
@@ -455,12 +455,12 @@
             document.getElementById('edit-pincode').value = addressData.pincode;
             document.getElementById('edit-country').value = addressData.country;
 
-            // Open the modal
+            
             openModal('editAddressModal');
         });
     });
 
-    // Add event listener for Remove buttons
+   
     removeButtons.forEach(button => {
         button.addEventListener('click', () => {
             const addressId = button.dataset.addressId;
@@ -515,12 +515,12 @@
         });
     });
 
-    // New: Add event listener for "Set as Default" buttons
+    
     setDefaultButtons.forEach(button => {
     button.addEventListener('click', async () => {
         const addressId = button.dataset.addressId;
 
-        // Confirm with the user using a SweetAlert modal
+        
         Swal.fire({
             title: 'Set as default?',
             text: "This address will be your primary shipping address.",
@@ -539,7 +539,7 @@
         }).then(async (result) => {
             if (result.isConfirmed) {
                 try {
-                    // Send the request to your server-side endpoint
+                  
                     const response = await fetch(`/user/profile/address/set-default/${addressId}`, {
                         method: 'POST',
                         headers: {
@@ -547,11 +547,11 @@
                         },
                     });
 
-                    // Parse the JSON response from the server
+                 
                     const result = await response.json();
 
                     if (response.ok) {
-                        // Display a success message
+                        
                         Swal.fire({
                             icon: 'success',
                             title: 'Success!',
@@ -564,14 +564,13 @@
                             }
                         });
 
-                        // Reload the page to ensure all data is fresh and the UI is correctly updated.
-                        // This is more reliable than reloading a single section.
+                        
                         setTimeout(() => {
                             window.location.reload();
                         }, 1500);
 
                     } else {
-                        // Display an error message if the server responds with a non-200 status
+                        
                         Swal.fire({
                             icon: 'error',
                             title: 'Error!',
@@ -586,7 +585,7 @@
                     }
                 } catch (error) {
                     console.error('Error setting default address:', error);
-                    // Display a network error message if the fetch fails
+                    
                     Swal.fire({
                         icon: 'error',
                         title: 'Network Error!',
@@ -606,7 +605,7 @@
 };
 
 
-        // Function to attach listener to the Edit Address form
+      
         const attachEditAddressFormListener = () => {
             const editAddressForm = document.getElementById('edit-address-form');
             if (editAddressForm) {
@@ -669,7 +668,7 @@
             }
         };
 
-        // Initial load of the default section and attach listeners
+       
         const urlParams = new URLSearchParams(window.location.search);
         const defaultSection = urlParams.get('section') || 'profile';
 
@@ -686,46 +685,46 @@
 </script>
 
 <style>
-/* Custom SweetAlert2 styles for dark theme */
+
 .swal-dark-bg {
-    background-color: #1a202c !important; /* Tailwind gray-900 */
-    color: #e2e8f0 !important; /* Tailwind gray-200 */
-    border: 1px solid #4a5568 !important; /* Tailwind gray-600 */
+    background-color: #1a202c !important; 
+    color: #e2e8f0 !important; 
+    border: 1px solid #4a5568 !important; 
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5) !important;
 }
 
 .swal-dark-title {
-    color: #cbd5e0 !important; /* Tailwind gray-300 */
+    color: #cbd5e0 !important;
 }
 
 .swal-dark-content {
-    color: #a0aec0 !important; /* Tailwind gray-400 */
+    color: #a0aec0 !important; 
 }
 
 .swal-dark-button {
-    background-color: #4299e1 !important; /* Tailwind blue-500 */
+    background-color: #4299e1 !important;
     color: white !important;
     border: none !important;
 }
 
 .swal-dark-button:focus {
-    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5) !important; /* Blue shadow on focus */
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5) !important; 
 }
 
-/* Ensure font-awesome classes are applied */
+
 .swal2-icon {
     font-family: 'Font Awesome 6 Free', sans-serif !important;
-    font-weight: 900 !important; /* Required for solid icons */
+    font-weight: 900 !important; 
 }
 
-/* Example: Specific icons can be styled if needed */
+
 .swal2-success .swal2-success-line-tip,
 .swal2-success .swal2-success-line-long {
-    background-color: #38a169 !important; /* Green for success */
+    background-color: #38a169 !important; 
 }
 
 .swal2-error .swal2-x-mark-line-left,
 .swal2-error .swal2-x-mark-line-right {
-    background-color: #e53e3e !important; /* Red for error */
+    background-color: #e53e3e !important; 
 }
 </style>

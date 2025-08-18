@@ -24,6 +24,14 @@ status: {
           ],
           default: 'PROCESSING',
         },
+request_reason: {
+      type: String,
+      default: null
+  },
+request_date: {
+      type: Date,
+      default: null
+  }
 }, { timestamps: true });
 
 const Order = mongoose.model('Order', orderSchema);

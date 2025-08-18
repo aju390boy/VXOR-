@@ -1,28 +1,27 @@
 const User = require('../../model/user.js');
 const Otp = require('../../model/otp.js');
-const { sendMail } = require('../../utils/otpMailer1.js'); // Assuming this path is correct
+const { sendMail } = require('../../utils/otpMailer1.js');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 
-// --- FORGOT PASSWORD FLOW ---
-// GET /forgot-password
+
 exports.getForgotPage = (req, res) => {
     res.render('user/forgot', {
         title: 'Forgot-Password',
         isAuthPage: true,
-        error: req.query.error || null // Display errors passed via query param
+        error: req.query.error || null 
     });
 };
 
-// POST /forgot-password (Send OTP for Forgot Password)
+
 exports.postForgotPassword = async (req, res) => {
     const emailOrPhone = req.body.emailOrPhone.trim();
 
     try {
         let user;
-        // Check if the input looks like an email or a phone number
-        const isEmail = emailOrPhone.includes('@'); // Simple check for email format
-        const isMobile = /^\d{10}$/.test(emailOrPhone); // Check for 10-digit number for mobile
+       
+        const isEmail = emailOrPhone.includes('@'); 
+        const isMobile = /^\d{10}$/.test(emailOrPhone); 
 
         if (isEmail) {
             user = await User.findOne({ email: emailOrPhone });
@@ -39,17 +38,15 @@ exports.postForgotPassword = async (req, res) => {
 
         const otpCode = crypto.randomInt(100000, 999999).toString();
 
-        // Delete any old OTPs for this user - use 'email' as per schema
-        // Important: Use user.email here, not emailOrPhone, to ensure you're deleting
-        // OTPs associated with the found user's actual email, as it's the primary key for OTP.
+
         await Otp.deleteMany({ email: user.email }); 
 
-        // Create new OTP - use 'email', 'otp', add 'context' and 'expiresAt'
+       
         const newOtpRecord = new Otp({
-            email: user.email, // Use the user's actual email from the found user object
+            email: user.email,
             otp: otpCode,
             context: 'forgot-password',
-            expiresAt: new Date(Date.now() + 5 * 60 * 1000) // 10 minutes from now
+            expiresAt: new Date(Date.now() + 5 * 60 * 1000) 
         });
         await newOtpRecord.save();
 
@@ -63,9 +60,9 @@ exports.postForgotPassword = async (req, res) => {
              <p>Cheers,<br>The VXOR Team </p>
            </div>`;
 
-        await sendMail(user.email, emailSubject, emailHtml); // Send to the user's actual email
+        await sendMail(user.email, emailSubject, emailHtml);
 
-        // Redirect to the unified OTP verification page with context
+       
         res.redirect(`/verify-otp?email=${encodeURIComponent(user.email)}&context=forgot-password`);
 
     } catch (err) {
@@ -74,12 +71,11 @@ exports.postForgotPassword = async (req, res) => {
     }
 };
 
-// --- UNIFIED OTP VERIFICATION PAGE & HANDLERS ---
-// GET /verify-otp (Renders the unified OTP page)
-exports.getOtpPage = async (req, res) => { // Make this function async
+
+exports.getOtpPage = async (req, res) => { 
     const email = req.query.email || '';
     const context = req.query.context || 'unknown';
-    let otpExpiresAt = null; // Initialize to null
+    let otpExpiresAt = null;
 
     if (!email) {
         if (context === 'signup') return res.redirect('/signup?error=' + encodeURIComponent('Email missing for OTP verification.'));
@@ -88,21 +84,20 @@ exports.getOtpPage = async (req, res) => { // Make this function async
     }
 
     try {
-        // Find the latest OTP for this email and context that hasn't expired yet
+        
         const latestOtp = await Otp.findOne({ email, context })
-                                  .sort({ createdAt: -1 }) // Sort by latest
+                                  .sort({ createdAt: -1 })
                                   .exec();
 
-        // If a latest OTP exists and it's not yet expired, pass its expiration time
+        
         if (latestOtp && latestOtp.expiresAt > new Date()) {
-            otpExpiresAt = latestOtp.expiresAt.getTime(); // Get timestamp in milliseconds
+            otpExpiresAt = latestOtp.expiresAt.getTime();
         }
-        // else, if it's expired or doesn't exist, otpExpiresAt remains null
-        // The frontend JS will handle this (e.g., show "OTP expired" or prompt to resend)
+       
 
     } catch (error) {
         console.error('Error fetching latest OTP for timer:', error);
-        // Do not block rendering, just proceed with otpExpiresAt = null
+        
     }
 
     res.render('user/otp', {
@@ -111,11 +106,11 @@ exports.getOtpPage = async (req, res) => { // Make this function async
         isAuthPage: true,
         email: email,
         context: context,
-        otpExpiresAt: otpExpiresAt // <<< Pass the expiration timestamp to the template
+        otpExpiresAt: otpExpiresAt
     });
 };
 
-// POST /verify-otp (Handles OTP verification submission for both signup and forgot password)
+
 exports.postVerifyOtp = async (req, res) => {
     console.log('1. Inside postVerifyOtp');
     const { email, otp, context } = req.body;
@@ -166,10 +161,10 @@ exports.postVerifyOtp = async (req, res) => {
             }
         } else if (context === 'forgot-password') {
             console.log('13. Context is forgot-password. Setting session and redirecting to reset page...');
-            await Otp.deleteOne({ _id: otpRecord._id }); // Delete OTP after successful verification
+            await Otp.deleteOne({ _id: otpRecord._id });
             req.session.otpVerified = true;
-            req.session.emailOrPhone = email; // Store email for the reset password step
-            req.session.save(() => { // Save session explicitly
+            req.session.emailOrPhone = email; 
+            req.session.save(() => { 
                 console.log('14. Session saved. Redirecting to /reset-password');
                 return res.redirect('/reset-password');
             });
@@ -179,52 +174,49 @@ exports.postVerifyOtp = async (req, res) => {
         }
 
     } catch (error) {
-        console.error('*** Error in postVerifyOtp:', error); // THIS IS CRITICAL
-        // Ensure this catch block sends a response to the client
-        // You were redirecting for most errors, so maybe this is an unhandled case.
+        console.error('*** Error in postVerifyOtp:', error); 
+        
         return res.status(500).json({ success: false, message: 'An internal server error occurred.' });
     }
 };
 
 // POST /resend-otp (Unified Resend OTP handler)
 exports.postResendOtp = async (req, res) => {
-    const { email: emailOrPhone, context } = req.body; // Expecting AJAX request with email and context
+    const { email: emailOrPhone, context } = req.body; 
 
-    // Define the cooldown period (e.g., 60 seconds)
-    const COOLDOWN_PERIOD_MS = 60 * 1000; // 60 seconds (1 minute)
+    
+    const COOLDOWN_PERIOD_MS = 60 * 1000; 
 
     if (!emailOrPhone || !context) {
         return res.status(400).json({ success: false, message: 'Email and context are required for resend.' });
     }
 
     try {
-        // --- 1. Implement Server-Side Cooldown Check ---
-        const lastResendTime = req.session.lastOtpResendTime || 0; // Get last resend time from session
+       
+        const lastResendTime = req.session.lastOtpResendTime || 0; 
 
         if (Date.now() - lastResendTime < COOLDOWN_PERIOD_MS) {
             const timeLeft = Math.ceil((COOLDOWN_PERIOD_MS - (Date.now() - lastResendTime)) / 1000);
             return res.status(429).json({ success: false, message: `Please wait ${timeLeft} seconds before resending OTP.` });
         }
 
-        // --- 2. Find User ---
-        // Retaining the email-only find as per your self-correction, assuming 'emailOrPhone' will always be an email for resend requests.
-        // If 'mobile' also needs to be supported here, you'd add the isEmail/isMobile logic again.
+       
         const user = await User.findOne({ email: emailOrPhone });
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found.' });
         }
 
-        // Check if account is already verified for signup context
+       
         if (user.isVerified && context === 'signup') {
             return res.status(400).json({ success: false, message: 'Account already verified. Please login.' });
         }
 
-        // --- 3. Generate and Save New OTP ---
+       
         const newOtpCode = crypto.randomInt(100000, 999999).toString();
-        const otpValidityDuration = 5 * 60 * 1000; // 5 minutes validity
+        const otpValidityDuration = 5 * 60 * 1000; 
         const newExpirationTime = new Date(Date.now() + otpValidityDuration);
 
-        // Delete any old OTPs for this user and specific context
+        
         await Otp.deleteMany({ email: emailOrPhone, context: context });
 
         // Save new OTP
@@ -232,7 +224,7 @@ exports.postResendOtp = async (req, res) => {
             email: emailOrPhone,
             otp: newOtpCode,
             context: context,
-            expiresAt: newExpirationTime // Use the calculated expiration time
+            expiresAt: newExpirationTime 
         });
 
         // --- 4. Prepare and Send Email ---
@@ -242,9 +234,9 @@ exports.postResendOtp = async (req, res) => {
         if (context === 'signup') {
             emailSubject = 'Nutrixo: Resend OTP for Account Verification';
             emailHtml = `<p>Your new OTP for Nutrixo account verification is: <strong>${newOtpCode}</strong></p>
-                         <p>This OTP is valid for <b>5 minutes</b>. Do not share it with anyone.</p>`; // Consistent 5 minutes
+                         <p>This OTP is valid for <b>5 minutes</b>. Do not share it with anyone.</p>`; 
         } else if (context === 'forgot-password') {
-            emailSubject = 'Nutrixo: Resend OTP for Password Reset'; // Corrected subject
+            emailSubject = 'Nutrixo: Resend OTP for Password Reset'; 
             emailHtml = `<div style="font-family:Arial,sans-serif;padding:20px;">
               <h2>Hello ${user.firstname || ''}</h2>
               <p>Here is your new OTP to reset your Nutrixo account password:</p>
@@ -252,21 +244,21 @@ exports.postResendOtp = async (req, res) => {
               <p>This OTP is valid for <b>5 minutes</b>. Do not share it with anyone.</p> // Consistent 5 minutes
               <br>
               <p>Cheers,<br>The Nutrixo Team </p>
-            </div>`; // Corrected team name
+            </div>`; 
         } else {
             return res.status(400).json({ success: false, message: 'Unknown context for OTP resend.' });
         }
 
         await sendMail(emailOrPhone, emailSubject, emailHtml);
 
-        // --- 5. Update Session for Cooldown and Send Success Response ---
-        req.session.lastOtpResendTime = Date.now(); // Record the time of this successful resend
-        await req.session.save(); // Ensure session is saved before responding
+        
+        req.session.lastOtpResendTime = Date.now(); 
+        await req.session.save();
 
         res.status(200).json({
             success: true,
             message: 'New OTP sent to your email!',
-            expiresAt: newExpirationTime.getTime() // Pass the exact new expiration timestamp
+            expiresAt: newExpirationTime.getTime() 
         });
 
     } catch (error) {
@@ -274,8 +266,7 @@ exports.postResendOtp = async (req, res) => {
         res.status(500).json({ success: false, message: 'Failed to resend OTP.' });
     }
 };
-// --- RESET PASSWORD FLOW ---
-// GET /reset-password
+
 exports.getResetPage = (req, res) => {
     // Ensure OTP was verified and email is in session before allowing access
     if (!req.session.otpVerified || !req.session.emailOrPhone) {
@@ -291,7 +282,7 @@ exports.getResetPage = (req, res) => {
 // POST /reset-password
 exports.postResetPassword = async (req, res) => {
     const { newPassword, confirmPassword } = req.body;
-    const emailOrPhone = req.session.emailOrPhone; // Get from session for continuity
+    const emailOrPhone = req.session.emailOrPhone; 
 
     if (!emailOrPhone) {
         return res.redirect('/forgot-password?error=' + encodeURIComponent('Session expired. Please restart password reset.'));
@@ -317,8 +308,7 @@ exports.postResetPassword = async (req, res) => {
         } else if (isMobile) {
             user = await User.findOne({ mobile: emailOrPhone });
         } else {
-            // This case should ideally not happen if emailOrPhone is correctly stored
-            // from the previous step, but as a fallback.
+           
             console.error('Invalid emailOrPhone in session during password reset:', emailOrPhone);
             return res.redirect('/forgot-password?error=' + encodeURIComponent('Invalid user identifier in session. Please start the process again.'));
         }
@@ -331,7 +321,7 @@ exports.postResetPassword = async (req, res) => {
         user.password = await bcrypt.hash(newPassword, 10);
         await user.save();
 
-        // Clear session variables related to OTP verification
+       
         req.session.otpVerified = false;
         req.session.emailOrPhone = null;
         req.session.save(() => {

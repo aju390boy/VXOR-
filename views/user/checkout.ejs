@@ -178,23 +178,22 @@
 
 
 <script>
-    // Get the toast message data passed from the server.
-    // Use a fallback object if 'toastMessage' is not defined.
+    
     const toastData = <%- JSON.stringify(typeof toastMessage !== 'undefined' ? toastMessage : {}) %>;
 
-    // Get the toast elements
+   
     const toastContainer = document.getElementById('toast-container');
     const toastAlert = document.getElementById('toast-alert');
     const toastIconSuccess = document.getElementById('toast-icon-success');
     const toastIconError = document.getElementById('toast-icon-error');
     const toastMessageText = document.getElementById('toast-message');
 
-    // Function to show the toast
+    
     function showToast(icon, text) {
         toastMessageText.textContent = text;
         toastAlert.classList.remove('hidden');
         
-        // Remove existing color classes before adding new ones
+        
         toastAlert.classList.remove('bg-green-600', 'bg-red-600');
 
         if (icon === 'success') {
@@ -207,40 +206,39 @@
             toastIconError.classList.remove('hidden');
         }
         
-        // Hide the toast after 5 seconds
+      
         setTimeout(() => {
             toastAlert.classList.add('hidden');
         }, 5000);
     }
 
-    // Check if a toast message exists and show it on page load
+    
     if (toastData && toastData.text) {
         showToast(toastData.icon, toastData.text);
     }
     
-    // Dynamically get the data from your EJS template.
-    // Use fallback values (`null` for address, `[]` for cartItems) to prevent the EJS compiler error.
+    
     const address = <%- JSON.stringify(typeof address !== 'undefined' ? address : null) %>;
     const cartItems = <%- JSON.stringify(typeof cartItems !== 'undefined' ? cartItems : []) %>;
     
-    // Get the button element
+   
     const placeOrderBtn = document.getElementById('place-order-btn');
 
-    // This function will be called when the button is clicked
+    
     async function handlePlaceOrder() {
-        // Check if the button is already disabled to prevent multiple submissions
+       
         if (placeOrderBtn.disabled) {
             console.log("Button is disabled, cannot place order.");
             return;
         }
         
-        // Disable the button to prevent multiple submissions
+        
         placeOrderBtn.disabled = true;
         placeOrderBtn.classList.add('bg-gray-500', 'cursor-not-allowed');
         placeOrderBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
 
         try {
-            // Check if address exists before getting the ID
+            
             const addressId = address ? address._id : null;
             if (!addressId) {
                 console.error("Address ID not found. Cannot place order.");
@@ -248,11 +246,11 @@
                 return;
             }
             
-            // Send the POST request to the server
+            
             const response = await fetch('/user/place-order/cod', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json' // Tell the server we are sending JSON data
+                    'Content-Type': 'application/json' 
                 },
                 body: JSON.stringify({
                     addressId: addressId, 
@@ -260,31 +258,31 @@
                 })
             });
 
-            // Check for a successful response (e.g., status code 200)
+           
             if (response.ok) {
                 const result = await response.json();
                 console.log('Order placed successfully:', result);
                 showToast('success', result.message || 'Order placed successfully!');
                  window.location.href = result.redirectUrl;
-                // Redirect or update the UI after a successful order
+               
             } else {
-                // Handle errors from the server
+              
                 const errorData = await response.json();
                 console.error('Failed to place order:', errorData);
                 showToast('error', errorData.message || 'An error occurred. Please try again.');
             }
         } catch (error) {
-            // Handle network or other unexpected errors
+           
             console.error('An error occurred:', error);
             showToast('error', 'Network error. Please check your connection.');
         } finally {
-            // Re-enable the button after the request is complete
+          
             placeOrderBtn.disabled = false;
             placeOrderBtn.classList.remove('bg-gray-500', 'cursor-not-allowed');
             placeOrderBtn.classList.add('bg-green-600', 'hover:bg-green-700');
         }
     }
 
-    // Add an event listener to the button to call our function on click
+   
     document.getElementById('place-order-btn').addEventListener('click', handlePlaceOrder);
 </script>

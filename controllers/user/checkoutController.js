@@ -1,15 +1,12 @@
 const User = require('../../model/user.js');
 const Cart = require('../../model/cart.js');
-const Product = require('../../model/product.js'); // Assuming you have a Product model
+const Product = require('../../model/product.js');
 const Address = require('../../model/address.js')
 
-// @desc    Get checkout page with order summary and address
-// @route   GET /user/checkout
-// @access  Private
+
 exports.getCheckout = async (req, res) => {
     try {
-        // Corrected: Use 'userId' to query the cart
-        // Corrected: Use 'items.productId' to populate the product details
+        
         const cart = await Cart.findOne({ userId: req.user._id }).populate({
             path: 'items.productId',
             model: 'Product'
@@ -36,7 +33,7 @@ exports.getCheckout = async (req, res) => {
 
         let toastMessage = null;
 
-        // Check for out-of-stock items (this logic seems fine)
+       
         const unavailableItems = cart.items.filter(item => {
             const variant = item.productId.colorVariants
                 .find(c => c.colorName === item.colorName)?.variants
@@ -51,7 +48,7 @@ exports.getCheckout = async (req, res) => {
             };
         }
 
-        // Correctly find the user's default address
+       
         const defaultAddress = await Address.findOne({ user_id: req.user._id, isDefault: true });
 
         if (!defaultAddress) {
@@ -61,7 +58,7 @@ exports.getCheckout = async (req, res) => {
             };
         }
 
-        // Corrected: Recalculate subtotal by finding the price from the product's nested variants
+       
         const subtotal = cart.items.reduce((acc, item) => {
             const variantPrice = item.productId.colorVariants
                 .find(c => c.colorName === item.colorName)?.variants
@@ -70,7 +67,7 @@ exports.getCheckout = async (req, res) => {
             if (variantPrice) {
                 return acc + (variantPrice * item.quantity);
             }
-            return acc; // If price isn't found, don't add to subtotal
+            return acc;
         }, 0);
 
         const taxRate = 0.1;

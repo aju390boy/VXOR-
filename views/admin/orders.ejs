@@ -6,6 +6,7 @@
     <title>Admin Dashboard - Orders</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
    <link rel="stylesheet" href="/styles/admin/adminnavbar.css">
   <link rel="stylesheet" href="/styles/admin/adminsidebar.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -200,6 +201,22 @@
         let totalOrders = 0;
         const statusOptions = ["PROCESSING", "PACKED", "SHIPPED", "DELIVERED", "RETURN REQUESTED", "CANCELLED", "RETURNED"];
 
+        
+        
+        const showSwal = (icon, title, text) => {
+        Swal.fire({
+            icon: icon,
+            title: title,
+            text: text,
+            confirmButtonText: 'OK',
+            customClass: {
+                popup: 'swal-dark-bg',
+                title: 'swal-dark-title',
+                content: 'swal-dark-content',
+                confirmButton: 'swal-dark-button'
+            }
+        });
+    };
         /**
          * Fetches and renders orders based on current state.
          */
@@ -312,13 +329,15 @@
             });
 
             // Add event listener for the view button
-            const viewBtn = row.querySelector('.view-btn');
-            viewBtn.addEventListener('click', () => {
-                alert(`Viewing details for Order ID: ${order._id}`);
-                // You would replace this with a redirect or a modal
-                // Example: window.location.href = `/admin/orders/${order._id}`;
-            });
-
+           
+           const viewBtn = row.querySelector('.view-btn');
+       if (viewBtn) { // Check if the button exists
+         viewBtn.addEventListener('click', () => {
+        const orderId = viewBtn.dataset.orderId;
+        // The URL now includes the orderId as a parameter
+        window.location.href = `/admin/api/orders/${orderId}`;
+    });
+}
             return row;
         };
 
@@ -328,32 +347,47 @@
          * @param {string} newStatus - The new status to set.
          */
         const changeOrderStatus = async (orderId, newStatus) => {
-            const isConfirmed = confirm(`Are you sure you want to change status of Order ID ${orderId} to ${newStatus}?`);
-            if (!isConfirmed) {
-                // Revert the UI state if the user cancels
-                fetchAndRenderOrders();
-                return;
+        // Use Swal.fire for confirmation
+        Swal.fire({
+            icon: 'warning',
+            title: 'Confirm Status Change',
+            text: `Are you sure you want to change the status of Order ID ${orderId} to ${newStatus}?`,
+            showCancelButton: true,
+            confirmButtonText: 'Yes, change it!',
+            cancelButtonText: 'Cancel',
+            reverseButtons: true,
+            customClass: {
+                popup: 'swal-dark-bg',
+                title: 'swal-dark-title',
+                content: 'swal-dark-content',
+                confirmButton: 'swal-dark-button',
+                cancelButton: 'swal-dark-button'
             }
-            
-            try {
-                const response = await fetch(`/admin/api/orders/${orderId}/status`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status: newStatus })
-                });
-                
-                if (response.ok) {
-                    alert(`Status for Order ID ${orderId} successfully changed to ${newStatus}.`);
-                    // Re-fetch and re-render the page to get fresh data
-                    fetchAndRenderOrders();
-                } else {
-                    throw new Error("Failed to update status.");
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/admin/api/orders/${orderId}/status`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ status: newStatus })
+                    });
+                    
+                    if (response.ok) {
+                        showSwal('success', 'Status Updated!', `Status for Order ID ${orderId} successfully changed to ${newStatus}.`);
+                        fetchAndRenderOrders();
+                    } else {
+                        throw new Error("Failed to update status.");
+                    }
+                } catch (error) {
+                    console.error("Error updating status:", error);
+                    showSwal('error', 'Update Failed', "An error occurred while updating the status. Please try again.");
                 }
-            } catch (error) {
-                console.error("Error updating status:", error);
-                alert("An error occurred while updating the status. Please try again.");
+            } else {
+                // If the user cancels, revert the UI state
+                fetchAndRenderOrders();
             }
-        };
+        });
+    };
         
         /**
          * Updates the pagination button states and page info.

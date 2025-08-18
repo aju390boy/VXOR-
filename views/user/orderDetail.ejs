@@ -1,6 +1,6 @@
 
  
-    <!-- Custom CSS to replicate the exact style from the image -->
+    
     <style>
         .progress-line {
             height: 2px;
@@ -251,7 +251,7 @@
         </div>
     </div>
 
-    <!-- Modals (reused from previous version) -->
+   
     <!-- Cancel Modal -->
     <div id="cancelModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
         <div class="bg-white w-full max-w-md mx-auto rounded-2xl shadow-lg p-6 relative">
@@ -296,8 +296,7 @@
 </div>
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // --- Progress Bar Animation Logic ---
-        // These steps and icons are defined to match the image you provided.
+        
         const progressSteps = ['PROCESSING', 'PACKED', 'SHIPPED', 'DELIVERED', 'RETURNED', 'CANCELLED'];
         
         const updateProgressBars = () => {
@@ -311,28 +310,28 @@
                 const progressBar = document.getElementById(`progress-line-${itemIndex}`);
                 const activeStepIndex = progressSteps.indexOf(currentStatus);
                 if (activeStepIndex !== -1) {
-                    // The width is calculated based on the position of the active step
+                 
                     const widthPercentage = (activeStepIndex / (progressSteps.length - 1)) * 100;
                     progressBar.style.width = `${widthPercentage}%`;
                 }
             });
         };
         
-        // Update progress bars on page load
+       
         updateProgressBars();
 
-        // --- Modal Logic ---
+        
         const cancelModal = document.getElementById('cancelModal');
         const returnModal = document.getElementById('returnModal');
 
         const btnCloseCancel = document.getElementById('btnCloseCancel');
         const btnCloseReturn = document.getElementById('btnCloseReturn');
 
-        // Functions to open and close modals
+      
         const openModal = (modal) => { modal.classList.remove('hidden'); };
         const closeModal = (modal) => { modal.classList.add('hidden'); };
 
-        // Attach listeners to open buttons
+       
         document.querySelectorAll('.cancel-item').forEach(button => {
             button.addEventListener('click', (e) => {
                 const orderId = e.target.dataset.orderId;
@@ -353,11 +352,11 @@
             });
         });
 
-        // Attach listeners to close buttons
+       
         btnCloseCancel.addEventListener('click', () => closeModal(cancelModal));
         btnCloseReturn.addEventListener('click', () => closeModal(returnModal));
         
-        // Close modals on outside click
+      
         window.addEventListener('click', (event) => {
             if (event.target === cancelModal) {
                 closeModal(cancelModal);
@@ -367,9 +366,7 @@
             }
         });
         
-        // --- Form Submission Logic ---
-        // You'll need to replace this with your actual backend API calls.
-        
+       
         document.getElementById('cancelForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const orderId = document.getElementById('cancelOrderId').value;
@@ -377,9 +374,9 @@
             const reason = document.getElementById('cancel-note').value;
             
             console.log(`Canceling item ${itemId} from order ${orderId}. Reason: ${reason}`);
-            // await fetch(`/api/cancel-item`, { method: 'POST', body: JSON.stringify({ orderId, itemId, reason }) });
+           
             closeModal(cancelModal);
-            // window.location.reload(); 
+         
         });
 
         document.getElementById('returnForm').addEventListener('submit', async (e) => {
@@ -389,9 +386,9 @@
             const reason = document.getElementById('returnNote').value;
             
             console.log(`Requesting return for item ${itemId} from order ${orderId}. Reason: ${reason}`);
-            // await fetch(`/api/return-item`, { method: 'POST', body: JSON.stringify({ orderId, itemId, reason }) });
+           
             closeModal(returnModal);
-            // window.location.reload(); 
+            
         });
     });
     </script>

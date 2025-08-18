@@ -10,6 +10,7 @@ const { isAuthenticated, isNotAuthenticated } = require('../middlewares/admin/vi
 const brandController=require('../controllers/admin/brandController.js')
 const addProductController=require('../controllers/admin/addProductController.js');
 const orderController=require('../controllers/admin/orderController.js')
+const orderdetailController = require('../controllers/admin/orderdetailController.js');
 const {
   addCategory,
   getCategories,
@@ -116,8 +117,10 @@ router.route('/addproducts')
 router.get('/orders', isAuthenticated, orderController.renderOrdersPage);
 router.get('/api/orders', isAuthenticated, orderController.getOrders);
 router.patch('/api/orders/:orderId/status', isAuthenticated, orderController.updateOrderStatus);
-router.get('/api/orders/:orderId', isAuthenticated, orderController.getSingleOrder);
-
+///order detail////
+router.get('/api/orders/:orderId', isAuthenticated, orderdetailController.getSingleOrder);
+router.patch('/api/orders/:orderId/cancel', isAuthenticated, orderdetailController.cancelOrder);
+router.patch('/api/orders/:orderId/return', isAuthenticated, orderdetailController.processReturnRequest);
 
 
 
