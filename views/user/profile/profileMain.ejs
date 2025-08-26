@@ -60,11 +60,12 @@
     </aside>
 
     <%# Main Content Area %>
-     <main id="main-content-area" class="flex-1 px-1 md:px-1 py-1 bg-gray-900 flex justify-center ">
-        <div id="profile-content" class="w-full max-w-2xl bg-gray-900 p-1 rounded-md shadow-md md-12">
-           <%- include('partials/_profileDetails', { user: user, addresses: addresses }) %>
-        </div>
-    </main>
+     <main id="main-content-area" 
+      class="flex-1 px-1 md:px-1 py-1 bg-gray-900 flex w-full">
+    <div id="profile-content" class="w-full">
+        <%- include('partials/_profileDetails', { user: user, addresses: addresses }) %>
+    </div>
+</main>
 </div>
 
 

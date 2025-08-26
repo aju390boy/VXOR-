@@ -1,9 +1,11 @@
 <%# views/user/profile/partials/_ordersList.ejs %>
-<div class="w-[120%] bg-gray-900 rounded-2xl shadow-2xl p-6">
+<div class="w-full bg-gray-900 rounded-2xl shadow-2xl p-6 border border-gray-800">
+    <!-- Header -->
     <div class="flex flex-col md:flex-row justify-between items-center mb-6 border-b border-gray-700 pb-4">
         <h2 class="text-3xl font-extrabold text-white mb-2 md:mb-0">My Orders</h2>
         <div class="relative w-full md:w-1/3">
-            <input type="text" id="orderSearch" placeholder="Search orders..." class="w-full bg-gray-800 text-gray-300 rounded-lg py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300 placeholder-gray-500">
+            <input type="text" id="orderSearch" placeholder="Search orders..." 
+                class="w-full bg-gray-800 text-gray-300 rounded-lg py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300 placeholder-gray-500">
             <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
@@ -12,27 +14,36 @@
 
     <% if (orders && orders.length > 0) { %>
         <div class="overflow-x-auto custom-scrollbar">
-            <table class="min-w-full text-gray-300 divide-y divide-gray-800">
-                <thead class="bg-gray-800">
-                    <tr class="text-left text-sm font-semibold text-gray-100">
-                        <th class="py-4 px-4 whitespace-nowrap">Order ID</th>
-                        <th class="py-4 px-4 whitespace-nowrap">Product</th>
-                        <th class="py-4 px-4 whitespace-nowrap">Title</th>
-                        <th class="py-4 px-4 whitespace-nowrap">Date</th>
-                        <th class="py-4 px-4 whitespace-nowrap">Total</th>
-                        <th class="py-4 px-4 whitespace-nowrap">Status</th>
-                        <th class="py-4 px-4 whitespace-nowrap">Payment Status</th>
+            <table class="min-w-full text-gray-300 border border-gray-800 rounded-xl overflow-hidden">
+                <!-- Table Head -->
+                <thead class="bg-gradient-to-r from-gray-800 to-gray-700">
+                    <tr class="text-left text-sm font-semibold text-gray-100 uppercase tracking-wide">
+                        <th class="py-4 px-4">Order ID</th>
+                        <th class="py-4 px-4">Product</th>
+                        <th class="py-4 px-4">Title</th>
+                        <th class="py-4 px-4">Date</th>
+                        <th class="py-4 px-4">Total</th>
+                        <th class="py-4 px-4">Status</th>
+                        <th class="py-4 px-4">Payment</th>
                     </tr>
                 </thead>
+
+                <!-- Table Body -->
                 <tbody id="ordersTableBody" class="divide-y divide-gray-800">
                     <% orders.forEach(order => { %>
-                        <tr class="bg-gray-900 hover:bg-gray-800 transition-colors duration-200 order-row cursor-pointer" data-order-id="<%= order._id %>">
-                            <td class="py-4 px-4 text-sm font-medium whitespace-nowrap">
-                                <a href="/user/order-detail?order_id=<%= order._id %>" class="hover:underline hover:text-white transition-colors duration-200"><%= order._id %></a>
+                        <tr class="bg-gray-900 hover:bg-gray-800 transition-all duration-200 order-row cursor-pointer border-l-4 border-transparent hover:border-purple-500" data-order-id="<%= order._id %>">
+                            <!-- Order ID -->
+                            <td class="py-4 px-4 text-sm font-medium">
+                                <a href="/user/order-detail?order_id=<%= order._id %>" 
+                                   class="hover:underline hover:text-purple-400 transition-colors duration-200">
+                                   <%= order._id %>
+                                </a>
                             </td>
+
+                            <!-- Product Image -->
                             <td class="py-4 px-4">
                                 <% if (order.products && order.products.length > 0) { %>
-                                    <%
+                                    <% 
                                         const product = order.products[0].product_id;
                                         let imagePath = 'https://placehold.co/64x64/2d3748/e2e8f0?text=IMG';
                                         let altText = 'No Image';
@@ -46,22 +57,38 @@
                                         }
                                     %>
                                     <a href="/user/order-detail?order_id=<%= order._id %>" class="flex items-center space-x-4">
-                                        <img src="<%= imagePath %>" alt="<%= altText %>" class="w-16 h-16 object-cover rounded-xl shadow-lg border border-gray-700">
+                                        <img src="<%= imagePath %>" alt="<%= altText %>" class="w-16 h-16 object-cover rounded-xl shadow-md border border-gray-700">
                                     </a>
                                 <% } else { %>
                                     <span class="text-gray-500">No Product</span>
                                 <% } %>
                             </td>
-                           <td class=" text-white text-base hover:underline"><%= order.products[0].product_id.title %></td>
+
+                            <!-- Title -->
+                            <td class="text-white text-base font-semibold hover:text-purple-400"><%= order.products[0].product_id.title %></td>
+
+                            <!-- Date -->
                             <td class="py-4 px-4 text-sm font-light whitespace-nowrap"><%= new Date(order.createdAt).toLocaleDateString() %></td>
+
+                            <!-- Total -->
                             <td class="py-4 px-4 text-base font-bold text-green-400 whitespace-nowrap">₹<%= order.total_amount.toFixed(2) %></td>
+
+                            <!-- Status -->
                             <td class="py-4 px-4">
-                                <span class="px-3 py-1 rounded-full text-xs font-semibold uppercase <%= order.status === 'delivered' ? 'bg-green-600' : order.status === 'cancelled' ? 'bg-red-600' : 'bg-yellow-600' %> text-white">
+                                <span class="px-3 py-1 rounded-full text-xs font-semibold uppercase 
+                                    <%= order.status === 'DELIVERED' ? 'bg-green-600/80 text-green-100' : 
+                                        order.status === 'CANCELLED' ? 'bg-red-600/80 text-red-100' : 
+                                        'bg-yellow-600/80 text-yellow-100' %> shadow-sm">
                                     <%= order.status %>
                                 </span>
                             </td>
+
+                            <!-- Payment Status -->
                             <td class="py-4 px-4">
-                                <span class="px-3 py-1 rounded-full text-xs font-semibold uppercase <%= order.status === 'delivered' ? 'bg-green-600' : order.status === 'cancelled' ? 'bg-red-600' : 'bg-yellow-600' %> text-white">
+                                <span class="px-3 py-1 rounded-full text-xs font-semibold uppercase 
+                                    <%= order.payment_status === 'COMPLETED' ? 'bg-green-600/80 text-gray-100' : 
+                                        order.payment_status === 'PENDING' ? 'bg-red-600/80 text-red-100' : 
+                                        'bg-gray-600/80 text-gray-100' %> shadow-sm">
                                     <%= order.payment_status %>
                                 </span>
                             </td>
@@ -71,28 +98,24 @@
             </table>
         </div>
     <% } else { %>
-        <div class="p-8 text-center bg-gray-800 rounded-xl mt-4">
-            <p class="text-gray-500 text-lg">You have no orders yet.</p>
+        <div class="p-8 text-center bg-gray-800 rounded-xl mt-4 border border-gray-700">
+            <p class="text-gray-400 text-lg">You have no orders yet.</p>
         </div>
     <% } %>
 </div>
-
 
 <style>
     .custom-scrollbar::-webkit-scrollbar {
         height: 8px;
     }
-
     .custom-scrollbar::-webkit-scrollbar-track {
         background: #1f2937;
         border-radius: 10px;
     }
-
     .custom-scrollbar::-webkit-scrollbar-thumb {
         background: #4b5563;
         border-radius: 10px;
     }
-
     .custom-scrollbar::-webkit-scrollbar-thumb:hover {
         background: #6b7280;
     }
