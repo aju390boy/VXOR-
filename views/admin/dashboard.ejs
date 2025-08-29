@@ -1,109 +1,180 @@
-<!-- File: views/admin/dashboard.ejs -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Admin Dashboard</title>
-  <link rel="stylesheet" href="/styles/admin/adminnavbar.css">
-  <link rel="stylesheet" href="/styles/admin/adminsidebar.css">
-  <link rel="stylesheet" href="/styles/admin/dashboard.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-</head>
-<body class="bg-gray-100 text-gray-800 min-h-screen">
-    <!-- Overall Layout Container -->
-    <div class="flex h-screen">
-        <!-- Sidebar - Fixed on the left -->
-        <%- include('../partials/admin/adminsidebar', { current: 'orders' }) %>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="/styles/admin/adminnavbar.css">
+    <link rel="stylesheet" href="/styles/admin/adminsidebar.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
 
-        <!-- Main Content Area (Navbar and Order Management) -->
+        /* CSS Bar Chart Styling */
+        .chart-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            width: 100%;
+            height: 250px;
+            padding: 20px 10px;
+            border-top: 1px solid #e5e7eb;
+        }
+        .chart-bar {
+            position: relative;
+            width: 35px;
+            background-image: linear-gradient(to top, #8b5cf6, #6366f1);
+            border-radius: 6px;
+            transition: all 0.3s ease-in-out;
+            height: calc(var(--bar-height, 0) * 1%); /* Height is set by --bar-height */
+        }
+        .chart-bar:hover {
+            opacity: 0.8;
+            transform: translateY(-5px);
+        }
+        .bar-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100%;
+        }
+        .bar-label {
+            margin-top: 8px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #6b7280;
+        }
+        .chart-tooltip {
+            position: absolute;
+            top: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #1f2937;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+        }
+        .chart-bar:hover .chart-tooltip {
+            opacity: 1;
+        }
+        .abass{
+            margin-left: 230px;
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body class="bg-slate-50">
+    <div class=" abass flex h-screen w-[87%]">
+        <%- include('../partials/admin/adminsidebar', { current: 'dashboard' }) %>
+
         <div class="flex-1 flex flex-col overflow-hidden">
-            <!-- Navbar - Fixed on top -->
             <%- include('../partials/admin/adminnavbar') %>
             
-            <!-- Main Content Wrapper -->
-            <main class="main-content-div flex-1 w-[55%] overflow-x-hidden overflow-y-auto bg-gray-100 p-4 md:p-8">
-                <div class="breadcrumb mb-4 text-gray-500">Admin > Dashboard</div>
-
+            <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 md:p-8">
                 <header class="mb-8">
-                    <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-2">DASHBOARD</h1>
-                    <p class="text-gray-700">Analytics and overview of your store.</p>
+                   
+                    <h1 class="text-slate-900 mt-1">Welcome back, Admin!</h1>
+                    
                 </header>
 
-                <div class="dashboard-cards grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <!-- Total Sales Card -->
-                    <div class="card bg-white p-6 rounded-xl shadow-lg border border-gray-200">
-                        <div class="card-title text-sm font-semibold text-gray-500 uppercase">Total Sales</div>
-                        <h2 class="text-3xl font-extrabold text-gray-900 mt-1">₹<%= totalSales %></h2>
-                        <div class="progress-left mt-2 text-sm text-gray-600">This Month</div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-2xl shadow-lg flex items-center justify-between">
+                        <div>
+                            <div class="text-sm font-semibold text-slate-500 uppercase">Total Revenue</div>
+                            <h2 class="text-3xl font-extrabold text-slate-900 mt-1">₹<%= totalSales.toFixed(2) %></h2>
+                        </div>
+                        <div class="w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-purple-500 to-indigo-500 text-white">
+                            <i class="fa-solid fa-indian-rupee-sign"></i>
+                        </div>
                     </div>
-
-                    <!-- Customer Count Card -->
-                    <div class="card bg-white p-6 rounded-xl shadow-lg border border-gray-200">
-                        <div class="card-title text-sm font-semibold text-gray-500 uppercase">Customers</div>
-                        <h2 class="text-3xl font-extrabold text-gray-900 mt-1"><%= customerCount %></h2>
-                        <div class="progress-left mt-2 text-sm text-gray-600">Total Registered Users</div>
+                    <div class="bg-white p-6 rounded-2xl shadow-lg flex items-center justify-between">
+                        <div>
+                            <div class="text-sm font-semibold text-slate-500 uppercase">Total Orders</div>
+                            <h2 class="text-3xl font-extrabold text-slate-900 mt-1"><%= orderCount %></h2>
+                        </div>
+                        <div class="w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-sky-500 text-white">
+                            <i class="fas fa-shopping-cart text-xl"></i>
+                        </div>
                     </div>
-
-                    <!-- Orders Count Card -->
-                    <div class="card bg-white p-6 rounded-xl shadow-lg border border-gray-200">
-                        <div class="card-title text-sm font-semibold text-gray-500 uppercase">Orders</div>
-                        <h2 class="text-3xl font-extrabold text-gray-900 mt-1"><%= orderCount %></h2>
-                        <div class="progress-left mt-2 text-sm text-gray-600">Total Orders</div>
+                    <div class="bg-white p-6 rounded-2xl shadow-lg flex items-center justify-between">
+                        <div>
+                            <div class="text-sm font-semibold text-slate-500 uppercase">Total Customers</div>
+                            <h2 class="text-3xl font-extrabold text-slate-900 mt-1"><%= customerCount %></h2>
+                        </div>
+                         <div class="w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-green-500 to-emerald-500 text-white">
+                            <i class="fas fa-users text-xl"></i>
+                        </div>
                     </div>
                 </div>
 
-                <div class="dashboard-bottom grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Recent Orders Section -->
-                    <div class="recent-orders bg-white rounded-xl shadow-lg p-6 border border-gray-200 overflow-x-auto">
-                        <div class="section-header flex justify-between items-center mb-4">
-                            <h3 class="text-xl font-semibold text-gray-800">Recent Orders</h3>
-                            <button class="view-all text-purple-600 font-medium text-sm hover:underline">View All</button>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                    <div class="lg:col-span-2 bg-white rounded-2xl shadow-lg p-6">
+                        <h3 class="text-xl font-semibold text-slate-800 mb-2">Sales Overview</h3>
+                        <p class="text-sm text-slate-500 mb-4">Last 7 Days</p>
+                        <div class="chart-container">
+                            <% salesDataForChart.forEach(data => { %>
+                                <div class="bar-wrapper flex-1">
+                                    <div class="chart-bar" style="--bar-height: <%= (data.sales / maxSales) * 100 %>;">
+                                        <div class="chart-tooltip">₹<%= data.sales.toFixed(2) %></div>
+                                    </div>
+                                    <div class="bar-label"><%= data.day %></div>
+                                </div>
+                            <% }) %>
                         </div>
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead>
+                    </div>
+                    <div class="bg-white rounded-2xl shadow-lg p-6">
+                        <h3 class="text-xl font-semibold text-slate-800 mb-4">Best Selling</h3>
+                        <ul class="space-y-4">
+                            <% bestSelling.forEach(product => { %>
+                                <li class="flex items-center space-x-4">
+                                    <div class="flex-shrink-0 w-12 h-12">
+                                        <% const firstColorVariant = product.colorVariants.length > 0 ? product.colorVariants[0] : null; %>
+                                        <img src="/uploads/products/<%= firstColorVariant?.images?.[0] || 'placeholder.png' %>" alt="<%= product.title %>" class="w-12 h-12 rounded-lg object-cover">
+                                    </div>
+                                    <div class="flex-grow">
+                                        <p class="text-sm font-semibold text-slate-800 truncate"><%= product.title %></p>
+                                        <p class="text-xs text-slate-500">Sales: <%= product.totalSalesCount %></p>
+                                    </div>
+                                </li>
+                            <% }) %>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <h3 class="text-xl font-semibold text-slate-800 mb-4">Recent Orders</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full">
+                            <thead class="border-b border-slate-200">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Order ID</th>
-                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">User</th>
-                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Total</th>
-                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Order ID</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">User</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Total</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Status</th>
                                 </tr>
                             </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
+                            <tbody>
                                 <% recentOrders.forEach(order => { %>
-                                    <tr>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"><%= order._id %></td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= order.user_id.firstname %> <%= order.user_id.lastname %></td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">₹<%= order.total_amount.toFixed(2) %></td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <%= order.status === 'DELIVERED' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' %>">
-                                                <%= order.status %>
+                                    <tr class="hover:bg-slate-50 transition-colors border-b border-slate-200">
+                                        <td class="px-4 py-3 text-sm font-medium text-purple-600"><%= order.order_id %></td>
+                                        <td class="px-4 py-3 text-sm text-slate-600"><%= order.user_id.firstname %> <%= order.user_id.lastname %></td>
+                                        <td class="px-4 py-3 text-sm font-medium text-slate-800">₹<%= order.total_amount.toFixed(2) %></td>
+                                        <td class="px-4 py-3 text-sm">
+                                            <% const status = order.products[0]?.status || 'UNKNOWN'; %>
+                                            <span class="px-2 py-1 inline-flex text-xs font-semibold rounded-full <%= status === 'DELIVERED' ? 'bg-green-100 text-green-800' : (status.includes('REQUESTED') ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800') %>">
+                                                <%= status %>
                                             </span>
                                         </td>
                                     </tr>
                                 <% }) %>
                             </tbody>
                         </table>
-                    </div>
-
-                    <!-- Best Selling Section -->
-                    <div class="best-selling bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-                        <div class="section-header flex justify-between items-center mb-4">
-                            <h3 class="text-xl font-semibold text-gray-800">Best Selling</h3>
-                            <button class="view-all text-purple-600 font-medium text-sm hover:underline">View All</button>
-                        </div>
-                        <ul class="divide-y divide-gray-200">
-                            <% bestSelling.forEach(product => { %>
-                                <li class="py-3 flex items-center space-x-4">
-                                    <div class="flex-shrink-0 w-16 h-16">
-                                        <% const firstColorVariant = product.colorVariants.length > 0 ? product.colorVariants[0] : null; %>
-                                        <img src="/uploads/products/<%= firstColorVariant?.images?.[0] || 'placeholder.png' %>" alt="<%= product.title %>" class="w-16 h-16 rounded-md object-cover">
-                                    </div>
-                                    <div class="flex-grow">
-                                        <p class="text-sm font-medium text-gray-900"><%= product.title %></p>
-                                    </div>
-                                </li>
-                            <% }) %>
-                        </ul>
                     </div>
                 </div>
             </main>

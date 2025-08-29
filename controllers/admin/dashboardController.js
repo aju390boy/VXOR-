@@ -4,46 +4,72 @@ const Product = require('../../model/product.js');
 
 exports.getDashboard = async (req, res) => {
     try {
-        // Corrected: Use the correct enum value 'DELIVERED'
-        const deliveredOrders = await Order.find({ status: 'DELIVERED' }).lean();
-        
-        // Corrected: Use 'total_amount' from the schema for calculations
-        const totalSales = deliveredOrders.reduce((sum, order) => sum + (order.total_amount || 0), 0);
-        
-        const customerCount = await User.countDocuments();
-        const orderCount = await Order.countDocuments();
+        // --- Existing Calculations ---
+        const totalSalesResult = await Order.aggregate([
+            { $match: { payment_status: 'COMPLETED' } },
+            { $group: { _id: null, totalSales: { $sum: '$total_amount' } } }
+        ]);
+        const totalSales = totalSalesResult.length > 0 ? totalSalesResult[0].totalSales : 0;
 
-        // Corrected: Populate user_id and product_id for recent orders
+        const orderCount = await Order.countDocuments();
+        const customerCount = await User.countDocuments({ role: 'user' });
+
         const recentOrders = await Order.find()
             .sort({ createdAt: -1 })
-            .limit(3)
-            .populate('user_id', 'firstname lastname')
-            .populate({
-                path: 'products.product_id',
-                select: 'title colorVariants'
-            })
-            .lean();
-
-        // NOTE: Your product schema does not have a 'sold' field.
-        // This logic is a placeholder. In a real app, you would
-        // need to add a 'sold' field or run an aggregation to find best sellers.
-        const bestSelling = await Product.find()
-            .sort({ title: 1 }) // Placeholder sort since 'sold' is not in schema
-            .limit(3)
-            .lean();
+            .limit(5)
+            .populate('user_id', 'firstname lastname');
         
-        // Render the dashboard with the corrected data
+        // This is a simplified query. A real-world scenario would be more complex.
+        const bestSelling = await Product.find({ isDeleted: false })
+             .sort({ /* Logic to determine best-selling needed here */ })
+             .limit(5);
+
+        // --- NEW: Data for Sales Chart ---
+        const salesDataForChart = [];
+        let maxSales = 0; // To calculate bar height percentage
+
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            
+            const startOfDay = new Date(date.setHours(0, 0, 0, 0));
+            const endOfDay = new Date(date.setHours(23, 59, 59, 999));
+
+            const dailySale = await Order.aggregate([
+                { $match: { 
+                    payment_status: 'COMPLETED',
+                    createdAt: { $gte: startOfDay, $lte: endOfDay } 
+                }},
+                { $group: { _id: null, total: { $sum: '$total_amount' } } }
+            ]);
+            
+            const total = dailySale.length > 0 ? dailySale[0].total : 0;
+            if (total > maxSales) maxSales = total;
+
+            salesDataForChart.push({
+                day: startOfDay.toLocaleString('en-US', { weekday: 'short' }),
+                sales: total
+            });
+        }
+        
+        // Ensure maxSales is not zero to avoid division by zero
+        if (maxSales === 0) maxSales = 1;
+
+        // --- Render Page with All Data ---
         res.render('admin/dashboard', {
-            totalSales: totalSales.toFixed(2), // Format the total
-            customerCount,
+            totalSales,
             orderCount,
+            customerCount,
             recentOrders,
             bestSelling,
-            layout: false
+            salesDataForChart,
+            maxSales,
+            layout:false
         });
+
     } catch (error) {
-        console.error('Dashboard error:', error);
-        res.status(500).send('Internal Server Error');
+        console.error('Error rendering dashboard:', error);
+        res.status(500).send('Server Error');
     }
 };
 
