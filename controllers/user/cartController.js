@@ -83,7 +83,7 @@ exports.getCart = async (req, res) => {
             })
             .lean();
 
-        if (!cart) {
+        if (!cart || !cart.items || cart.items.length === 0) {
             return res.render('user/cart', {
                 cartItems: [],
                 subtotal: 0,
@@ -97,7 +97,9 @@ exports.getCart = async (req, res) => {
         const cartItemsForEJS = cart.items.map(item => {
             const product = item.productId;
             
+            // Check if product exists and is valid
             if (!product) {
+                console.error('Product not found for item in cart:', item._id);
                 return null;
             }
 
@@ -106,21 +108,19 @@ exports.getCart = async (req, res) => {
             
             const price = sizeVariant ? sizeVariant.price : 0;
             const stock = sizeVariant ? sizeVariant.stock : 0;
-
-            // CORRECTED LOGIC: Added a check for stock > 0
             const isAvailable = !product.isDeleted && 
                                 product.isListed && 
                                 product.category_id && 
                                 product.category_id.isListed && 
                                 product.brand_id && 
                                 product.brand_id.isListed &&
-                                stock > 0; // The new condition
+                                stock > 0;
 
-            // Only add to subtotal if the product is actually available
             if (isAvailable) {
                 const itemTotal = price * item.quantity;
                 subtotal += itemTotal;
             }
+
             const imagePath = colorVariant && colorVariant.images && colorVariant.images.length > 0 
                 ? `/uploads/products/${colorVariant.images[0]}` 
                 : '/images/placeholder.png';
@@ -154,6 +154,7 @@ exports.getCart = async (req, res) => {
         res.status(500).render('user/error', { message: 'Server error.', error: error.message });
     }
 };
+
 
 
 /**

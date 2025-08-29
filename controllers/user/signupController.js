@@ -10,7 +10,6 @@ exports.signup = (req, res) => {
 
 exports.signupadd = async (req, res) => {
     const { firstname, lastname, mobile, email, password, confirmPassword } = req.body;
-
    
     const errors = [];
     if (!firstname || !lastname || !mobile || !email || !password || !confirmPassword) {

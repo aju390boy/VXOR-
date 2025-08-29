@@ -5,14 +5,16 @@ const Address = require('../../model/address.js')
 
 
 exports.getCheckout = async (req, res) => {
+    const TAX_RATE = 0.05;
+
     try {
-        
         const cart = await Cart.findOne({ userId: req.user._id }).populate({
             path: 'items.productId',
-            model: 'Product'
+            model: 'Product',
+            populate: [
+                { path: 'colorVariants.variants' }
+            ]
         });
-
-        
 
         if (!cart || cart.items.length === 0) {
             return res.render('user/checkout', {
@@ -33,14 +35,21 @@ exports.getCheckout = async (req, res) => {
 
         let toastMessage = null;
 
-       
+        // Stock validation check
         const unavailableItems = cart.items.filter(item => {
-            const variant = item.productId.colorVariants
-                .find(c => c.colorName === item.colorName)?.variants
-                .find(s => s.size === item.size);
-            return !variant || variant.stock < item.quantity;
+            const product = item.productId;
+            if (!product) return true; // Treat as unavailable
+            
+            const colorVariant = product.colorVariants.find(c => c.colorName === item.colorName);
+            if (!colorVariant) return true; // Treat as unavailable
+            
+            const sizeVariant = colorVariant.variants.find(s => s.size === item.size);
+            if (!sizeVariant || sizeVariant.stock < item.quantity) {
+                return true;
+            }
+            return false;
         });
-        
+
         if (unavailableItems.length > 0) {
             toastMessage = {
                 icon: 'error',
@@ -48,7 +57,6 @@ exports.getCheckout = async (req, res) => {
             };
         }
 
-       
         const defaultAddress = await Address.findOne({ user_id: req.user._id, isDefault: true });
 
         if (!defaultAddress) {
@@ -58,32 +66,30 @@ exports.getCheckout = async (req, res) => {
             };
         }
 
-       
-        const subtotal = cart.items.reduce((acc, item) => {
-            const variantPrice = item.productId.colorVariants
-                .find(c => c.colorName === item.colorName)?.variants
-                .find(s => s.size === item.size)?.price;
+        let subtotal = 0;
+        cart.items.forEach(item => {
+            const product = item.productId;
+            const colorVariant = product.colorVariants.find(c => c.colorName === item.colorName);
+            const sizeVariant = colorVariant ? colorVariant.variants.find(s => s.size === item.size) : null;
 
-            if (variantPrice) {
-                return acc + (variantPrice * item.quantity);
+            if (sizeVariant && sizeVariant.stock >= item.quantity) {
+                subtotal += sizeVariant.price * item.quantity;
             }
-            return acc;
-        }, 0);
+        });
 
-        const taxRate = 0.1;
-        const tax = subtotal * taxRate;
-        const couponDiscount = 0;
+        const tax = subtotal * TAX_RATE;
+        const couponDiscount = 0; // Placeholder for coupon logic
         const total = subtotal + tax - couponDiscount;
-        console.log(cart.items)
+
         res.render('user/checkout', {
             title: 'Checkout',
             user: req.user,
             address: defaultAddress,
             cartItems: cart.items,
-            subtotal: subtotal,
-            tax: tax,
-            couponDiscount: couponDiscount,
-            total: total,
+            subtotal: subtotal.toFixed(2),
+            tax: tax.toFixed(2),
+            couponDiscount: couponDiscount.toFixed(2),
+            total: total.toFixed(2),
             toastMessage: toastMessage
         });
 

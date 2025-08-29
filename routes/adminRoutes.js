@@ -119,8 +119,9 @@ router.get('/api/orders', isAuthenticated, orderController.getOrders);
 router.patch('/api/orders/:orderId/status', isAuthenticated, orderController.updateOrderStatus);
 ///order detail////
 router.get('/api/orders/:orderId', isAuthenticated, orderdetailController.getSingleOrder);
-router.patch('/api/orders/:orderId/cancel', isAuthenticated, orderdetailController.cancelOrder);
+router.patch('/api/orders/:orderId/cancel', isAuthenticated, orderdetailController.cancelOrderItem);
 router.patch('/api/orders/:orderId/return', isAuthenticated, orderdetailController.processReturnRequest);
+router.patch('/api/orders/:orderId/products/:productId/status', orderdetailController.updateProductStatusInOrder);
 
 
 

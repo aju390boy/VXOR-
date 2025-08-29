@@ -34,12 +34,7 @@
           margin-left: 240px;
           margin-top: 50px;
         }
-        .status-PROCESSING {
-    background-color: #e2e8f0; /* Light gray */
-    color: #475569; /* Slate gray */
-    font-weight: 500;
-}
-
+       
 .status-PACKED {
     background-color: #fde68a; /* Light yellow */
     color: #92400e; /* Dark orange */
@@ -80,6 +75,7 @@
   color: white;
   font-weight: 500;
 }
+
 
 
     </style>
@@ -275,71 +271,70 @@
          * @param {object} order - The order data object.
          * @returns {HTMLElement} - The created table row element.
          */
-        const createOrderRow = (order) => {
-            const row = document.createElement('tr');
-            row.classList.add('hover:bg-gray-100', 'transition-colors', 'duration-200');
-            
-            // Use the 'createdAt' timestamp from the schema for the order date
-            const formattedDate = new Date(order.createdAt).toLocaleDateString('en-IN', {
-                day: 'numeric', month: 'short', year: 'numeric'
-            });
-            
-            // Use 'total_amount' from the schema
-            const formattedTotal = new Intl.NumberFormat('en-IN', {
-                style: 'currency', currency: 'INR'
-            }).format(order.total_amount);
-            
-            // Get the dynamic status class for styling
-            const statusClass = getStatusClass(order.status);
+         const createOrderRow = (order) => {
+    const row = document.createElement('tr');
+    row.classList.add('hover:bg-gray-100', 'transition-colors', 'duration-200');
 
-            row.innerHTML = `
-                <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${order._id}</td>
-                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">${formattedDate}</td>
-                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                    ${order.user_id.firstname} ${order.user_id.lastname}<br>
-                    <span class="text-xs text-gray-400">${order.user_id.email}</span>
-                </td>
-                <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${formattedTotal}</td>
-                
-                <td class="px-4 py-4 whitespace-nowrap">
-                    <!-- The select dropdown for changing status -->
-                    <select data-order-id="${order._id}" class="status-select bg-gray-200 text-gray-800 text-sm rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-purple-500">
-                        ${statusOptions.map(status => `
-                            <option value="${status}" ${order.status === status ? 'selected' : ''}>
-                                ${status}
-                            </option>
-                        `).join('')}
-                    </select>
-                    <!-- Display the status visually with a colored span -->
-                    <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium status-${statusClass} mt-2">
-                        ${order.status}
-                    </span>
-                </td>
-                
-                <td class="px-4 py-4 whitespace-nowrap text-sm font-medium">
-                    <button data-order-id="${order._id}" class="view-btn text-purple-600 hover:text-purple-800 transition-colors">View</button>
-                </td>
-            `;
-            
-            // Add event listener for the status change dropdown
-            const statusSelect = row.querySelector('.status-select');
-            statusSelect.addEventListener('change', (e) => {
-                const newStatus = e.target.value;
-                changeOrderStatus(order._id, newStatus);
-            });
+    // --- Data Cells ---
+    const orderIdCell = document.createElement('td');
+    orderIdCell.className = "px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900";
+    orderIdCell.textContent = order.orderId; // Safe way to set text
 
-            // Add event listener for the view button
-           
-           const viewBtn = row.querySelector('.view-btn');
-       if (viewBtn) { // Check if the button exists
-         viewBtn.addEventListener('click', () => {
-        const orderId = viewBtn.dataset.orderId;
-        // The URL now includes the orderId as a parameter
-        window.location.href = `/admin/api/orders/${orderId}`;
+    const dateCell = document.createElement('td');
+    dateCell.className = "px-4 py-4 whitespace-nowrap text-sm text-gray-500";
+    dateCell.textContent = new Date(order.createdAt).toLocaleDateString('en-IN', {
+        day: 'numeric', month: 'short', year: 'numeric'
     });
-}
-            return row;
-        };
+
+    const userCell = document.createElement('td');
+    userCell.className = "px-4 py-4 whitespace-nowrap text-sm text-gray-500";
+    userCell.innerHTML = `
+        ${order.user.name}<br>
+        <span class="text-xs text-gray-400">${order.user.email}</span>
+    `; // innerHTML is okay here since the structure is complex and the data is likely safe.
+
+    const totalCell = document.createElement('td');
+    totalCell.className = "px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900";
+    totalCell.textContent = new Intl.NumberFormat('en-IN', {
+        style: 'currency', currency: 'INR'
+    }).format(order.total_amount);
+
+    const statusCell = document.createElement('td');
+    statusCell.className = "px-4 py-4 whitespace-nowrap";
+    
+    const currentStatus = order.displayStatus || 'N/A';
+    const statusClass = getStatusClass(currentStatus);
+
+    statusCell.innerHTML = `
+        <select data-order-id="${order._id}" class="status-select bg-gray-200 text-gray-800 text-sm rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-purple-500">
+            ${statusOptions.map(status => `<option value="${status}" ${currentStatus === status ? 'selected' : ''}>${status}</option>`).join('')}
+        </select>
+        <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium status-${statusClass} mt-2">
+            ${currentStatus}
+        </span>
+    `;
+
+    const actionsCell = document.createElement('td');
+    actionsCell.className = "px-4 py-4 whitespace-nowrap text-sm font-medium";
+    const viewBtn = document.createElement('button');
+    viewBtn.className = "view-btn text-purple-600 hover:text-purple-800 transition-colors";
+    viewBtn.textContent = 'View';
+    viewBtn.dataset.orderId = order._id;
+    actionsCell.appendChild(viewBtn);
+
+    // --- Appending all cells to the row ---
+    row.append(orderIdCell, dateCell, userCell, totalCell, statusCell, actionsCell);
+    
+    // --- Event Listeners ---
+    const statusSelect = statusCell.querySelector('.status-select');
+    statusSelect.addEventListener('change', (e) => changeOrderStatus(order._id, e.target.value));
+
+    viewBtn.addEventListener('click', () => {
+        window.location.href = `/admin/api/orders/${viewBtn.dataset.orderId}`;
+    });
+
+    return row;
+};
 
         /**
          * Handles the order status change action.

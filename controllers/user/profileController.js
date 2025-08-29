@@ -91,6 +91,7 @@ exports.getProfileSection = async (req, res) => {
                 break;
                  case 'orders':
     const orders = await Order.find({ user_id: user._id })
+     .select('order_id total_amount payment_status createdAt products')
         .sort({ createdAt: -1 })
         .populate({
             path: 'products.product_id',
@@ -98,8 +99,6 @@ exports.getProfileSection = async (req, res) => {
             select: 'title colorVariants'
         })
         .lean();
-    
-   
     data.orders = orders
     templatePath = 'user/profile/partials/_orderList';
     break;

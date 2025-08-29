@@ -31,12 +31,12 @@
                 <!-- Table Body -->
                 <tbody id="ordersTableBody" class="divide-y divide-gray-800">
                     <% orders.forEach(order => { %>
-                        <tr class="bg-gray-900 hover:bg-gray-800 transition-all duration-200 order-row cursor-pointer border-l-4 border-transparent hover:border-purple-500" data-order-id="<%= order._id %>">
+                         <tr class="bg-gray-800 hover:bg-gray-700 transition-all duration-300 transform hover:scale-[1.01] order-row cursor-pointer border-l-8 border-gray-700 hover:border-purple-500">
                             <!-- Order ID -->
-                            <td class="py-4 px-4 text-sm font-medium">
+                            <td class="py-4 px-4 text-sm font-medium ">
                                 <a href="/user/order-detail?order_id=<%= order._id %>" 
                                    class="hover:underline hover:text-purple-400 transition-colors duration-200">
-                                   <%= order._id %>
+                                     <%= order.order_id || order._id %>
                                 </a>
                             </td>
 
@@ -74,24 +74,33 @@
                             <td class="py-4 px-4 text-base font-bold text-green-400 whitespace-nowrap">₹<%= order.total_amount.toFixed(2) %></td>
 
                             <!-- Status -->
-                            <td class="py-4 px-4">
-                                <span class="px-3 py-1 rounded-full text-xs font-semibold uppercase 
-                                    <%= order.status === 'DELIVERED' ? 'bg-green-600/80 text-green-100' : 
-                                        order.status === 'CANCELLED' ? 'bg-red-600/80 text-red-100' : 
-                                        'bg-yellow-600/80 text-yellow-100' %> shadow-sm">
-                                    <%= order.status %>
-                                </span>
-                            </td>
+                           <td class="py-4 px-6">
+    <% const firstProductStatus = order.products && order.products.length > 0 ? order.products[0].status : ''; %>
+<span class="px-3 py-1 rounded-full text-xs font-semibold uppercase shadow-sm
+    <%= firstProductStatus === 'PROCESSING' ? 'bg-blue-600/80 text-blue-100' : 
+        firstProductStatus === 'PACKED' ? 'bg-indigo-600/80 text-indigo-100' : 
+        firstProductStatus === 'SHIPPED' ? 'bg-cyan-600/80 text-cyan-100' : 
+        firstProductStatus === 'DELIVERED' ? 'bg-green-600/80 text-green-100' : 
+        firstProductStatus === 'RETURN REQUESTED' ? 'bg-yellow-600/80 text-yellow-100' : 
+        firstProductStatus === 'CANCELLED' ? 'bg-red-600/80 text-red-100' : 
+        firstProductStatus === 'RETURNED' ? 'bg-orange-600/80 text-orange-100' : 
+        'bg-gray-600/80 text-gray-100' %>">
+    <%= firstProductStatus %>
+</span>
+</td>
 
-                            <!-- Payment Status -->
-                            <td class="py-4 px-4">
-                                <span class="px-3 py-1 rounded-full text-xs font-semibold uppercase 
-                                    <%= order.payment_status === 'COMPLETED' ? 'bg-green-600/80 text-gray-100' : 
-                                        order.payment_status === 'PENDING' ? 'bg-red-600/80 text-red-100' : 
-                                        'bg-gray-600/80 text-gray-100' %> shadow-sm">
-                                    <%= order.payment_status %>
-                                </span>
-                            </td>
+                     <!-- Payment Status -->
+                    <td class="py-4 px-4">
+                    <span class="px-3 py-1 rounded-full text-xs font-semibold uppercase shadow-sm
+                             <%= order.payment_status === 'COMPLETED' ? 'bg-green-600/80 text-green-100' : 
+                                 order.payment_status === 'PENDING' ? 'bg-yellow-600/80 text-yellow-50' : 
+                                 order.payment_status === 'REFUNDED' ? 'bg-indigo-600/80 text-indigo-100' : 
+                                 order.payment_status === 'FAILED' ? 'bg-red-600/80 text-red-100' : 
+                                 order.payment_status === 'PROCESSING' ? 'bg-blue-600/80 text-blue-100' : 
+                                'bg-gray-600/80 text-gray-100' %>">
+                       <%= order.payment_status %>
+           </span>
+       </td>
                         </tr>
                     <% }); %>
                 </tbody>
@@ -102,6 +111,8 @@
             <p class="text-gray-400 text-lg">You have no orders yet.</p>
         </div>
     <% } %>
+
+    
 </div>
 
 <style>

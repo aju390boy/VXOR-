@@ -59,6 +59,9 @@ router.post('/place-order/cod',isAuthenticated,placeorderController.placeOrder);
 router.get('/success',isAuthenticated,successController.getSuccess);
 
 router.get('/order-detail', isAuthenticated, orderdetailController.getOrderDetail);
+router.post('/cancel-item',isAuthenticated, orderdetailController.cancelItem);
+router.post('/return-item',isAuthenticated, orderdetailController.returnItem);
+router.get('/invoice',isAuthenticated, orderdetailController.downloadInvoice);
 
 
 

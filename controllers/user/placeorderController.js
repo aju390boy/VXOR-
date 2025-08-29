@@ -8,8 +8,8 @@ exports.placeOrder = async (req, res) => {
     try {
         const { addressId } = req.body;
         const userId = req.user._id;
+        const TAX_RATE = 0.05;
 
-        // Find the user's cart using the correct field name 'userId'
         const cart = await Cart.findOne({ userId: userId }).populate({
             path: 'items.productId',
             model: 'Product'
@@ -19,21 +19,21 @@ exports.placeOrder = async (req, res) => {
             return res.status(400).json({ message: 'Cart is empty.' });
         }
 
-        // Find the default address to be absolutely sure it exists
         const shippingAddress = await Address.findById(addressId);
         if (!shippingAddress) {
             return res.status(400).json({ message: 'Shipping address not found.' });
         }
 
         let subtotal = 0;
-        let couponDiscount = 0;
-        let tax = 0;
-
+        let couponDiscount = 0; // Assuming this comes from req.body
+        const productsToOrder = [];
+        
+        // Critical: Validate and RE-CALCULATE
         for (const item of cart.items) {
             const product = item.productId;
+
             if (!product) {
-                console.error(`Product not found for cart item: ${item._id}`);
-                continue; 
+                return res.status(400).json({ message: 'One or more products in your cart are not available.' });
             }
 
             const colorVariant = product.colorVariants.find(
@@ -41,57 +41,81 @@ exports.placeOrder = async (req, res) => {
             );
 
             if (!colorVariant) {
-                console.error(`Color variant not found for product ${product._id} with color ${item.colorName}`);
-                continue; 
+                return res.status(400).json({ message: `Color variant for ${product.title} not found.` });
             }
 
             const sizeVariant = colorVariant.variants.find(
                 (sv) => sv.size === item.size
             );
-
+            
             if (!sizeVariant) {
-                console.error(`Size variant not found for product ${product._id} with size ${item.size}`);
-                continue; 
+                return res.status(400).json({ message: `Size variant for ${product.title} not found.` });
             }
 
-            subtotal += Number(sizeVariant.price) * Number(item.quantity);
-        }
+            if (sizeVariant.stock < item.quantity) {
+                return res.status(400).json({ message: `Insufficient stock for ${product.title}. Available: ${sizeVariant.stock}` });
+            }
+            
+            const price = Number(sizeVariant.price);
+            subtotal += price * Number(item.quantity);
 
+            productsToOrder.push({
+                product_id: product._id,
+                quantity: item.quantity,
+                price: price,
+                colorName: item.colorName, // SAVING THE COLOR
+                size: item.size            // SAVING THE SIZE
+            });
+        }
+        
+        // Re-calculate tax and total on the server side for security
+        const tax = subtotal * TAX_RATE;
         const total_amount = subtotal - couponDiscount + tax;
 
-        if (isNaN(total_amount)) {
-            console.error(`Calculated total_amount is NaN. Subtotal: ${subtotal}, Tax: ${tax}, Discount: ${couponDiscount}`);
-            return res.status(500).json({ message: 'Failed to calculate order total. Please try again.' });
-        }
-
-        // Create the order document with the correct field names and enum values
         const newOrder = new Order({
-            user_id: userId, // Correct field name to match the schema
-            address_id: shippingAddress._id, // Correct field name to match the schema
-            products: cart.items.map(item => ({
-                product_id: item.productId,
-                quantity: item.quantity,
-                // You might also want to add the price at the time of purchase here
-                price: item.productId.colorVariants.find(c => c.colorName === item.colorName)?.variants.find(s => s.size === item.size)?.price
-            })),
-            total_amount: total_amount,
-            status: 'PROCESSING', // Use the lowercase enum value
-            payment_status: 'PENDING', // Use the lowercase enum value
-            // coupon_id: ...
+            user_id: userId,
+            address_id: shippingAddress._id,
+            products: productsToOrder,
+            total_amount: total_amount.toFixed(2),
+            // The status should be on each product, not the top level, per our schema.
+            // new Order() will apply the default 'PROCESSING' status to each product.
+            payment_status: 'PENDING', 
         });
+
+        // I noticed your newOrder object had a top-level 'status', which your schema doesn't.
+        // I've removed it to prevent errors. The default status will be applied to each product automatically.
 
         await newOrder.save();
         
-        // Clear the user's cart after a successful order
+        // You also need to decrement the stock here after a successful order.
+        // This is a crucial step for inventory management.
+        for (const item of cart.items) {
+            await Product.updateOne(
+                { 
+                    _id: item.productId, 
+                    'colorVariants.colorName': item.colorName,
+                    'colorVariants.variants.size': item.size
+                },
+                { 
+                    $inc: { 'colorVariants.$[c].variants.$[v].stock': -item.quantity }
+                },
+                {
+                    arrayFilters: [
+                        { 'c.colorName': item.colorName },
+                        { 'v.size': item.size }
+                    ]
+                }
+            );
+        }
+        
         cart.items = [];
         await cart.save();
 
         res.status(200).json({ 
             message: 'Order placed successfully!',
-            orderId: newOrder._id,
-            redirectUrl: '/user/success' // Or whatever your success page URL is
+            orderId: newOrder.order_id,
+            redirectUrl: '/user/success' // Or wherever you redirect
         });
-
         
     } catch (error) {
         console.error('Error placing order:', error);

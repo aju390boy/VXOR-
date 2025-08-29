@@ -90,256 +90,224 @@
     <%- include('../partials/admin/adminnavbar') %>
 
     <!-- Main container for sidebar and content -->
-    <div class="flex flex-grow">
-        
-        <!-- Sidebar on the left side of the screen -->
-        <%- include('../partials/admin/adminsidebar', { current: 'orders' }) %>
+<div class="flex flex-grow">
+    
+    <%- include('../partials/admin/adminsidebar', { current: 'orders' }) %>
 
-        <!-- Order detail section on the right side of the screen -->
-         <main class="main-content-div flex-1 w-[85%] overflow-x-hidden overflow-y-auto bg-gray-100 p-4 md:p-8">
-    <div class="bg-white rounded-xl shadow-2xl p-6 md:p-8 max-w-7xl mx-auto">
-        <header class="mb-8 border-b border-gray-200 pb-4">
-            <h1 class="text-3xl font-bold text-gray-900">Order #<%= order._id %></h1>
-            <p class="text-gray-600 mt-2">Placed on <%= new Date(order.createdAt).toLocaleDateString() %></p>
+   <main class="main-content-div flex-1 w-[85%] overflow-x-hidden overflow-y-auto bg-slate-50 p-4 md:p-8">
+    <div class="max-w-7xl mx-auto">
+        <header class="mb-4">
+            <a href="/admin/orders" class="text-sm font-medium text-slate-500 hover:text-purple-600 transition-colors mb-4 inline-flex items-center">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Back to All Orders
+            </a>
+            <h1 class="text-3xl font-bold text-slate-800">Order #<%= order.order_id %></h1>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Left Column: User and Product Details -->
-            <div class="lg:col-span-2 space-y-6">
-
-                <!-- Customer Details -->
-                <div class="bg-gray-50 rounded-lg shadow-sm p-6">
-                    <h2 class="text-xl font-semibold mb-4 text-gray-800 border-b border-gray-200 pb-2">Customer Details</h2>
-                    <div class="text-gray-700 space-y-2">
-                        <p><strong>Name:</strong> <%= order.user_id?.firstname %> <%= order.user_id?.lastname %></p>
-                        <p><strong>Email:</strong> <%= order.user_id?.email %></p>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center">
+                    <i class="fas fa-user-circle mr-3 text-purple-500"></i>
+                    Customer Details
+                </h2>
+                <% if (order.user_id) { %>
+                    <div class="space-y-1">
+                        <p class="font-medium text-slate-700"><%= order.user_id.firstname %> <%= order.user_id.lastname %></p>
+                        <p class="text-sm text-slate-500"><%= order.user_id.email %></p>
                     </div>
-                </div>
-
-                <!-- Order Items Table -->
-                <div class="bg-gray-50 rounded-lg shadow-sm p-6 overflow-x-auto">
-                    <h2 class="text-xl font-semibold mb-4 text-gray-800 border-b border-gray-200 pb-2">Order Items</h2>
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-100">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                            </tr>
-                        </thead>
-                       <tbody class="bg-white divide-y divide-gray-200">
-    <% if (order.products) { %>
-        <% order.products.forEach(item => { %>
-            <%
-                // Define the product and its color/size variants to access data
-                const product = item.product_id;
-                const colorVariant = product?.colorVariants?.find(c => c.colorName === item.color);
-                const sizeVariant = colorVariant?.variants?.find(s => s.size === item.size);
-
-                // Build the image path
-                const imageUrl = colorVariant?.images?.[0] ? `/uploads/products/${colorVariant.images[0]}` : 'https://via.placeholder.com/96';
-                
-                // Get the status
-                const itemStatus = item.status || order.status;
-            %>
-            <tr>
-                <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0 h-16 w-16">
-                            <img class="h-16 w-16 rounded-md" src="<%= imageUrl %>" >
-                        </div>
-                        <div class="ml-4">
-                            <div class="text-sm font-medium text-gray-900"><%= product?.title %></div>
-                            <div class="text-sm text-gray-500">Size: <%= item.size %></div>
-                            <div class="text-sm text-gray-500">Color: <%= item.color %></div>
-                        </div>
-                    </div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= item.quantity %></td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">₹<%= item.price %></td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                        <%= itemStatus === 'DELIVERED' ? 'bg-green-100 text-green-800' :
-                           itemStatus === 'SHIPPED' ? 'bg-blue-100 text-blue-800' :
-                           itemStatus === 'PACKED' ? 'bg-purple-100 text-purple-800' :
-                           itemStatus === 'RETURN REQUESTED' ? 'bg-yellow-100 text-yellow-800' :
-                           itemStatus === 'RETURNED' ? 'bg-gray-100 text-gray-800' :
-                           itemStatus === 'CANCELLED' ? 'bg-red-100 text-red-800' :
-                           'bg-gray-100 text-gray-800' %>
-                        ">
-                        <%= itemStatus %>
-                    </span>
-                </td>
-            </tr>
-        <% }); %>
-    <% } %>
-</tbody>
-                    </table>
-                </div>
+                <% } else { %>
+                    <p class="text-sm text-slate-500">Customer details not available.</p>
+                <% } %>
             </div>
 
-            <!-- Right Column: Address and Summary -->
-            <div class="lg:col-span-1 space-y-6">
-                <!-- Delivery Address -->
-                <div class="bg-gray-50 rounded-lg shadow-sm p-6">
-                    <h2 class="text-xl font-semibold mb-4 text-gray-800 border-b border-gray-200 pb-2">Delivery Address</h2>
-                    <% if (order.address_id) { %>
-                        <div class="text-gray-700 space-y-1">
-                            <p class="font-semibold text-lg text-black"><%= order.address_id?.name %></p>
-                            <p class="text-gray-600"><%= order.address_id?.address1 %><% if (order.address_id?.address2) { %>, <%= order.address_id.address2 %><% } %></p>
-                            <p class="text-gray-600"><%= order.address_id?.city %>, <%= order.address_id?.state %> - <%= order.address_id?.pincode %></p>
-                            <p class="text-gray-600">Mobile: <%= order.address_id?.mobile %></p>
-                        </div>
-                    <% } else { %>
-                        <p class="text-gray-500">No address provided.</p>
-                    <% } %>
-                </div>
-
-                <!-- Order Summary -->
-                <div class="bg-gray-50 rounded-lg shadow-sm p-6">
-                    <h2 class="text-xl font-semibold mb-4 text-gray-800 border-b border-gray-200 pb-2">Order Summary</h2>
-                    <div class="space-y-3 text-sm">
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Subtotal</span>
-                            <span class="font-medium">₹<%= order.subtotal || '0.00' %></span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Tax</span>
-                            <span class="font-medium">₹<%= order.taxAmount|| '0.00' %></span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Shipping</span>
-                            <span class="font-medium">₹<%= order.shippingCost || '0.00' %></span>
-                        </div>
-                        <div class="flex justify-between font-bold text-lg pt-3 border-t border-gray-200 mt-4">
-                            <span class="text-black">Total</span>
-                            <span class="text-black">₹<%= order.total || '0.00' %></span>
-                        </div>
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center">
+                    <i class="fas fa-truck mr-3 text-purple-500"></i>
+                    Shipping Address
+                </h2>
+                <% if (order.address_id) { %>
+                    <div class="space-y-1 text-sm text-slate-600 leading-relaxed">
+                        <p class="font-medium text-slate-800"><%= order.address_id.name %></p>
+                        <p><%= order.address_id.address1 %></p>
+                        <p><%= order.address_id.city %>, <%= order.address_id.state %> - <%= order.address_id.pincode %></p>
+                        <p class="font-medium text-slate-800 pt-1"><i class="fas fa-phone-alt mr-2 text-xs"></i><%= order.address_id.mobile %></p>
                     </div>
-                </div>
+                <% } else { %>
+                    <p class="text-sm text-slate-500">No address provided.</p>
+                <% } %>
+            </div>
 
-                <!-- Actions Section -->
-                <div class="bg-gray-50 rounded-lg shadow-sm p-6">
-                    <h2 class="text-xl font-semibold mb-4 text-gray-800 border-b border-gray-200 pb-2">Order Actions</h2>
-                    <div class="flex flex-col space-y-3">
-                        <!-- Conditional buttons for Cancel or Return -->
-                        <% if (order.status === 'RETURN REQUESTED') { %>
-                            <div class="p-4 bg-yellow-50 rounded-lg border border-yellow-300">
-                                <p class="text-yellow-800 font-semibold mb-2">Return Request Reason:</p>
-                                <p class="text-sm text-yellow-700"><%= order.request_reason %></p>
-                            </div>
-                            <div class="flex gap-2">
-                                <button id="approve-return-btn" class="flex-1 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors">
-                                    Approve Return
-                                </button>
-                                <button id="reject-return-btn" class="flex-1 px-4 py-2 text-sm font-medium text-red-600 border border-red-600 bg-white rounded-lg hover:bg-red-50 transition-colors">
-                                    Reject Return
-                                </button>
-                            </div>
-                        <% } else if (order.status === 'PENDING') { %>
-                            <button id="cancel-order-btn" class="w-full px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg shadow-lg hover:bg-red-700 transition duration-300">
-                                Cancel Order
-                            </button>
-                        <% } %>
-                        <button id="generate-invoice-btn" class="w-full px-4 py-2 text-sm font-medium text-white bg-purple-900 rounded-lg hover:bg-purple-700 transition-colors">
-                            Generate Invoice
-                        </button>
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center">
+                    <i class="fas fa-receipt mr-3 text-purple-500"></i>
+                    Order Summary
+                </h2>
+                <div class="space-y-3">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-slate-500">Order Date</span>
+                        <span class="font-medium text-slate-700"><%= new Date(order.createdAt).toLocaleDateString('en-GB') %></span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-slate-500">Payment Status</span>
+                        <span class="px-2 py-0.5 text-xs font-bold rounded-full 
+                        <%= order.payment_status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
+                            order.payment_status === 'PENDING' || order.payment_status === 'PROCESSING' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800' %>">
+                           <%= order.payment_status %>
+                        </span>
+                    </div>
+                     <div class="pt-2 mt-2 border-t border-slate-200 flex justify-between items-baseline">
+                        <span class="text-slate-500">Tax</span>
+                        <span class="font-bold text-s text-purple-700">₹<%=  order.tax %></span>
+                    </div>
+                    <div class="pt-2 mt-2 border-t border-slate-200 flex justify-between items-baseline">
+                        <span class="font-bold text-slate-800">Total</span>
+                        <span class="font-bold text-xl text-purple-700">₹<%= order.total_amount.toFixed(2) %></span>
                     </div>
                 </div>
             </div>
         </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6 md:p-8">
+            <h2 class="text-xl font-semibold text-slate-800 mb-6 flex items-center">
+                <i class="fas fa-stream mr-3 text-slate-400"></i>
+                Order Timeline
+            </h2>
+            <div class="space-y-8">
+                <% if (order.products && order.products.length > 0) { %>
+                    <% order.products.forEach((item, index) => { %>
+                        <% const product = item.product_id; %>
+                        <div class="flex gap-4">
+                            <div class="flex flex-col items-center">
+                                <div class="w-8 h-8 rounded-full flex items-center justify-center 
+                                    <%= item.status.includes('REQUESTED') ? 'bg-yellow-500' : (item.status === 'DELIVERED' || item.status === 'RETURNED' ? 'bg-green-600' : 'bg-purple-600') %>">
+                                    <i class="fas <%= item.status.includes('REQUESTED') ? 'fa-exclamation' : (item.status === 'DELIVERED' ? 'fa-check' : 'fa-box') %> text-white text-sm"></i>
+                                </div>
+                                <% if (index < order.products.length - 1) { %>
+                                    <div class="w-px h-full bg-slate-200 mt-2"></div>
+                                <% } %>
+                            </div>
+
+                            <div class="flex-1 pb-4">
+                                <div class="border border-slate-200 rounded-lg p-4 transition-all hover:shadow-md">
+                                    <div class="flex items-start justify-between">
+                                        <div class="flex items-center gap-4">
+                                             <img class="h-16 w-12 rounded-lg object-cover" src="<%= item.image %>" alt="<%= item.title %>">
+                                           <div>
+                                            <div class="mt-2">
+                                                <h3 class="font-semibold text-slate-800"><%= product?.title || 'Product Not Found' %></h3>
+                                                <p class="text-sm text-slate-500 mt-2">Qty: <%= item.quantity %> • Price: ₹<%= item.price.toFixed(2)  %> • Color:<%= item.colorName %> • Size:<%= item.size %></p>
+                                            </div>
+                                             <p class="font-bold text-slate-900 mt-2"> Status :
+                                            <span class="px-3 py-1 text-xs font-bold rounded-full 
+                                            <%= item.status === 'DELIVERED' ? 'bg-green-100 text-green-800' :
+                                                item.status === 'SHIPPED' ? 'bg-blue-100 text-blue-800' :
+                                                item.status.includes('REQUESTED') ? 'bg-yellow-100 text-yellow-800' :
+                                                item.status === 'CANCELLED' ? 'bg-red-100 text-red-800' :
+                                                'bg-slate-100 text-slate-700' %>">
+                                           <%= item.status %>
+                                        </span>
+                                        </p>
+                                        </div>
+                                        
+                                    </div>
+
+                                    <%# ACTION SECTION: Appears for pending requests %>
+                                    <% if (item.status === 'RETURN REQUESTED' || item.status === 'CANCELLATION REQUESTED') { %>
+                                        <div class="mt-4 pt-4 border-t border-dashed border-slate-200 bg-yellow-50/70 rounded-b-lg -m-4 p-4">
+                                            <div class="flex justify-between items-center">
+                                                <div>
+                                                    <h4 class="font-semibold text-yellow-900 text-sm">Action Required</h4>
+                                                    <p class="text-sm text-yellow-800 italic mt-1">
+                                                        Reason: "<%= item.status === 'RETURN REQUESTED' ? item.return_reason : item.cancellation_reason %>"
+                                                    </p>
+                                                </div>
+                                                <div class="flex gap-2">
+                                                    <button data-order-id="<%= order._id %>" data-product-id="<%= item._id %>" data-action="approve" class="action-btn px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 shadow-sm">Approve</button>
+                                                    <button data-order-id="<%= order._id %>" data-product-id="<%= item._id %>" data-action="reject" class="action-btn px-4 py-2 text-sm font-medium text-red-700 bg-white border border-red-300 rounded-lg hover:bg-red-50">Reject</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </div>
+                    <% }); %>
+                <% } %>
+            </div>
+        </div>
     </div>
 </main>
-
-    </div>
-
+</div>
     <!-- Modals would go here -->
     <script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Select ALL action buttons, not just one by ID
+    const actionButtons = document.querySelectorAll('.action-btn');
 
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const orderId = "<%= order._id %>";
+    // Attach a click event listener to each button
+    actionButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            const { orderId, productId, action } = e.currentTarget.dataset;
             
-            const cancelBtn = document.getElementById('cancel-order-btn');
-            if (cancelBtn) {
-                cancelBtn.addEventListener('click', () => {
-                    const confirmCancel = confirm("Are you sure you want to cancel this order?");
-                    if (confirmCancel) {
-                        fetch(`/admin/api/orders/${orderId}/status`, {
-                            method: 'PATCH',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ status: 'CANCELLED' })
-                        })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.message) {
-                                alert(data.message);
-                                window.location.reload();
-                            }
-                        });
-                    }
-                });
+            // Determine the text for the confirmation modal
+            const isApprove = action === 'approve';
+            const title = `Confirm ${isApprove ? 'Approval' : 'Rejection'}`;
+            const text = `Are you sure you want to ${action} this request?`;
+            const confirmButtonText = `Yes, ${action} it!`;
+
+            // Use SweetAlert2 for a better UX
+            Swal.fire({
+                title: title,
+                text: text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: isApprove ? '#16a34a' : '#dc2626',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: confirmButtonText
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // If confirmed, call the function to perform the fetch request
+                    handleStatusUpdate(orderId, productId, action);
+                }
+            });
+        });
+    });
+
+    const handleStatusUpdate = async (orderId, productId, action) => {
+        try {
+            const response = await fetch(`/admin/api/orders/${orderId}/products/${productId}/status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: action })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'An unknown error occurred.');
             }
 
-            /////sweetalert/////
-            const showSwal = (icon, title, text) => {
-        Swal.fire({
-            icon: icon,
-            title: title,
-            text: text,
-            confirmButtonText: 'OK',
-            customClass: {
-                popup: 'swal-dark-bg',
-                title: 'swal-dark-title',
-                content: 'swal-dark-content',
-                confirmButton: 'swal-dark-button'
-            }
-        });
+            // Show success message and then reload the page
+            await Swal.fire({
+                title: 'Success!',
+                text: data.message,
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false
+            });
+            window.location.reload();
+
+        } catch (error) {
+            console.error('Failed to update status:', error);
+            Swal.fire({
+                title: 'Error!',
+                text: error.message,
+                icon: 'error'
+            });
+        }
     };
-
-            const approveReturnBtn = document.getElementById('approve-return-btn');
-            if (approveReturnBtn) {
-                approveReturnBtn.addEventListener('click', () => {
-                    const confirmApprove = confirm("Are you sure you want to approve this return?");
-                    if (confirmApprove) {
-                        fetch(`/admin/api/orders/${orderId}/status`, {
-                            method: 'PATCH',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ status: 'RETURNED' })
-                        })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.message) {
-                                alert(data.message);
-                                window.location.reload();
-                            }
-                        });
-                    }
-                });
-            }
-
-            const rejectReturnBtn = document.getElementById('reject-return-btn');
-            if (rejectReturnBtn) {
-                rejectReturnBtn.addEventListener('click', () => {
-                    const confirmReject = confirm("Are you sure you want to reject this return?");
-                    if (confirmReject) {
-                        fetch(`/admin/api/orders/${orderId}/status`, {
-                            method: 'PATCH',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ status: 'REJECTED' })
-                        })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.message) {
-                                alert(data.message);
-                                window.location.reload();
-                            }
-                        });
-                    }
-                });
-            }
-        });
-    </script>
+});
+</script>
 </body>
 </html>
