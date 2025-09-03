@@ -157,9 +157,33 @@
     <% } %>
 </div>
 <div id="reviews-content" class="tab-content" style="display: none;">
-    <p>Customer reviews will be displayed here.</p>
+    <p>No reviews yet.</p>
 </div>
 
+
+<!-- similar products  -->
+<h1 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-green-600 text-center uppercase tracking-widest pb-5 shadow-lg shadow-green-500/30 mt-4 mb-12">Similar products</h1>
+<div class="similar-products-grid">
+    <% similarProducts.slice(0, 4).forEach(similarProduct => { %>
+        <a href="/user/product/<%= similarProduct._id %>" class="product-card">
+            
+            <% if (similarProduct.colorVariants && similarProduct.colorVariants.length > 0 && similarProduct.colorVariants[0].images && similarProduct.colorVariants[0].images.length > 0) { %>
+                <img class="product-card-image" 
+                     src="/uploads/products/<%= similarProduct.colorVariants[0].images[0] %>" 
+                     alt="<%= similarProduct.title %>">
+            <% } else { %>
+                <img class="product-card-image" 
+                     src="/images/placeholder.png" 
+                     alt="<%= similarProduct.title %>">
+            <% } %>
+
+            <div class="product-card-info">
+                <h3 class="product-card-title"><%= similarProduct.title %></h3>
+                <p class="product-card-price">From ₹<%= (similarProduct.min_price || 0).toFixed(2) %></p>
+            </div>
+        </a>
+    <% }) %>
+</div>
 <!-- This is the updated script block that integrates the animation logic with the fetch call -->
 <script>
     document.addEventListener("DOMContentLoaded", () => {

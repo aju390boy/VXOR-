@@ -110,16 +110,12 @@ exports.deleteCategory = async (req, res) => {
         const deletedCategory = await Category.findByIdAndDelete(categoryId);
         
         if (!deletedCategory) {
-            // Send a JSON response for an error
             return res.status(404).json({ success: false, message: 'Category not found.' });
         }
-        
-        // Send a JSON response for success
         res.json({ success: true, message: 'Successfully deleted category.' });
         
     } catch (err) {
         console.error("Error deleting category:", err.message);
-        // Send a generic JSON error response
         res.status(500).json({ success: false, message: 'Internal Server Error: Could not delete category.' });
     }
 };

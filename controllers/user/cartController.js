@@ -2,12 +2,12 @@ const Product=require('../../model/product.js');
 const Cart = require('../../model/cart.js')
 
 exports.addToCart = async (req, res) => {
-    // Assumes 'protect' middleware adds the user object to the request
+
     const userId = req.user._id; 
     const { productId, colorName, size, quantity } = req.body;
 
     try {
-        // 1. Validate the product, color, and size variants against the Product schema
+       
         const product = await Product.findById(productId);
         if (!product) {
             return res.status(404).json({ message: 'Product not found.' });
@@ -22,19 +22,13 @@ exports.addToCart = async (req, res) => {
         if (!sizeVariant) {
             return res.status(400).json({ message: 'Invalid size selected for this product.' });
         }
-        
-        // 2. Check for sufficient stock before adding to cart
         if (sizeVariant.stock < quantity) {
             return res.status(400).json({ message: `Insufficient stock. Only ${sizeVariant.stock} available.` });
         }
-        
-        // 3. Find the user's cart or create a new one if it doesn't exist
         let cart = await Cart.findOne({ userId });
         if (!cart) {
             cart = new Cart({ userId, items: [] });
         }
-
-        // 4. Check if the item (by product, color, and size) is already in the cart
         const existingItemIndex = cart.items.findIndex(item =>
             item.productId.toString() === productId &&
             item.colorName === colorName &&
@@ -42,14 +36,12 @@ exports.addToCart = async (req, res) => {
         );
 
         if (existingItemIndex > -1) {
-            // Item exists, update its quantity
+           
             cart.items[existingItemIndex].quantity += quantity;
         } else {
-            // Item is new, add it to the cart
+            
             cart.items.push({ productId, colorName, size, quantity });
         }
-
-        // 5. Save the updated cart to the database
         await cart.save();
         res.status(200).json({ message: 'Product added to cart successfully.', cart });
 
@@ -58,12 +50,6 @@ exports.addToCart = async (req, res) => {
         res.status(500).json({ message: 'Server error.', error: error.message });
     }
 };
-
-/**
- * @desc    Get the user's cart and render the cart EJS page
- * @route   GET /api/cart
- * @access  Private
- */
 exports.getCart = async (req, res) => {
     const userId = req.user._id;
     const TAX_RATE = 0.05; 
@@ -96,8 +82,6 @@ exports.getCart = async (req, res) => {
         let subtotal = 0;
         const cartItemsForEJS = cart.items.map(item => {
             const product = item.productId;
-            
-            // Check if product exists and is valid
             if (!product) {
                 console.error('Product not found for item in cart:', item._id);
                 return null;
@@ -154,17 +138,8 @@ exports.getCart = async (req, res) => {
         res.status(500).render('user/error', { message: 'Server error.', error: error.message });
     }
 };
-
-
-
-/**
- * @desc    Update the quantity of a specific item in the cart
- * @route   PATCH /api/cart/update
- * @access  Private
- */
 exports.updateCartQunty = async (req, res) => {
-    // console.log("User from authentication middleware:", req.user); 
-    // Ensure the user is authenticated before proceeding
+    
     if (!req.user || !req.user._id) {
         return res.status(401).json({ message: 'Unauthorized. Please log in.' });
     }
@@ -178,77 +153,51 @@ exports.updateCartQunty = async (req, res) => {
         if (!cart) {
             return res.status(404).json({ message: 'Cart not found for this user.' });
         }
-
         const itemToUpdate = cart.items.find(item => item._id.toString() === itemId);
         if (!itemToUpdate) {
             return res.status(404).json({ message: 'Item not found in cart.' });
         }
-        
-        // Basic quantity validation
         if (newQuantity < 1) {
             return res.status(400).json({ message: 'Quantity cannot be less than 1.' });
         }
-
-        // Fetch the product with all its variant information
         const product = await Product.findById(itemToUpdate.productId);
         if (!product) {
             return res.status(404).json({ message: 'Product not found.' });
         }
-
-        // CORRECTED LOGIC: Find the variant using colorName and size, which are stored in the cart item
         const colorVariant = product.colorVariants.find(cv => cv.colorName === itemToUpdate.colorName);
         const sizeVariant = colorVariant?.variants.find(sv => sv.size === itemToUpdate.size);
-        
-        // Check if the variant was found and if the new quantity exceeds its stock
         if (!sizeVariant) {
             return res.status(404).json({ message: 'Product variant not found.' });
         }
         if (newQuantity > sizeVariant.stock) {
             return res.status(400).json({ message: `The selected quantity exceeds available stock (${sizeVariant.stock}).` });
         }
-
-        // Update the item quantity and save
         itemToUpdate.quantity = newQuantity;
         await cart.save();
-        
         res.status(200).json({ message: 'Cart item quantity updated successfully.', cart });
-        
     } catch (error) {
         console.error('Error updating cart item quantity:', error);
         res.status(500).json({ message: 'Server error.', error: error.message });
     }
 };
 
-/**
- * @desc    Remove a specific item from the cart
- * @route   DELETE /api/cart/remove-item/:itemId
- * @access  Private
- */
 exports.removeCartItm = async (req, res) => {
     console.log("User from authentication middleware:", req.user);
-    // Ensure the user is authenticated before proceeding
     if (!req.user || !req.user._id) {
         return res.status(401).json({ message: 'Unauthorized. Please log in.' });
     } 
- 
     const userId = req.user._id;
     const { itemId } = req.params;
-
     try {
         const cart = await Cart.findOne({ userId });
         if (!cart) {
             return res.status(404).json({ message: 'Cart not found for this user.' });
         }
-
-        // Filter out the item to be removed
         const initialItemCount = cart.items.length;
         cart.items = cart.items.filter(item => item._id.toString() !== itemId);
-
-        // Check if an item was actually removed
         if (cart.items.length === initialItemCount) {
             return res.status(404).json({ message: 'Item not found in cart.' });
         }
-
         await cart.save();
         res.status(200).json({ message: 'Item removed from cart successfully.', cart });
 

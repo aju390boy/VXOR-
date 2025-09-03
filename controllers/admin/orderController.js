@@ -15,7 +15,6 @@ exports.renderOrdersPage = async (req, res) => {
         res.render('admin/orders', {
             orders: orders.map(order => ({
                 ...order,
-                // Check if user_id exists after populate. If not, provide fallback data.
                 user: order.user_id ? { 
                     name: `${order.user_id.firstname} ${order.user_id.lastname}`,
                     email: order.user_id.email
@@ -23,11 +22,7 @@ exports.renderOrdersPage = async (req, res) => {
                     name: 'Deleted User',
                     email: 'N/A'
                 },
-                
-                // Use the custom order_id for display
                 orderId: order.order_id,
-                
-                // For backward compatibility if you still use ._id somewhere
                 _id: order._id 
             })),
             layout: false
@@ -43,27 +38,19 @@ exports.getOrders = async (req, res) => {
     const { page = 1, limit = 10, search, status, sort } = req.query;
 
     let query = {};
-    const conditions = []; // We will build our query conditions here
-
-    // 1. Handle the status filter correctly
+    const conditions = []; 
     if (status) {
         conditions.push({ products: { $elemMatch: { status: status } } });
     }
-
-    // 2. Handle the search filter correctly and efficiently
     if (search) {
         const searchRegex = { $regex: search, $options: 'i' };
         const orConditions = [];
 
-        // Search by custom order_id
+       
         orConditions.push({ order_id: searchRegex });
-
-        // Search by internal MongoDB _id if the search term is a valid ObjectId
         if (mongoose.isValidObjectId(search)) {
             orConditions.push({ _id: search });
         }
-
-        // Find users that match the search term
         const matchingUsers = await User.find({
             $or: [{ firstname: searchRegex }, { lastname: searchRegex }, { email: searchRegex }]
         }).select('_id').lean();
@@ -72,17 +59,13 @@ exports.getOrders = async (req, res) => {
             const userIds = matchingUsers.map(u => u._id);
             orConditions.push({ user_id: { $in: userIds } });
         }
-        
-        // If 'orConditions' has any criteria, add it to the main conditions array
         if (orConditions.length > 0) {
             conditions.push({ $or: orConditions });
         } else {
-            // If the search term found no potential users or valid IDs, return no results immediately.
+           
              return res.status(200).json({ orders: [], total: 0 });
         }
     }
-
-    // 3. Combine all conditions into the final query object
     if (conditions.length > 0) {
         query = { $and: conditions };
     }
@@ -99,7 +82,7 @@ exports.getOrders = async (req, res) => {
             
         const totalOrders = await Order.countDocuments(query);
 
-        // 4. Map the response correctly, with safety checks and required fields
+        
         res.status(200).json({
             orders: orders.map(order => ({
                 ...order,
@@ -107,8 +90,8 @@ exports.getOrders = async (req, res) => {
                 user: order.user_id 
                     ? { name: `${order.user_id.firstname} ${order.user_id.lastname}`, email: order.user_id.email } 
                     : { name: 'Deleted User', email: 'N/A' },
-                orderId: order.order_id, // Send the correct custom ID
-                _id: order._id // Keep the internal ID for actions like updates
+                orderId: order.order_id,
+                _id: order._id 
             })),
             total: totalOrders
         });
@@ -139,10 +122,8 @@ exports.updateOrderStatus = async (req, res) => {
         default:
             break;
     }
-
-    // This object holds all the fields to be updated.
     const updateObject = {
-        // CORRECT: Target the status field in all elements of the products array.
+      
         'products.$[].status': status
     };
 
@@ -154,7 +135,7 @@ exports.updateOrderStatus = async (req, res) => {
         const order = await Order.findOneAndUpdate(
             { _id: orderId },
             { $set: updateObject },
-            { new: true, runValidators: true } // 'new: true' returns the updated document
+            { new: true, runValidators: true }
         );
 
         if (!order) {

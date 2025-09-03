@@ -1,4 +1,4 @@
-// controllers/authController.js
+
 const User=require('../../model/user.js')
 const bcrypt=require('bcrypt')
 
@@ -7,24 +7,21 @@ exports.postLogin = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        // Basic server-side validation (can be more extensive)
-        if (!email || !password) {
+       
+        if (!email.trim() || !password.trim()) {
             return res.status(400).json({ status: false, message: 'Email and password are required.' });
         }
 
         const user = await User.findOne({ email });
 
         if (!user) {
-            return res.status(401).json({ status: false, message: 'Invalid credentials' }); // Use 401 for unauthorized
+            return res.status(401).json({ status: false, message: 'Invalid credentials' }); 
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return res.status(401).json({ status: false, message: 'Invalid credentials' }); // Use 401 for unauthorized
+            return res.status(401).json({ status: false, message: 'Invalid credentials' }); 
         }
-
-        // Check if user is blocked/active (if you have such a field in your User model)
-        // Example: if (user.isBlocked) { return res.status(403).json({ status: false, message: 'Your account is blocked.' }); }
 
         req.session.user = {
             _id: user._id,
@@ -36,7 +33,6 @@ exports.postLogin = async (req, res) => {
                 console.error('Session save error:', err);
                 return res.status(500).json({ status: false, message: 'Login failed due to session error.' });
             }
-            // IMPORTANT CHANGE: Send JSON success response instead of redirect
             res.status(200).json({ status: true, message: 'Login successful!' });
         });
 
@@ -57,15 +53,11 @@ exports.login=(req,res)=> {
 }
 
 exports.googleLoginSuccess = (req, res) => {
-  // After Google login success
   const user = req.user;
-
    req.session.user = {
       _id: user._id,
       email: user.email,
     };
-   
-
      res.redirect('/user/home');
 };
 

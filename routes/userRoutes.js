@@ -11,6 +11,7 @@ const checkoutController = require('../controllers/user/checkoutController.js');
 const placeorderController = require('../controllers/user/placeorderController.js');
 const successController = require('../controllers/user/successController.js');
 const orderdetailController = require('../controllers/user/orderdetailController..js');
+const orderController=require('../controllers/user/orderController.js')
 
 router.route('/home')
   .get(userController.getHome);
@@ -38,6 +39,8 @@ router.get('/profile/section/:sectionName',isAuthenticated, profileController.ge
 // profile changing password
 router.post('/profile/change-password',isAuthenticated,profileController.changePassword);
 router.post('/profile/update', isAuthenticated, profileController. upload.single('profileImage') ,profileController.updateProfile);
+router.post('/verify-email-update',isAuthenticated,profileController.verifyEmailUpdate);
+router.post('/resend-email-otp',isAuthenticated,profileController.resendEmailUpdateOtp);
 ////profile address routes
 router.post('/profile/address/add', isAuthenticated, profileController.addAddress);
 router.post('/profile/address/edit/:addressId', isAuthenticated, profileController.editAddress);
@@ -58,6 +61,10 @@ router.get('/checkout',isAuthenticated,checkoutController.getCheckout);
 router.post('/place-order/cod',isAuthenticated,placeorderController.placeOrder);
 router.get('/success',isAuthenticated,successController.getSuccess);
 
+///orders routes///
+router.get('/orders/search',isAuthenticated,orderController.searchUserOrders)
+
+////order detail routes/////
 router.get('/order-detail', isAuthenticated, orderdetailController.getOrderDetail);
 router.post('/cancel-item',isAuthenticated, orderdetailController.cancelItem);
 router.post('/return-item',isAuthenticated, orderdetailController.returnItem);

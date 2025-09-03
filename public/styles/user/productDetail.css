@@ -425,7 +425,121 @@ body {
     color: var(--text-muted);
     font-style: italic;
 }
+/* similar products */
+.similar-products-container {
+    max-width: 1400px; /* Match the max-width of your main container */
+    margin: 60px auto; /* Center it with ample vertical spacing */
+    padding: 0 20px;   /* Add some horizontal padding */
+}
 
+.similar-products-container h2 {
+    font-size: 2.2em;
+    color: var(--text-light);
+    text-align: center;
+    margin-bottom: 40px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    border-bottom: 2px solid var(--border-subtle);
+    padding-bottom: 15px;
+}
+
+/* The grid that holds all the product cards */
+.similar-products-grid {
+    display: grid;
+    margin-top: 30px;
+    /* Creates a responsive grid that fits as many columns as possible with a min width of 260px */
+    grid-template-columns: repeat(4, 1fr);
+    gap: 30px; /* Consistent gap for spacing between cards */
+}
+
+/* Styles for each individual product card link */
+.product-card {
+    display: block;
+   
+    
+    border-radius: 8px; /* Consistent rounding */
+    overflow: hidden; /* Ensures the image respects the border-radius */
+    text-decoration: none;
+    color: inherit;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4); /* Softer shadow than main block */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.product-card:hover {
+    transform: translateY(-6px); /* A nice lift effect on hover */
+    box-shadow: 0 12px 35px var(--shadow-soft), 0 0 15px var(--glow-effect); /* Enhanced shadow + accent glow */
+}
+
+/* The image inside the card */
+.product-card-image {
+    width: 60%;
+    margin-left: 40px;
+    height: 250px; /* Fixed height for a uniform grid appearance */
+    object-fit: cover; /* Ensures the image fills the space without distortion */
+    display: block; /* Removes any extra space below the image */
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+/* The container for text content below the image */
+.product-card-info {
+    padding: 20px;
+}
+
+/* The product title in the card */
+.product-card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-light);
+   margin-left: 60px;
+    /* The following lines will truncate long titles with an ellipsis (...) */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* The product price in the card */
+.product-card-price {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--accent-main); /* Use the main accent color for the price */
+   margin-left: 60px;
+    text-shadow: 0 0 10px var(--glow-effect); /* Subtle glow effect */
+}
+
+
+/* --- Responsiveness for Smaller Screens --- */
+@media (max-width: 1024px) {
+    .similar-products-container h2 {
+        font-size: 1.8em;
+    }
+    .similar-products-grid {
+        gap: 20px;
+        /* Adjust column size for tablets */
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .product-card-image {
+        height: 250px;
+    }
+}
+
+@media (max-width: 600px) {
+    .similar-products-container {
+        margin: 40px auto;
+        padding: 0 10px;
+    }
+    .similar-products-grid {
+        /* On very small screens, you might prefer 1 or 2 columns */
+       grid-template-columns: 1fr;
+    }
+     .product-card-image {
+        height: 480px; /* Taller image for single-column layout */
+    }
+}
+
+
+
+/* end of similar products */
 /* Media Queries for Responsiveness (from the second part) */
 @media (max-width: 1200px) {
     .detail-container {

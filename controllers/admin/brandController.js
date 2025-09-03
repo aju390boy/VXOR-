@@ -33,17 +33,13 @@ exports.uploadBrandImage = multer({
 
 exports.getBrands = async (req, res) => {
     try {
-        const query = {}; // Assuming your query is defined elsewhere.
+        const query = {}; 
         const page = parseInt(req.query.page) || 1;
         const limit = 2;
-        const skip = (page - 1) * limit; // Calculate how many documents to skip
-
+        const skip = (page - 1) * limit;
         const totalBrands = await Brand.countDocuments(query);
         const totalPages = Math.ceil(totalBrands / limit);
-        
-        // Correct: Fetch only the brands for the current page
         const brands = await Brand.find(query).skip(skip).limit(limit);
-
         const message = req.session.message;
         delete req.session.message;
         
@@ -69,12 +65,12 @@ exports.addBrand = async (req, res) => {
             if (imageFile) {
                 fs.unlinkSync(imageFile.path);
             }
-            // Corrected icon name to 'error'
+        
             req.session.message = { icon: 'error', title: 'Error!', text: 'Brand with this name already exists!' };
             return res.redirect('/admin/brand');
         }
         if (!imageFile) {
-            // Corrected icon name to 'error'
+          
             req.session.message = { icon: 'error', title: 'Error!', text: 'Brand image is required!' };
             return res.redirect('/admin/brand');
         }
@@ -93,7 +89,7 @@ exports.addBrand = async (req, res) => {
         if (req.file) {
             fs.unlinkSync(req.file.path);
         }
-        // Corrected icon name to 'error'
+        
         req.session.message = { icon: 'error', title: 'Error!', text: 'Failed to add Brand !' };
         res.status(500).redirect('/admin/brand');
     }
@@ -131,7 +127,7 @@ exports.editBrand = async (req, res) => {
             if (imageFile) {
                 fs.unlinkSync(imageFile.path);
             }
-            // Corrected icon name to 'error'
+           
             req.session.message = { icon: 'error', title: 'Error!', text: 'Brand already exist!' };
             return res.redirect('/admin/brand');
         }
@@ -141,7 +137,7 @@ exports.editBrand = async (req, res) => {
             if (imageFile) {
                 fs.unlinkSync(imageFile.path);
             }
-            // Corrected icon name to 'error'
+           
             req.session.message = { icon: 'error', title: 'Error!', text: 'Brand not found!' };
             return res.status(404).redirect('/admin/brand');
         }
@@ -169,7 +165,7 @@ exports.editBrand = async (req, res) => {
         if (req.file) {
             fs.unlinkSync(req.file.path);
         }
-        // Corrected icon name to 'error'
+        
         req.session.message = { icon: 'error', title: 'Error!', text: 'Failed to edit Brand !' };
         res.status(500).redirect('/admin/brand');
     }

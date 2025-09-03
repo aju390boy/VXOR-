@@ -1,5 +1,6 @@
 const Order=require('../../model/order.js');
 const User=require('../../model/user.js');
+const Product=require('../../model/product.js')
 
 
 
@@ -138,7 +139,7 @@ exports.processReturnRequest = async (req, res) => {
 
 exports.updateProductStatusInOrder = async (req, res) => {
     const { orderId, productId } = req.params;
-    const { action } = req.body; // We will send 'approve' or 'reject'
+    const { action } = req.body; // 'approve' or 'reject'
 
     try {
         const order = await Order.findById(orderId);
@@ -156,21 +157,38 @@ exports.updateProductStatusInOrder = async (req, res) => {
         let newPaymentStatus = order.payment_status;
 
         if (action === 'approve') {
-            if (currentStatus === 'CANCELLATION REQUESTED') {
-                newStatus = 'CANCELLED';
-                newPaymentStatus='FAILED'
-                // You might trigger a partial refund here in a real app
-                // For now, if all items are cancelled/returned, we mark as refunded.
-            } else if (currentStatus === 'RETURN REQUESTED') {
-                newStatus = 'RETURNED';
-                newPaymentStatus = 'REFUNDED'; // Assume full refund for simplicity
+            if (currentStatus === 'CANCELLATION REQUESTED' || currentStatus === 'RETURN REQUESTED') {
+                
+                // --- NEW: RESTOCK INVENTORY LOGIC ---
+                await Product.updateOne(
+                    { 
+                        _id: productItem.product_id, 
+                        'colorVariants.colorName': productItem.colorName,
+                        'colorVariants.variants.size': productItem.size
+                    },
+                    { 
+                        $inc: { 'colorVariants.$[c].variants.$[v].stock': productItem.quantity }
+                    },
+                    {
+                        arrayFilters: [
+                            { 'c.colorName': productItem.colorName },
+                            { 'v.size': productItem.size }
+                        ]
+                    }
+                );
+                // --- END: NEW LOGIC ---
+
+                if (currentStatus === 'CANCELLATION REQUESTED') {
+                    newStatus = 'CANCELLED';
+                    newPaymentStatus = 'FAILED'; // Or 'REFUNDED' if payment was captured
+                } else { // RETURN REQUESTED
+                    newStatus = 'RETURNED';
+                    newPaymentStatus = 'REFUNDED';
+                }
             }
         } else if (action === 'reject') {
             if (currentStatus === 'CANCELLATION REQUESTED') {
-                // Revert to a logical previous state.
-                // This logic might need to be more complex (e.g., storing previous state)
-                // but for now, 'PACKED' is a safe assumption.
-                newStatus = 'PACKED'; 
+                newStatus = 'PACKED'; // Revert to a safe, non-final status
             } else if (currentStatus === 'RETURN REQUESTED') {
                 newStatus = 'DELIVERED'; // Revert to delivered status
             }
@@ -178,9 +196,9 @@ exports.updateProductStatusInOrder = async (req, res) => {
 
         if (newStatus) {
             productItem.status = newStatus;
-            order.payment_status = newPaymentStatus; // Update payment status if changed
+            order.payment_status = newPaymentStatus;
             await order.save();
-            res.status(200).json({ message: `Request successfully ${action}d.`, order });
+            res.status(200).json({ message: `Request successfully ${action}d and inventory updated.`, order });
         } else {
             res.status(400).json({ message: 'Invalid action or status for this item.' });
         }

@@ -10,30 +10,23 @@ exports.getOrderDetail = async (req, res) => {
         if (!orderId) {
             return res.status(400).render('user/400', { message: 'Order ID is missing.' });
         }
-
-        // Updated for efficiency: query by both _id and user_id
         const order = await Order.findOne({ _id: orderId, user_id: userId })
-            .select('order_id total_amount payment_status address_id products createdAt') // Explicitly select all required fields
+            .select('order_id total_amount payment_status address_id products createdAt')
             .populate({
                 path: 'products.product_id',
                 select: 'title colorVariants'
             })
             .populate('address_id');
-
-        // The check is now much simpler and cleaner
         if (!order) {
             return res.status(404).render('user/404', { message: 'Order not found or does not belong to this user.' });
         }
-        
+        console.log(order)
         res.render('user/orderDetail', { order });
-        
     } catch (error) {
         console.error('Error fetching order details:', error);
         res.status(500).render('user/error', { message: 'Failed to retrieve order details.' });
     }
 };
-
-
 exports.cancelItem = async (req, res) => {
     try {
         const { orderId, itemId, reason } = req.body;
@@ -49,15 +42,9 @@ exports.cancelItem = async (req, res) => {
         if (!itemToUpdate) {
             return res.status(404).json({ message: 'Item not found in this order.' });
         }
-
-        // Corrected logic: Check if the status is one of the allowed statuses for cancellation
         if (['PROCESSING', 'PACKED', 'SHIPPED'].includes(itemToUpdate.status)) {
-            // Update the item's status and reason
             itemToUpdate.status = 'CANCELLATION REQUESTED';
             itemToUpdate.cancellation_reason = reason;
-            
-            // Do not recalculate total amount here, as the cancellation is pending admin approval
-            
             await order.save();
             return res.status(200).json({ message: 'Cancellation request submitted successfully.' });
         } else {
@@ -69,7 +56,7 @@ exports.cancelItem = async (req, res) => {
         res.status(500).json({ message: 'Server error occurred during cancellation.' });
     }
 };
-// Function to handle return requests
+
 exports.returnItem = async (req, res) => {
     try {
         const { orderId, itemId, reason } = req.body;
@@ -80,19 +67,13 @@ exports.returnItem = async (req, res) => {
         if (!order) {
             return res.status(404).json({ message: 'Order not found or does not belong to this user.' });
         }
-
         const itemToUpdate = order.products.id(itemId);
         if (!itemToUpdate) {
             return res.status(404).json({ message: 'Item not found in this order.' });
         }
-
-        // Corrected logic: Check if the status is 'DELIVERED'
         if (itemToUpdate.status === 'DELIVERED') {
-            // Update the item's status and reason
             itemToUpdate.status = 'RETURN REQUESTED';
             itemToUpdate.return_reason = reason;
-            
-            // Update the main order's payment status to 'PROCESSING' for admin review
             order.payment_status = 'PROCESSING';
 
             await order.save();
@@ -106,8 +87,6 @@ exports.returnItem = async (req, res) => {
     }
 };
 
-
-// Function for downloading invoice (simple example)
 exports.downloadInvoice = async (req, res) => {
     try {
         const orderId = req.query.orderId;
@@ -130,21 +109,18 @@ exports.downloadInvoice = async (req, res) => {
         const doc = new PDFDocument({ size: 'A4', margin: 50 });
         doc.pipe(res);
 
-        // Header
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename="invoice_${order.order_id}.pdf"`);
 
         doc.fontSize(20).text('Order Invoice', { align: 'center' });
         doc.moveDown();
 
-        // Order Details & Invoice Info
         doc.fontSize(12).text(`Order Number: ${order.order_id}`);
         doc.text(`Invoice Date: ${new Date().toLocaleDateString()}`);
         doc.text(`Payment Status: ${order.payment_status}`);
-        doc.text(`Payment Method: COD`); // Assuming a default for now
+        doc.text(`Payment Method: COD`); 
         doc.moveDown();
 
-        // Shipping Address
         doc.fontSize(14).text('Shipping Address', { underline: true });
         const address = order.address_id;
         if (address) {
@@ -152,11 +128,10 @@ exports.downloadInvoice = async (req, res) => {
             doc.text(`${address.address1}, ${address.address2}`);
             doc.text(`${address.city}, ${address.state}`);
             doc.text(`${address.pincode}`);
-            doc.text(`Mobile: ${address.mobile}`); // Corrected: Using 'mobile' from the schema
+            doc.text(`Mobile: ${address.mobile}`); 
         }
         doc.moveDown();
 
-        // Items Table Header
         const tableTop = doc.y;
         const itemX = 50;
         const qtyX = 300;
@@ -170,7 +145,7 @@ exports.downloadInvoice = async (req, res) => {
         doc.text('Total', totalX, tableTop);
         doc.moveTo(itemX, tableTop + 20).lineTo(totalWidth + 50, tableTop + 20).stroke();
 
-        // Items Table Content
+        
         let y = tableTop + 30;
         let subtotal = 0;
         order.products.forEach(productItem => {
@@ -188,11 +163,10 @@ exports.downloadInvoice = async (req, res) => {
         });
         doc.moveDown();
 
-        // Summary
+        
         doc.fontSize(12);
         doc.text(`Subtotal: ₹${subtotal.toFixed(2)}`, totalX);
 
-        // Recalculate tax and total on the server for security
         const tax = subtotal * TAX_RATE;
         const total = subtotal + tax - (order.coupon_id ? order.coupon_id.discount : 0);
         

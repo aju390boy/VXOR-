@@ -9,60 +9,81 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-        body { font-family: 'Inter', sans-serif; }
+    body { font-family: 'Inter', sans-serif; }
 
-        /* CSS Bar Chart Styling */
-        .chart-container {
-            display: flex;
-            justify-content: space-around;
-            align-items: flex-end;
-            width: 100%;
-            height: 250px;
-            padding: 20px 10px;
-            border-top: 1px solid #e5e7eb;
+    /* Keyframes for the bar growing animation */
+    @keyframes growBar {
+        from {
+            transform: scaleY(0);
         }
-        .chart-bar {
-            position: relative;
-            width: 35px;
-            background-image: linear-gradient(to top, #8b5cf6, #6366f1);
-            border-radius: 6px;
-            transition: all 0.3s ease-in-out;
-            height: calc(var(--bar-height, 0) * 1%); /* Height is set by --bar-height */
+        to {
+            transform: scaleY(1);
         }
-        .chart-bar:hover {
-            opacity: 0.8;
-            transform: translateY(-5px);
-        }
-        .bar-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            height: 100%;
-        }
-        .bar-label {
-            margin-top: 8px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            color: #6b7280;
-        }
-        .chart-tooltip {
-            position: absolute;
-            top: -35px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #1f2937;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            white-space: nowrap;
-            opacity: 0;
-            transition: opacity 0.2s;
-            pointer-events: none;
-        }
-        .chart-bar:hover .chart-tooltip {
-            opacity: 1;
-        }
+    }
+
+    .chart-container {
+        display: flex;
+        justify-content: space-around;
+        align-items: flex-end;
+        width: 100%;
+        height: 250px;
+        padding: 20px 10px;
+        border-top: 1px solid #e5e7eb;
+    }
+    
+    .bar-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        height: 100%;
+        justify-content: flex-end; /* FIX: Aligns bar and label to the bottom */
+    }
+
+    .chart-bar {
+        position: relative;
+        width: 35px;
+        background-image: linear-gradient(to top, #8b5cf6, #6366f1);
+        border-radius: 6px;
+        transition: all 0.3s ease-in-out;
+        height: calc(var(--bar-height, 0) * 1%);
+        
+        /* NEW: Animation properties */
+        transform-origin: bottom; /* Makes the bar grow from the bottom up */
+        animation: growBar 1.1s ease-out forwards; /* Applies the keyframe animation */
+    }
+
+    .chart-bar:hover {
+        opacity: 0.8;
+        transform: translateY(-5px) scale(1.05); /* Added a slight scale for better feel */
+    }
+
+    .bar-label {
+        margin-top: 8px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: #6b7280;
+    }
+
+    .chart-tooltip {
+        position: absolute;
+        top: -35px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #1f2937;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        white-space: nowrap;
+        opacity: 0;
+        transition: opacity 0.2s, transform 0.5s;
+        pointer-events: none;
+    }
+
+    .chart-bar:hover .chart-tooltip {
+        opacity: 1;
+        transform: translateX(-50%) translateY(-5px); /* Smooth hover effect */
+    }
         .abass{
             margin-left: 230px;
             margin-top: 50px;
@@ -114,20 +135,23 @@
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-                    <div class="lg:col-span-2 bg-white rounded-2xl shadow-lg p-6">
-                        <h3 class="text-xl font-semibold text-slate-800 mb-2">Sales Overview</h3>
-                        <p class="text-sm text-slate-500 mb-4">Last 7 Days</p>
-                        <div class="chart-container">
-                            <% salesDataForChart.forEach(data => { %>
-                                <div class="bar-wrapper flex-1">
-                                    <div class="chart-bar" style="--bar-height: <%= (data.sales / maxSales) * 100 %>;">
-                                        <div class="chart-tooltip">₹<%= data.sales.toFixed(2) %></div>
-                                    </div>
-                                    <div class="bar-label"><%= data.day %></div>
-                                </div>
-                            <% }) %>
-                        </div>
-                    </div>
+                  <div class="lg:col-span-2 bg-white rounded-2xl shadow-lg p-6">
+    <h3 class="text-xl font-semibold text-slate-800 mb-2">Sales Overview</h3>
+    <p class="text-sm text-slate-500 mb-4">Last 7 Days</p>
+    <div class="chart-container">
+        <%# Get the 'index' to use for the animation delay %>
+        <% salesDataForChart.forEach((data, index) => { %>
+            <div class="bar-wrapper flex-1">
+                <div 
+                    class="chart-bar" 
+                    style="--bar-height: <%= (data.sales / maxSales) * 100 %>; animation-delay: <%= index * 100 %>ms;">
+                    <div class="chart-tooltip">₹<%= data.sales.toFixed(2) %></div>
+                </div>
+                <div class="bar-label"><%= data.day %></div>
+            </div>
+        <% }) %>
+    </div>
+</div>
                     <div class="bg-white rounded-2xl shadow-lg p-6">
                         <h3 class="text-xl font-semibold text-slate-800 mb-4">Best Selling</h3>
                         <ul class="space-y-4">

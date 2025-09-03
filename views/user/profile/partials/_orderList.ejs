@@ -57,7 +57,7 @@
                                         }
                                     %>
                                     <a href="/user/order-detail?order_id=<%= order._id %>" class="flex items-center space-x-4">
-                                        <img src="<%= imagePath %>" alt="<%= altText %>" class="w-16 h-16 object-cover rounded-xl shadow-md border border-gray-700">
+                                        <img src="<%= imagePath %>" alt="<%= altText %>" class="w-16 h-22 object-cover rounded-xl shadow-md border border-gray-700">
                                     </a>
                                 <% } else { %>
                                     <span class="text-gray-500">No Product</span>
@@ -132,25 +132,3 @@
     }
 </style>
 
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const searchInput = document.getElementById('orderSearch');
-        const ordersTableBody = document.getElementById('ordersTableBody');
-        const orderRows = document.querySelectorAll('.order-row');
-
-        searchInput.addEventListener('keyup', (e) => {
-            const searchTerm = e.target.value.toLowerCase();
-            
-            orderRows.forEach(row => {
-                const orderId = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
-                const productName = row.querySelector('td:nth-child(2) span').textContent.toLowerCase();
-
-                if (orderId.includes(searchTerm) || productName.includes(searchTerm)) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-        });
-    });
-</script>

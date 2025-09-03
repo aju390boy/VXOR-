@@ -6,7 +6,6 @@ const Address = require('../../model/address.js')
 
 exports.getCheckout = async (req, res) => {
     const TAX_RATE = 0.05;
-
     try {
         const cart = await Cart.findOne({ userId: req.user._id }).populate({
             path: 'items.productId',
@@ -15,7 +14,6 @@ exports.getCheckout = async (req, res) => {
                 { path: 'colorVariants.variants' }
             ]
         });
-
         if (!cart || cart.items.length === 0) {
             return res.render('user/checkout', {
                 title: 'Checkout',
@@ -32,55 +30,43 @@ exports.getCheckout = async (req, res) => {
                 }
             });
         }
-
         let toastMessage = null;
-
-        // Stock validation check
         const unavailableItems = cart.items.filter(item => {
             const product = item.productId;
-            if (!product) return true; // Treat as unavailable
-            
+            if (!product) return true; 
             const colorVariant = product.colorVariants.find(c => c.colorName === item.colorName);
-            if (!colorVariant) return true; // Treat as unavailable
-            
+            if (!colorVariant) return true; 
             const sizeVariant = colorVariant.variants.find(s => s.size === item.size);
             if (!sizeVariant || sizeVariant.stock < item.quantity) {
                 return true;
             }
             return false;
         });
-
         if (unavailableItems.length > 0) {
             toastMessage = {
                 icon: 'error',
                 text: 'One or more items in your cart are now out of stock. Please remove them to proceed.'
             };
         }
-
         const defaultAddress = await Address.findOne({ user_id: req.user._id, isDefault: true });
-
         if (!defaultAddress) {
             toastMessage = {
                 icon: 'error',
                 text: 'Please add a default address before proceeding to checkout.'
             };
         }
-
         let subtotal = 0;
         cart.items.forEach(item => {
             const product = item.productId;
             const colorVariant = product.colorVariants.find(c => c.colorName === item.colorName);
             const sizeVariant = colorVariant ? colorVariant.variants.find(s => s.size === item.size) : null;
-
             if (sizeVariant && sizeVariant.stock >= item.quantity) {
                 subtotal += sizeVariant.price * item.quantity;
             }
         });
-
         const tax = subtotal * TAX_RATE;
-        const couponDiscount = 0; // Placeholder for coupon logic
+        const couponDiscount = 0; 
         const total = subtotal + tax - couponDiscount;
-
         res.render('user/checkout', {
             title: 'Checkout',
             user: req.user,
@@ -92,7 +78,6 @@ exports.getCheckout = async (req, res) => {
             total: total.toFixed(2),
             toastMessage: toastMessage
         });
-
     } catch (error) {
         console.error('Error in getCheckout:', error);
         res.status(500).render('error', { title: 'Error', message: 'Something went wrong.' });
