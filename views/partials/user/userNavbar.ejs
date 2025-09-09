@@ -16,7 +16,21 @@
     <div class="nav-right flex items-center gap-3">
        
         <a href="/login" class="text-lg"><i class="fa-solid fa-heart"></i></a>
-        <a href="/user/cart" class="text-lg"><i class="fa-solid fa-cart-shopping"></i></a>
+      <a href="/user/cart" class="relative text-gray-300 hover:text-white">
+    <i class="fas fa-shopping-cart fa-lg"></i>
+
+    <% if (locals.cartCount && cartCount > 0) { %>
+        <span id="cart-count-badge" 
+              class="absolute -top-2 -right-3 bg-red-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+            <%= cartCount %>
+        </span>
+    <% } else { %>
+        <span id="cart-count-badge" 
+              class="hidden absolute -top-2 -right-3 bg-red-600 text-white text-xs font-bold rounded-full h-5 w-5 items-center justify-center">
+            0
+        </span>
+    <% } %>
+</a>
         <a href="/user/profile" class="text-lg"><i class="fa-solid fa-user"></i></a>
     </div>
 </nav>

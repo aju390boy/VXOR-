@@ -17,7 +17,7 @@ router.route('/home')
   .get(userController.getHome);
 
 router.route('/product')
-    .get(productController.getAllProducts);
+    .get(isAuthenticated, productController.getAllProducts);
 
 router.get('/product-search', productController.liveSearch);
 
@@ -55,10 +55,12 @@ router.route('/cart')
 .get( isAuthenticated, cartController.getCart);
 router.patch('/cart/update-quantity/:itemId', isAuthenticated, cartController.updateCartQunty);
 router.delete('/cart/remove-item/:itemId', isAuthenticated, cartController.removeCartItm);
+router.get('/cart/count',isAuthenticated,cartController.getCartCount);
 
 ////checkout////place order////success////
 router.get('/checkout',isAuthenticated,checkoutController.getCheckout);
 router.post('/place-order/cod',isAuthenticated,placeorderController.placeOrder);
+router.post('/checkout/address/set-default/:addressId',isAuthenticated, placeorderController.setDefaultAddress);
 router.get('/success',isAuthenticated,successController.getSuccess);
 
 ///orders routes///

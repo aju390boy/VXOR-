@@ -1,9 +1,5 @@
-<!-- This is your updated productDetail.ejs file -->
+
 <% title = product.title || 'Product Details'; -%>
-
-<!-- Don't forget to link your custom animation stylesheet here -->
-
-
 <div class="detail-container">
    <!-- alert -->
     <div id="toast-container" class="fixed top-0 right-2 -translate-x-1/2 mt-4 z-50">
@@ -184,7 +180,6 @@
         </a>
     <% }) %>
 </div>
-<!-- This is the updated script block that integrates the animation logic with the fetch call -->
 <script>
     document.addEventListener("DOMContentLoaded", () => {
         const productData = <%- JSON.stringify(product) %>;
@@ -209,7 +204,7 @@
         const successIcon = document.getElementById('toast-icon-success');
         const errorIcon = document.getElementById('toast-icon-error');
 
-        let currentSelectedColorIndex = 0; // Default to the first color variant
+        let currentSelectedColorIndex = 0; 
         let currentSelectedSize = null;
         let currentQuantity = 1;
         let timeoutId;
@@ -221,43 +216,31 @@
 
     // Set the message
     toastMessage.textContent = message;
-
-    // Reset all color classes before adding new ones
     toastAlert.classList.remove('bg-white', 'bg-green-500', 'bg-red-500');
     toastMessage.classList.remove('text-gray-900');
 
     if (type === 'success') {
-        // Change background to green and text to white
         toastAlert.classList.add('bg-green-500');
         toastMessage.classList.add('text-white');
-        
-        // Show success icon, hide error icon
         successIcon.classList.remove('hidden');
         errorIcon.classList.add('hidden');
     } else if (type === 'error') {
-        // Change background to red and text to white
         toastAlert.classList.add('bg-red-500');
         toastMessage.classList.add('text-white');
-
-        // Show error icon, hide success icon
         successIcon.classList.add('hidden');
         errorIcon.classList.remove('hidden');
     }
 
-    // Show the alert and restart the animation
     toastAlert.classList.remove('hidden', 'animate-fadeOut');
-    void toastAlert.offsetWidth; // Trigger a reflow
+    void toastAlert.offsetWidth; 
     toastAlert.classList.add('animate-slideIn', 'animate-fadeOut');
 
-    // Hide the alert after the animation finishes
     timeoutId = setTimeout(() => {
         toastAlert.classList.add('hidden');
     }, 3000);
 }
-        
-        // --- Helper Functions ---
         function updateThumbnails(images) {
-            thumbnailWrapper.innerHTML = ''; // Clear existing thumbnails
+            thumbnailWrapper.innerHTML = '';
             if (images && images.length > 0) {
                 images.forEach((imgSrc, index) => {
                     const thumb = document.createElement('img');
@@ -265,15 +248,14 @@
                     if (index === 0) {
                         thumb.classList.add('active-thumb');
                     }
-                    // The EJS template provides the full path, so use it directly.
                     thumb.src = `/uploads/products/${imgSrc}`;
                     thumb.alt = `Thumbnail ${index}`;
                     thumbnailWrapper.appendChild(thumb);
                 });
-                mainImage.src = `/uploads/products/${images[0]}`; // Set main image to the first of the new set
-                attachThumbnailListeners(); // Re-attach listeners after new elements
+                mainImage.src = `/uploads/products/${images[0]}`; 
+                attachThumbnailListeners();
             } else {
-                mainImage.src = '/images/placeholder.png'; // Fallback
+                mainImage.src = '/images/placeholder.png'; 
             }
         }
 
@@ -291,7 +273,7 @@
         }
 
         function updateSizeButtons(sizes) {
-            sizeButtonsWrapper.innerHTML = ''; // Clear existing size buttons
+            sizeButtonsWrapper.innerHTML = ''; 
             if (sizes && sizes.length > 0) {
                 sizes.forEach(size => {
                     const button = document.createElement('button');
@@ -300,7 +282,7 @@
                     button.dataset.size = size;
                     sizeButtonsWrapper.appendChild(button);
                 });
-                attachSizeButtonListeners(); // Re-attach listeners
+                attachSizeButtonListeners(); 
             }
         }
 
@@ -315,7 +297,7 @@
             document.querySelectorAll('.size-button').forEach(btn => btn.classList.remove('active-size'));
             this.classList.add('active-size');
             currentSelectedSize = this.dataset.size;
-            updatePriceAndStock(); // Update price and stock based on selected size
+            updatePriceAndStock(); 
         }
 
         function updatePriceAndStock() {
@@ -375,8 +357,7 @@
             updateQuantityButtons();
         }
 
-        // --- Event Listeners ---
-        // Initial setup for the first color variant
+       
         if (productData && productData.colorVariants && productData.colorVariants.length > 0) {
             const initialImages = productData.colorVariants[0].images;
             updateThumbnails(initialImages);
@@ -396,8 +377,6 @@
             dot.addEventListener('click', () => {
                 colorDots.forEach(d => d.classList.remove('active-color'));
                 dot.classList.add('active-color');
-                
-                // --- FIX: Use camelCase for dataset properties ---
                 currentSelectedColorIndex = parseInt(dot.dataset.colorIndex);
                 selectedColorNameSpan.textContent = dot.dataset.colorName;
 
@@ -471,8 +450,6 @@
                 document.getElementById(button.dataset.tab + '-content').style.display = 'block';
             });
         });
-
-        // --- Image Zoom Feature ---
         let zoomLevel = 1;
         const maxZoom = 3;
         const zoomStep = 0.5;
@@ -516,8 +493,7 @@
                 mainImage.style.transform = `scale(${zoomLevel})`;
             }
         }, { passive: false });
-
-        // --- ADD TO CART FUNCTIONALITY with new animation and modal ---
+        ////////////addtocart button ////////////////////////
         if (addToCartBtn) {
             addToCartBtn.addEventListener("click", async () => {
                 const quantity = parseInt(quantityValueSpan.textContent, 10);
@@ -555,6 +531,8 @@
                     const data = await response.json();
 
                     if (response.ok) {
+                        updateCartCount(); 
+                        console.log('after updateCartCount functon called')
                         if (!addToCartBtn.classList.contains("added")) {
                             addToCartBtn.classList.add("added");
                             addToCartBtn.style.pointerEvents = "none";
@@ -580,27 +558,27 @@
 </script>
 <style>
     
-/* Add this to your CSS file, or directly in a <style> tag in productDetail.ejs */
+
 .zoomable-image {
     width: 100%;
-    height: 100%; /* Or a fixed height like 400px */
-    object-fit: contain; /* Use 'contain' so the whole image is visible initially */
-    cursor: zoom-in; /* Indicate zoomability */
-    transform: scale(1); /* Initial scale */
-    transition: transform 0.1s ease-out; /* Smooth zoom transition */
+    height: 100%; 
+    object-fit: contain;
+    cursor: zoom-in;
+    transform: scale(1);
+    transition: transform 0.1s ease-out;
 }
 
-/* Hover effect for zoom */
+
 .zoomable-image:hover {
     cursor: zoom-in;
 }
 
-/* When zoomed, change cursor */
-.zoomable-image.zoomed { /* You can add/remove this class with JS */
+
+.zoomable-image.zoomed { 
     cursor: zoom-out;
 }
 
-/* Styles for color dots - if you don't have them in a global CSS */
+
 .color-selector-wrapper {
     display: flex;
     gap: 8px;
@@ -612,7 +590,7 @@
     height: 25px;
     border-radius: 50%;
     cursor: pointer;
-    border: 2px solid transparent; /* Default border */
+    border: 2px solid transparent;
     transition: border 0.2s ease, transform 0.1s ease;
     box-shadow: 0 0 5px rgba(0,0,0,0.2);
 }
@@ -622,8 +600,8 @@
 }
 
 .color-dot.active-color {
-    border-color: #007bff; /* Highlight color */
-    box-shadow: 0 0 8px rgba(0, 123, 255, 0.6); /* Glow effect */
+    border-color: #007bff; 
+    box-shadow: 0 0 8px rgba(0, 123, 255, 0.6);
 }
 
 .size-buttons-wrapper {
@@ -658,10 +636,10 @@
     opacity: 0.5;
 }
 
-/* Ensure the detail-image container has overflow hidden for zoom */
+
 .detail-image {
     position: relative;
-    overflow: hidden; /* Crucial for containing the zoomed image */
+    overflow: hidden; 
 }
 @keyframes slideIn {
         from { transform: translateY(-100%); }

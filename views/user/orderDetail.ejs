@@ -66,14 +66,8 @@
         }
     </style>
 <%# views/user/profile/partials/orderDetail.ejs %>
-<!-- Ensure you have the Tailwind CSS CDN and Font Awesome included in your main layout file -->
-<!-- <script src="https://cdn.tailwindcss.com"></script> -->
-<!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> -->
-
 <div class="font-sans antialiased text-gray-300 min-h-screen bg-gray-950 p-4 sm:p-6 lg:p-8">
     <div class="max-w-6xl mx-auto rounded-3xl shadow-2xl p-6 md:p-10 border border-gray-800 bg-gray-900">
-
-        <!-- Header, Order Details, and Actions -->
         <div class="flex flex-col md:flex-row justify-between items-start mb-5 border-b border-gray-800 pb-2">
             <!-- Order Details -->
             <div class="mb-6 md:mb-0 flex-grow">
@@ -81,7 +75,6 @@
                 <p class="text-gray-500 text-sm">Placed on <%= new Date(order.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %></p>
             </div>
         </div>
-        
         <!-- Order Items -->
         <div class="rounded-2xl px-3 shadow-lg mb-5">
             <h2 class="text-2xl font-bold border-b mb-2">Items in Your Order</h2>
@@ -353,18 +346,13 @@
         };
         
         updateProgressBars();
-
-        // Modal elements and close buttons
         const cancelModal = document.getElementById('cancelModal');
         const returnModal = document.getElementById('returnModal');
         const btnCloseCancel = document.getElementById('btnCloseCancel');
         const btnCloseReturn = document.getElementById('btnCloseReturn');
-
-        // Functions to open and close modals
         const openModal = (modal) => { modal.classList.remove('hidden'); };
         const closeModal = (modal) => { modal.classList.add('hidden'); };
 
-        // Handle clicks on the 'Cancel' button for each item
         document.querySelectorAll('.cancel-item-btn').forEach(button => {
             button.addEventListener('click', (e) => {
                 Swal.fire({
@@ -387,7 +375,6 @@
             });
         });
 
-        // Handle clicks on the 'Return' button for each item
         document.querySelectorAll('.return-item-btn').forEach(button => {
             button.addEventListener('click', (e) => {
                 Swal.fire({
@@ -410,17 +397,14 @@
             });
         });
 
-        // Close modals when the 'x' button is clicked
         btnCloseCancel.addEventListener('click', () => closeModal(cancelModal));
         btnCloseReturn.addEventListener('click', () => closeModal(returnModal));
-        
-        // Close modals when clicking outside of them
+      
         window.addEventListener('click', (event) => {
             if (event.target === cancelModal) closeModal(cancelModal);
             if (event.target === returnModal) closeModal(returnModal);
         });
         
-        // Handle form submission for item cancellation
         document.getElementById('cancelForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const orderId = document.getElementById('cancelOrderId').value;
@@ -441,7 +425,7 @@
                         title: 'Success!',
                         text: 'Item cancellation request submitted successfully!'
                     }).then(() => {
-                        location.reload(); // Reload the page after the user closes the alert
+                        location.reload();
                     });
                 } else {
                     Swal.fire({
@@ -462,7 +446,6 @@
             }
         });
 
-        // Handle form submission for return requests
         document.getElementById('returnForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const orderId = document.getElementById('returnOrderId').value;
@@ -483,7 +466,7 @@
                         title: 'Success!',
                         text: 'Return request submitted successfully!'
                     }).then(() => {
-                        location.reload(); // Reload the page after the user closes the alert
+                        location.reload(); 
                     });
                 } else {
                     Swal.fire({
@@ -504,7 +487,6 @@
             }
         });
 
-        // Function for downloading invoice
         document.querySelectorAll('.invoice-btn').forEach(button => {
             button.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -515,8 +497,8 @@
                     text: 'Are you sure you want to download the invoice?',
                     icon: 'question',
                     showCancelButton: true,
-                    confirmButtonColor: '#6b7280', // Tailwind gray-500
-                    cancelButtonColor: '#dc2626', // Tailwind red-600
+                    confirmButtonColor: '#6b7280',
+                    cancelButtonColor: '#dc2626', 
                     confirmButtonText: 'Yes, download it!'
                 }).then((result) => {
                     if (result.isConfirmed) {

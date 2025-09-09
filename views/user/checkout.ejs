@@ -21,85 +21,156 @@
     <div class="px-6 py-4 text-gray-400 text-sm">
         <a href="/" class="hover:text-white">Home</a> <span class="mx-2">›</span> Checkout
     </div>
+<!-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// -->
+     <div class="px-6 py-8 flex flex-col justify-between lg:flex-row gap-8">
+                <!-- Left Side: Default Address -->
+              <div class=" w-[80%] ">
+<!-- /////////////////adresss/////////// -->
+  <div class="relative bg-gray-900 rounded-xl p-6 mb-5 bg-gradient-to-br from-gray-800 via-gray-700 to-gray-900
+"
+     x-data="{ isAddressDropdownOpen: false, isEditing: false }"
+     @click.away="isAddressDropdownOpen = false">
 
-    <div class="px-6 py-8 flex flex-col lg:flex-row gap-8">
-        <!-- Left Side: Default Address -->
-        <div class="flex-1 bg-gray-900 text-white p-8 rounded-2xl shadow-2xl">
-    <h2 class="text-3xl font-bold mb-6 pb-4 border-b-2 border-purple-900">Shipping Address</h2>
-    
+    <div class="flex justify-between items-center mb-2 ">
+        <h2 class="text-2xl font-bold text-white">Shipping Address</h2>
+        <div class="flex items-center gap-2">
+            <button id="addNewAddressBtn" type="button" class="text-sm font-medium bg-gradient-to-br from-gray-800 via-gray-700 to-gray-900 rounded-2xl px-3 py-2 hover:text-blue-300 transition-colors">
+                ADD
+            </button>
+            <% if (address) { %>
+                <button @click="isAddressDropdownOpen = !isAddressDropdownOpen" title="Change Address" class="p-2.5 bg-gradient-to-br from-gray-800 via-gray-700 to-gray-900 rounded-full hover:text-blue-300 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+            <% } %>
+        </div>
+    </div>
+
     <% if (address) { %>
-        <div class="space-y-8 mb-8">
-            <!-- Name -->
-            <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 flex  items-center">
-                <span class="text-gray-400 font-semibold">Name:</span>
-                <span class="text-white mx-4"><%= address.name %></span>
+        <div x-show="!isEditing">
+            <div class="text-gray-300 space-y-1 border-gray-700 pl-4">
+                <p class="font-semibold text-white"><%= address.name %></p>
+                <p><%= address.address1 %></p>
+                <% if (address.address2 && address.address2.trim() !== '') { %><p><%= address.address2 %></p><% } %>
+                <p><%= address.city %>, <%= address.state %> - <%= address.pincode %></p>
+                <p class="pt-1 font-medium">Mobile: <span class="text-white"><%= address.mobile %></span></p>
             </div>
+            <button @click="isEditing = true" class="text-sm font-medium ml-3 mt-1 bg-gradient-to-br from-gray-800 via-gray-700 to-gray-900 rounded-2xl p-2 hover:text-blue-300 transition-colors">
+                EDIT
+            </button>
+        </div>
 
-            <!-- Address 1 -->
-            <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 flex  items-center">
-                <span class="text-gray-400 font-semibold">Address 1:</span>
-                <span class="text-white text-right mx-4"><%= address.address1 %></span>
+        <div x-show="isEditing" style="display: none;">
+            <form id="edit-address-form" class="space-y-3 pl-4">
+                <input type="text" name="name" value="<%= address.name %>" class="w-full bg-gray-700 p-2 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500">
+                <input type="text" name="address1" value="<%= address.address1 %>" class="w-full bg-gray-700 p-2 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500">
+                <input type="text" name="address2" value="<%= address.address2 %>" class="w-full bg-gray-700 p-2 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500">
+                <div class="grid grid-cols-3 gap-2">
+                    <input type="text" name="city" value="<%= address.city %>" class="bg-gray-700 p-2 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500">
+                    <input type="text" name="state" value="<%= address.state %>" class="bg-gray-700 p-2 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500">
+                    <input type="text" name="pincode" value="<%= address.pincode %>" class="bg-gray-700 p-2 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500">
+                </div>
+                <input type="tel" name="mobile" value="<%= address.mobile %>" class="w-full bg-gray-700 p-2 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500">
+                
+                <div class="flex items-center gap-2 pt-2">
+                    <button type="submit" class="text-sm font-medium bg-blue-600 hover:bg-blue-700 rounded-2xl px-3 py-2 text-white transition-colors">
+                        Save Changes
+                    </button>
+                    <button @click="isEditing = false" type="button" class="text-sm font-medium bg-gradient-to-br from-gray-600 to-gray-900 hover:bg-gray-700 rounded-2xl px-3 py-4 ml-2 mt-6 transition-colors">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    <% } else { %>
+        <div class="text-center py-8">
+             <p class="text-gray-400 mb-4">No default address found. Please add one.</p>
+             <a href="/user/profile" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-lg transition-colors">Add New Address</a>
+        </div>
+    <% } %>
+
+    <div x-show="isAddressDropdownOpen" x-transition style="display: none;" class="absolute top-16 right-6 mt-2 w-72 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-10">
+    <div class="p-2 max-h-64 overflow-y-auto">
+        <% if (allAddresses && allAddresses.length > 0) { %>
+            <% allAddresses.forEach(addr => { %>
+                 <% if (!addr.isDefault) { %>
+                <div class="block w-full text-left p-3 rounded-md transition-colors <% if (address && addr._id.toString() === address._id.toString()) { %>bg-blue-600/30 text-white<% } else { %>hover:bg-gray-700 text-gray-300<% } %>">
+                    <p class="font-semibold"><%= addr.name %></p>
+                    
+                    
+                    <button 
+                        type="button"
+                        class="set-default-btn bg-gradient-to-br from-purple-900 to-purple-600 p-2 rounded-md text-xs font-bold text-blue-400 hover:text-blue-300 mt-2" 
+                        data-address-id="<%= addr._id %>">
+                        Set as Default
+                    </button>
+                </div>
+                 <% } %>
+            <% }); %>
+        <% } else { %>
+            <p class="text-center text-sm text-gray-400 p-4">No other addresses saved.</p>
+        <% } %>
+    </div>
+</div>
+</div>
+   <!-- //////////end address////// -->
+
+    <div class="bg-gray-900 rounded-2xl p-6 mt-2 bg-gradient-to-br from-gray-800 via-gray-700 to-gray-900">
+        <h2 class="text-2xl font-bold text-white mb-6 ">Payment Method</h2>
+        <div class="space-y-4">
+            <div @click="selectedPayment = 'credit_card'" :class="{'border-blue-500 bg-gray-800/50': selectedPayment === 'credit_card', 'border-gray-700': selectedPayment !== 'credit_card'}" >
+                <div class="flex items-center">
+                    <input type="radio" name="payment_method" value="credit_card" x-model="selectedPayment" class="h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 focus:ring-blue-500">
+                    <label class="ml-3 flex items-center gap-4 text-sm font-medium text-white">
+                        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor"><path d="M21.928 6.607a1.5 1.5 0 0 0-1.06-.44h-16.736a1.5 1.5 0 0 0-1.06.44l-1.936 1.936v.001a1.5 1.5 0 0 0 0 2.121l1.936 1.936a1.5 1.5 0 0 0 1.06.44h16.736a1.5 1.5 0 0 0 1.06-.44l1.936-1.936v-.001a1.5 1.5 0 0 0 0-2.121zm-2.06 5.557H4.132a1.5 1.5 0 0 0-1.5 1.5v4.203a1.5 1.5 0 0 0 1.5 1.5h15.736a1.5 1.5 0 0 0 1.5-1.5v-4.203a1.5 1.5 0 0 0-1.5-1.5z"/></svg>
+                        Credit / Debit Card
+                    </label>
+                </div>
             </div>
-
-            <!-- Address 2 (if it exists) -->
-            <% if (address.address2 && address.address2.trim() !== '') { %>
-                <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 flex  items-center">
-                    <span class="text-gray-400 font-semibold">Address 2:</span>
-                    <span class="text-white text-right mx-4"><%= address.address2 %></span>
+            <div @click="selectedPayment = 'upi'" :class="{'border-blue-500 bg-gray-800/50': selectedPayment === 'upi', 'border-gray-700': selectedPayment !== 'upi'}" >
+                <div class="flex items-center">
+                    <input type="radio" name="payment_method" value="upi" x-model="selectedPayment" class="h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 focus:ring-blue-500">
+                    <label class="ml-3 flex items-center gap-4 text-sm font-medium text-white">
+                        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor"><path d="M14.292 2.34l-3.324 7.978h4.064l-4.292 9.342 3.324-7.978h-4.064zM12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12z"/></svg>
+                        UPI
+                    </label>
+                </div>
+            </div>
+            <div @click="selectedPayment = 'upi'" :class="{'border-blue-500 bg-gray-800/50': selectedPayment === 'upi', 'border-gray-700': selectedPayment !== 'upi'}">
+                <div class="flex items-center">
+                    <input type="radio" name="payment_method" value="upi" x-model="selectedPayment" class="h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 focus:ring-blue-500">
+                    <label class="ml-3 flex items-center gap-4 text-sm font-medium text-white">
+                        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor"><path d="M14.292 2.34l-3.324 7.978h4.064l-4.292 9.342 3.324-7.978h-4.064zM12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12z"/></svg>
+                        WALLET
+                    </label>
+                </div>
+            </div>
+            <% if (isCodAvailable) { %>
+                <div @click="selectedPayment = 'cod'" :class="{'border-blue-500 bg-gray-800/50': selectedPayment === 'cod', 'border-gray-700': selectedPayment !== 'cod'}" >
+                    <div class="flex items-center">
+                        <input type="radio" name="payment_method" value="cod" x-model="selectedPayment" class="h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 focus:ring-blue-500">
+                        <label class="ml-3 flex items-center gap-4 text-sm font-medium text-white">
+                             <svg class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm0 22c-5.514 0-10-4.486-10-10s4.486-10 10-10 10 4.486 10 10-4.486 10-10 10zm-1.2-12.012c-.255 0-.512.098-.707.293s-.293.452-.293.707v1.012h4v-1.012c0-.255-.098-.512-.293-.707s-.452-.293-.707-.293h-2zm3.2 0c-.441 0-.8.359-.8.8v1.212h-4v-1.212c0-.441-.359-.8-.8-.8s-.8.359-.8.8v1.212h-1c-.552 0-1 .448-1 1v6c0 .552.448 1 1 1h8c.552 0 1-.448 1-1v-6c0-.552-.448-1-1-1h-1v-1.212c0-.441-.359-.8-.8-.8z"/></svg>
+                            Cash on Delivery
+                        </label>
+                    </div>
                 </div>
             <% } %>
-
-            <!-- City, State, Pincode -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 flex  items-center">
-                    <span class="text-gray-400 font-semibold">City:</span>
-                    <span class="text-white mx-4"><%= address.city %></span>
-                </div>
-                <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 flex  items-center">
-                    <span class="text-gray-400 font-semibold">State:</span>
-                    <span class="text-white mx-4"><%= address.state %></span>
-                </div>
-                <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 flex items-center">
-                    <span class="text-gray-400 font-semibold">Pincode:</span>
-                    <span class="text-white mx-4"><%= address.pincode %></span>
-                </div>
-            </div>
-
-            <!-- Mobile -->
-            <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 flex  items-center">
-                <span class="text-gray-400 font-semibold">Mobile:</span>
-                <span class="text-white mx-4"><%= address.mobile %></span>
-            </div>
         </div>
+    </div>
 
-        <a href="/user/profile?section=address" class="block w-full">
-            <button class="w-full bg-purple-900 hover:bg-purple-700 px-5 py-3 rounded-xl font-medium transition-colors duration-200">
-                Edit Address
-            </button>
-        </a>
-    <% } else { %>
-        <div class="text-center text-gray-400 mb-8 p-6 bg-gray-800 rounded-xl border border-gray-700">
-            <p>No default address found.</p>
-            <p>Please add one to proceed with your order.</p>
-        </div>
-        <a href="/user/profile" class="inline-block w-full">
-            <button class="w-full bg-purple-900 hover:purple-700 px-5 py-3 rounded-xl font-medium transition-colors duration-200">
-                Add Address
-            </button>
-        </a>
-    <% } %>
 </div>
+                   <!-- ///////////////////////////////left side end -->
 
-        <!-- Right Side: Your Order -->
-        <div class="lg:w-1/3 bg-gray-800 p-6 rounded-lg shadow-lg">
-            <h3 class="text-xl font-semibold mb-6">Your Order</h3>
+                 <!-- Right Side: Your Order -->
+                 <div class="lg:w-1/3 bg-gray-800 p-6 rounded-lg shadow-lg bg-gradient-to-br from-gray-800 via-gray-700 to-gray-900">
+                   <h3 class="text-xl font-semibold mb-4">Your Order</h3>
 
-            <!-- Cart Items -->
-           <div class="space-y-4 mb-6">
-    <% if (cartItems && cartItems.length > 0) { %>
-        <% cartItems.forEach(item => { %>
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
+                  <!-- Cart Items -->
+                      <div class="space-y-4 mb-4">
+                  <% if (cartItems && cartItems.length > 0) { %>
+                   <% cartItems.forEach(item => { %>
+                    <div class="flex items-center justify-between">
+                     <div class="flex items-center gap-3">
                     <%
                         // We need a fallback image path in case something goes wrong
                         let imageUrl = '/images/placeholder.png'; 
@@ -112,25 +183,25 @@
                             imageUrl = `/uploads/products/${colorVariant.images[0]}`;
                         }
                     %>
-                    <img src="<%= imageUrl %>" alt="<%= item.productId.title %>" class="w-16 h-22 rounded object-cover border border-gray-700" />
+                    <img src="<%= imageUrl %>" alt="<%= item.productId.title %>" class="w-16 h-22 rounded object-cover " />
                     <div>
                         <p class="text-sm font-medium"><%= item.productId.title %></p>
                         <p class="text-xs text-gray-400">Qty: <%= item.quantity %></p>
-                    </div>
-                </div>
-                <%
-                    const itemPrice = item.productId.colorVariants.find(c => c.colorName === item.colorName)?.variants.find(s => s.size === item.size)?.price || 0;
-                %>
-                <span class="text-sm font-semibold">₹<%= (itemPrice * item.quantity).toLocaleString() %></span>
-            </div>
-        <% }) %>
-    <% } else { %>
-        <p class="text-gray-300">Your cart is empty.</p>
-    <% } %>
-</div>
+                                 </div>
+                             </div>
+                         <%
+                           const itemPrice = item.productId.colorVariants.find(c => c.colorName === item.colorName)?.variants.find(s => s.size === item.size)?.price || 0;
+                           %>
+                             <span class="text-sm font-semibold">₹<%= (itemPrice * item.quantity).toLocaleString() %></span>
+                          </div>
+                                  <% }) %>
+                                <% } else { %>
+                              <p class="text-gray-300">Your cart is empty.</p>
+                            <% } %>
+                             </div>
 
 
-            <a href="/user/cart" class="block mb-6 text-sm text-indigo-400 hover:underline">Edit Cart</a>
+            <a href="/user/cart" class="block mb-2 text-sm text-purple-700 font-extrabold hover:underline">Edit Cart</a>
 
             <!-- Price Details -->
             <div class="space-y-3 text-gray-300">
@@ -166,11 +237,80 @@
             </div>
 
             <% const isDisabled = !address || !cartItems || cartItems.length === 0; %>
-            <button id="place-order-btn" type="button" class="w-full mt-8 py-3 rounded-lg font-semibold transition
+            <button id="place-order-btn" type="button" class="w-full mt-4 py-3 rounded-lg font-semibold transition
                 <%= isDisabled ? 'bg-gray-500 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700' %>"
                 <%= isDisabled ? 'disabled' : '' %>>
                 Place Order
             </button>
+        </div>
+    </div>
+    <!-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// -->
+</div>
+
+<!-- add address modal -->
+<div id="addAddressModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-gray-900 bg-opacity-75 transition-opacity duration-300 ease-in-out">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="relative bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-auto p-6 md:p-8 transform scale-95 opacity-0 transition-all duration-300 ease-in-out">
+            
+            <button type="button" class="absolute top-4 right-4 text-gray-400 hover:text-gray-100 transition-colors duration-200" onclick="closeModal('addAddressModal')">
+                <i class="fa-solid fa-xmark fa-lg"></i>
+            </button>
+            
+            <h3 class="text-2xl font-bold text-white mb-6 border-b border-gray-700 pb-3">Add New Address</h3>
+
+            <form id="add-address-form" method="POST" action="/user/profile/address/add">
+                <div class="space-y-4">
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-300">Full Name</label>
+                        <input type="text" name="name" id="name" required class="mt-1 block w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                        <span id="nameError" class="text-sm text-red-500 error-message"></span>
+                    </div>
+
+                    <div>
+                        <label for="mobile" class="block text-sm font-medium text-gray-300">Mobile Number</label>
+                        <input type="tel" name="mobile" id="mobile" required class="mt-1 block w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                        <span id="mobileError" class="text-sm text-red-500 error-message"></span>
+                    </div>
+
+                    <div>
+                        <label for="address1" class="block text-sm font-medium text-gray-300">Address Line 1</label>
+                        <input type="text" name="address1" id="address1" required class="mt-1 block w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                        <span id="address1Error" class="text-sm text-red-500 error-message"></span>
+                    </div>
+                    
+                    <div>
+                        <label for="address2" class="block text-sm font-medium text-gray-300">Address Line 2 (Optional)</label>
+                        <input type="text" name="address2" id="address2" class="mt-1 block w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                        <span id="address2Error" class="text-sm text-red-500 error-message"></span>
+                    </div>
+
+                    <div>
+                        <label for="city" class="block text-sm font-medium text-gray-300">City</label>
+                        <input type="text" name="city" id="city" required class="mt-1 block w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                        <span id="cityError" class="text-sm text-red-500 error-message"></span>
+                    </div>
+
+                    <div>
+                        <label for="state" class="block text-sm font-medium text-gray-300">State</label>
+                        <input type="text" name="state" id="state" required class="mt-1 block w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                        <span id="stateError" class="text-sm text-red-500 error-message"></span>
+                    </div>
+
+                    <div>
+                        <label for="pincode" class="block text-sm font-medium text-gray-300">Pincode</label>
+                        <input type="text" name="pincode" id="pincode" required class="mt-1 block w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                        <span id="pincodeError" class="text-sm text-red-500 error-message"></span>
+                    </div>
+
+                    <input type="hidden" name="country" value="India">
+                </div>
+
+                <div class="mt-6 text-center">
+                    <button type="submit" class="inline-flex justify-center py-2 px-6 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Save Address
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -179,6 +319,34 @@
 
 <script>
     
+function openModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                const modalContent = modal.querySelector('.transform');
+                if (modalContent) {
+                    modalContent.classList.remove('scale-95', 'opacity-0');
+                    modalContent.classList.add('scale-100', 'opacity-100');
+                }
+            }, 10);
+        }
+    }
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    function closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            const modalContent = modal.querySelector('.transform');
+            if (modalContent) {
+                modalContent.classList.remove('scale-100', 'opacity-100');
+                modalContent.classList.add('scale-95', 'opacity-0');
+            }
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300); 
+        }
+    }
+    //////////////////////////////////////////////////////////////////////////////
     const toastData = <%- JSON.stringify(typeof toastMessage !== 'undefined' ? toastMessage : {}) %>;
 
    
@@ -285,4 +453,154 @@
 
    
     document.getElementById('place-order-btn').addEventListener('click', handlePlaceOrder);
+
+
+    ///////////////////////////////////////
+    const attachAddAddressFormListener = () => {
+            const addNewAddressBtn = document.getElementById('addNewAddressBtn');
+            const addAddressForm = document.getElementById('add-address-form');
+            if (addNewAddressBtn) {
+                addNewAddressBtn.addEventListener('click', () => {
+                    openModal('addAddressModal');
+                });
+            }
+            if (addAddressForm) {
+                addAddressForm.addEventListener('submit', async (event) => {
+                    event.preventDefault();
+                    document.querySelectorAll('#add-address-form .error-message').forEach(el => el.textContent = '');
+                    document.querySelectorAll('#add-address-form input').forEach(input => input.classList.remove('border-red-500'));
+                    const formData = new FormData(addAddressForm);
+                    const data = Object.fromEntries(formData.entries());
+                    try {
+                        const response = await fetch('/user/profile/address/add', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(data)
+                        });
+                        const result = await response.json();
+                        if (response.ok) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success!',
+                                text: result.message || 'Address added successfully!',
+                                 width:'400px',
+                                customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
+                                
+                            });
+                            closeModal('addAddressModal');
+                            addAddressForm.reset();
+                            window.location.reload();
+                        } else {
+                            if (result.errors) {
+                                for (const field in result.errors) {
+                                    const errorElement = document.getElementById(`${field}Error`);
+                                    if (errorElement) {
+                                        errorElement.textContent = result.errors[field];
+                                        addAddressForm.querySelector(`[name="${field}"]`).classList.add('border-red-500');
+                                    }
+                                }
+                            }
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Validation Error!',
+                                text: result.message || 'Please correct the errors in the form.',
+                                 width:'400px',
+                                customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error submitting add address form:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Network Error!',
+                            text: 'Could not connect to server.',
+                             width:'400px',
+                            customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
+                        });
+                    }
+                });
+            }
+        };
+//////////////////////////////////////////////////////////////////////////////////
+const attachEditAddressFormListener = () => {
+    const editAddressForm = document.getElementById('edit-address-form');
+    if (editAddressForm && typeof address !== 'undefined' && address) {
+        editAddressForm.addEventListener('submit', async (event) => {
+            event.preventDefault(); 
+            const formData = new FormData(editAddressForm);
+            const data = Object.fromEntries(formData.entries());
+            const addressId = address._id; 
+            try {
+                const response = await fetch(`/user/profile/address/edit/${addressId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: result.message || 'Address updated successfully!',
+                        width: '400px',
+                        customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
+                    });
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
+                        text: result.message || 'Could not update address.',
+                        width: '400px',
+                        customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
+                    });
+                }
+            } catch (error) {
+                console.error('Error submitting edit address form:', error);
+            }
+        });
+    }
+};
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+const attachSetDefaultListeners = () => {
+    const setDefaultButtons = document.querySelectorAll('.set-default-btn');
+    setDefaultButtons.forEach(button => {
+        button.addEventListener('click', async () => {
+            const addressId = button.dataset.addressId;
+
+            try {
+                const response = await fetch(`/user/checkout/address/set-default/${addressId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: result.message || 'Default address updated.',
+                    });
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
+                        text: result.message || 'Failed to update address.',
+                    });
+                }
+            } catch (error) {
+                console.error('Error setting default address:', error);
+            }
+        });
+    });
+};
+         attachAddAddressFormListener(); 
+         attachEditAddressFormListener();
+         attachSetDefaultListeners();
+
 </script>

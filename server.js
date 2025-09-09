@@ -7,6 +7,7 @@ const connect = require('./database/connect.js')
 const adminRoutes = require('./routes/adminRoutes.js');
 const userRoutes = require('./routes/userRoutes.js');
 const authRoutes = require('./routes/authRoutes.js')
+const { getCartCount } = require('./middlewares/user/cartMiddleware.js');
 const passport = require('passport');
 const morgan=require('morgan')
 const expressLayouts = require('express-ejs-layouts');
@@ -26,6 +27,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(nocache());
 
+
 app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
@@ -37,6 +39,8 @@ app.use(session({
 }));
 app.use(passport.initialize());
 app.use(passport.session());
+
+app.use(getCartCount);
 
 app.use('/', authRoutes);
 app.use('/user', userRoutes);

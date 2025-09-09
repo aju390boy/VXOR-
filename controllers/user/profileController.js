@@ -144,9 +144,7 @@ exports.getProfileSection = async (req, res) => {
           .status(404)
           .send('<p class="text-red-400">Requested section not found.</p>');
     }
-    console.log(
-      data.orders && data.orders[0].products[0].product_id.colorVariants
-    );
+    
 
     res.render(templatePath, { ...data, layout: false }, (err, html) => {
       if (err) {

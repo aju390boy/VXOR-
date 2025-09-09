@@ -118,52 +118,38 @@
 </div>
 
 <script>
-  // This line must be at the very top of your script block
-  // It ensures the server-side 'query' object is available as 'serverQuery' in client-side JS.
   const serverQuery = <%- JSON.stringify(query) %>;
-
   document.addEventListener("DOMContentLoaded", () => {
     const productList = document.getElementById("productList");
     const priceRange = document.getElementById("priceRange");
     const priceValue = document.getElementById("priceValue");
     const sortSelect = document.getElementById("sortSelect");
-
-    // Initialize price range display based on current value.
-    // The input's value is already set by EJS server-side (e.g., value="<%= query.price || 10000 %>")
-    // This line updates the *display text* based on the input's current value.
     priceValue.textContent = `Up to ₹${parseFloat(priceRange.value).toLocaleString('en-IN')}`;
-
     priceRange.addEventListener('input', () => {
       priceValue.textContent = `Up to ₹${parseFloat(priceRange.value).toLocaleString('en-IN')}`;
     });
-
     const applyFiltersAndSort = async () => {
         const params = new URLSearchParams();
         document.querySelectorAll('#filter-section input[type="checkbox"]:checked').forEach(input => {
             params.append(input.name, input.value);
         });
         params.append('price', priceRange.value);
-        params.append("sort", sortSelect.value); // Include current sort selection
+        params.append("sort", sortSelect.value); 
         try {
             const res = await axios.get(`/user/product?${params.toString()}`);
             productList.innerHTML = res.data.html;
-            // Optionally update URL without full page reload for better user experience
             history.pushState(null, '', `/user/product?${params.toString()}`);
         } catch (err) {
             console.error('Filter or Sort failed:', err);
         }
     };
-
     document.querySelector(".filter-btn.apply").addEventListener("click", applyFiltersAndSort);
     sortSelect.addEventListener("change", applyFiltersAndSort);
+    const input = document.getElementById('searchInput');
+    const resultsBox = document.getElementById('searchResults');
 
-
-    const input = document.getElementById('searchInput'); // Assuming you have a search input with this ID somewhere
-    const resultsBox = document.getElementById('searchResults'); // Assuming you have a search results container
-
-    if (input && resultsBox) { // Add null checks for search elements
+    if (input && resultsBox) { 
       input.addEventListener('input', async () => {
-        // This 'query' is local to the search input, and is NOT the server-side query object.
         const query = input.value.trim();
         if (query.length === 0) {
           resultsBox.innerHTML = '';
@@ -203,22 +189,15 @@
         }
       });
     }
-
-
-    // Function to set checkbox state based on query parameters
     const setCheckboxState = () => {
-      // Loop through all filter types that use checkboxes
       ['category', 'brand', 'rating', 'color', 'size'].forEach(filterName => {
-        // Correctly use 'serverQuery' here!
         const selectedValues = Array.isArray(serverQuery[filterName]) ? serverQuery[filterName] : (serverQuery[filterName] ? [serverQuery[filterName]] : []);
-
         document.querySelectorAll(`input[name="${filterName}"]`).forEach(input => {
           if (selectedValues.includes(input.value)) {
             input.checked = true;
-            // Also ensure the parent section is expanded
             const parentSection = input.closest('.mb-4, .mb-3');
             if (parentSection) {
-                const optionsDiv = parentSection.querySelector('.flex-col, .flex-wrap'); // flex-col for category/brand/rating, flex-wrap for color/size
+                const optionsDiv = parentSection.querySelector('.flex-col, .flex-wrap');
                 const toggleArrow = parentSection.querySelector('.toggle-arrow');
                 if (optionsDiv && optionsDiv.style.display === 'none') {
                     optionsDiv.style.display = 'flex';
@@ -226,35 +205,18 @@
                 }
             }
           } else {
-            input.checked = false; // Explicitly uncheck if not in query
+            input.checked = false; 
           }
         });
       });
     };
-
-    // Initial setup on page load
     setCheckboxState();
-    initializeToggleState(serverQuery); // Pass serverQuery to initializeToggleState
-
-    // IMPORTANT: Remove or comment out this line if priceRange.value is already correctly set by EJS
-    // and you only need to update the text display. The EJS value="<%= query.price || 10000 %>"
-    // on the input itself is what initially sets the range slider's position.
-    // The line below simply ensures the text display matches the slider's initial position.
-    // priceRange.value = serverQuery.price || 10000; // THIS LINE IS LIKELY REDUNDANT IF EJS IS SETTING IT.
-                                                    // It can also cause issues if serverQuery.price is a string
-                                                    // and priceRange.value expects a number immediately.
-                                                    // Keeping it for now if it was intentionally setting a default.
-
-    // This line is correct for updating the display text based on the input's current value.
+    initializeToggleState(serverQuery); 
     priceValue.textContent = `Up to ₹${parseFloat(priceRange.value).toLocaleString('en-IN')}`;
-
-
   });
-
-  // Passed 'this' to get the arrow for the correct section
   function toggleSection(id, element) {
     const section = document.getElementById(id);
-    const arrow = element.querySelector('.toggle-arrow'); // Use element to find arrow
+    const arrow = element.querySelector('.toggle-arrow'); 
     if (section.style.display === 'none' || section.style.display === '') {
       section.style.display = 'flex';
       arrow.textContent = '▲';
@@ -263,15 +225,11 @@
       arrow.textContent = '▼';
     }
   }
-
-  // Initial toggle state setup.
-  // Now accepts 'query' as an argument, which will be 'serverQuery' from the DOMContentLoaded.
   const initializeToggleState = (query) => {
       document.querySelectorAll('#filter-section > div.mb-4, #filter-section > div.mb-3').forEach(sectionDiv => {
           const optionsDiv = sectionDiv.querySelector('.flex-col, .flex-wrap');
           const toggleArrow = sectionDiv.querySelector('.toggle-arrow');
           const inputsChecked = Array.from(sectionDiv.querySelectorAll('input[type="checkbox"]:checked')).length > 0;
-          // Use the 'query' parameter passed into this function
           const priceFilterActive = sectionDiv.querySelector('#priceRange') && parseFloat(query.price) < 10000;
 
           if (optionsDiv && toggleArrow) {

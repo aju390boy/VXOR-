@@ -14,22 +14,11 @@ exports.getCheckout = async (req, res) => {
                 { path: 'colorVariants.variants' }
             ]
         });
+
         if (!cart || cart.items.length === 0) {
-            return res.render('user/checkout', {
-                title: 'Checkout',
-                user: req.user,
-                address: null,
-                cartItems: [],
-                subtotal: 0,
-                tax: 0,
-                couponDiscount: 0,
-                total: 0,
-                toastMessage: {
-                    icon: 'error',
-                    text: 'Your cart is empty. Please add items before checking out.'
-                }
-            });
+            return res.redirect('/user/cart');
         }
+        
         let toastMessage = null;
         const unavailableItems = cart.items.filter(item => {
             const product = item.productId;
@@ -49,6 +38,7 @@ exports.getCheckout = async (req, res) => {
             };
         }
         const defaultAddress = await Address.findOne({ user_id: req.user._id, isDefault: true });
+         const allAddresses = await Address.find({ user_id: req.user._id });
         if (!defaultAddress) {
             toastMessage = {
                 icon: 'error',
@@ -66,10 +56,14 @@ exports.getCheckout = async (req, res) => {
         });
         const tax = subtotal * TAX_RATE;
         const couponDiscount = 0; 
+        const isCodAvailable ={a:0,b:0}
+          
         const total = subtotal + tax - couponDiscount;
         res.render('user/checkout', {
             title: 'Checkout',
             user: req.user,
+            isCodAvailable ,
+            allAddresses,
             address: defaultAddress,
             cartItems: cart.items,
             subtotal: subtotal.toFixed(2),

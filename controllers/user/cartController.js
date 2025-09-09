@@ -206,3 +206,18 @@ exports.removeCartItm = async (req, res) => {
         res.status(500).json({ message: 'Server error.', error: error.message });
     }
 };
+
+
+exports.getCartCount = async (req, res) => {
+    console.log('getcartcount controller function is hitted');
+    try {
+        const cart = await Cart.findOne({ userId: req.user._id });
+        if (!cart) {
+            return res.json({ success: true, count: 0 });
+        }
+        const count = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+        res.json({ success: true, count: count });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+};

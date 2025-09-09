@@ -104,10 +104,11 @@ exports.placeOrder = async (req, res) => {
 
     cart.items = [];
     await cart.save();
-
+    const isCodAvailable ={a:0,b:0}
     res.status(200).json({
       message: "Order placed successfully!",
       orderId: newOrder.order_id,
+      isCodAvailable ,
       redirectUrl: "/user/success",
     });
   } catch (error) {
@@ -117,4 +118,31 @@ exports.placeOrder = async (req, res) => {
       error: error.message,
     });
   }
+};
+
+
+
+exports.setDefaultAddress = async (req, res) => {
+    try {
+        const { addressId } = req.params;
+        const userId = req.user._id;
+        await Address.updateMany(
+            { user_id: userId }, 
+            { $set: { isDefault: false } }
+        );
+        await Address.findByIdAndUpdate(addressId, { 
+            $set: { isDefault: true } 
+        });
+        res.status(200).json({ 
+            success: true, 
+            message: 'Default address updated successfully.' 
+        });
+
+    } catch (error) {
+        console.error('Error setting default address:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'An error occurred on the server. Please try again.' 
+        });
+    }
 };

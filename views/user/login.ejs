@@ -32,36 +32,29 @@
     const loginForm = document.getElementById('loginForm');
 
     loginForm.addEventListener('submit', async (event) => {
-        event.preventDefault(); // Prevent default form submission
-
+        event.preventDefault();
         const formData = new FormData(loginForm);
         const data = Object.fromEntries(formData.entries());
-
         const errors = [];
-
-        // Client-side Validation (basic check for empty fields)
         if (!data.email) {
             errors.push('Email is required.');
         }
         if (!data.password) {
             errors.push('Password is required.');
         }
-
         if (errors.length > 0) {
             Swal.fire({
                 icon: 'error',
                 title: 'Validation Error!',
                 html: errors.join('<br>'),
-                customClass: { // Add your custom classes here if defined in your CSS
+                customClass: {
                     popup: 'swal-custom-popup',
                     title: 'swal-custom-title',
                     htmlContainer: 'swal-custom-content'
                 }
             });
-            return; // Stop submission if there are client-side errors
+            return; 
         }
-
-        // If client-side validation passes, send data to server via Fetch API
         try {
             const response = await fetch('/login', {
                 method: 'POST',
@@ -70,34 +63,32 @@
                 },
                 body: JSON.stringify(data)
             });
-
-            const result = await response.json(); // Parse the JSON response from the server
-
-            if (result.status) { // Check for 'status: true' from your controller
+            const result = await response.json();
+            if (result.status) { 
                 Swal.fire({
                     icon: 'success',
                     title: 'Login Successful!',
                     text: result.message || 'Redirecting to home...',
                     showConfirmButton: false,
-                    timer: 1500, // Short timer for successful login
-                    customClass: { // Add your custom classes here if defined
+                    timer: 1500, 
+                    customClass: { 
                         popup: 'swal-custom-popup',
                         title: 'swal-custom-title',
                         htmlContainer: 'swal-custom-content'
                     }
                 }).then(() => {
-                    window.location.href = '/user/home'; // Redirect on success
+                    window.location.href = '/user/home'; 
                 });
             } else {
                 Swal.fire({
                     icon: 'error',
                     title: 'Login Failed!',
                     text: result.message || 'Invalid credentials or account not found.',
-                    customClass: { // Add your custom classes here if defined
+                    customClass: { 
                         popup: 'swal-custom-popup',
                         title: 'swal-custom-title',
                         htmlContainer: 'swal-custom-content',
-                        confirmButton: 'swal-custom-confirm-button' // If you want to style the 'OK' button
+                        confirmButton: 'swal-custom-confirm-button' 
                     }
                 });
             }
@@ -107,7 +98,7 @@
                 icon: 'error',
                 title: 'Network Error',
                 text: 'Could not connect to the server. Please try again.',
-                customClass: { // Add your custom classes here if defined
+                customClass: { 
                     popup: 'swal-custom-popup',
                     title: 'swal-custom-title',
                     htmlContainer: 'swal-custom-content',
