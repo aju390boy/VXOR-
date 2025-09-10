@@ -58,9 +58,26 @@ exports.getBrands = async (req, res) => {
 
 exports.addBrand = async (req, res) => {
     try {
-        const { name, description, offer, isListed } = req.body;
+        const { name, description, isListed } = req.body;
         const imageFile = req.file;
-        const existingBrand = await Brand.findOne({ name: { $regex: new RegExp(`^${name.trim()}$`, 'i') } });
+         if (!name || !name.trim()) {
+           req.session.message = {
+              icon: 'error',
+              title: 'Error',
+              text: 'Brand name is required'
+            };
+         return res.redirect('/admin/brand');
+        }
+         if (description && description.length > 300) {
+            req.session.message = {
+              icon: 'error',
+              title: 'Error',
+              text: 'Description must not exceed 300 characters'
+            };
+         return res.redirect('/admin/brand');
+       }
+        const normalizedName = name.trim().toUpperCase();
+        const existingBrand = await Brand.findOne({ name: normalizedName }).lean();
         if (existingBrand) {
             if (imageFile) {
                 fs.unlinkSync(imageFile.path);
@@ -75,9 +92,8 @@ exports.addBrand = async (req, res) => {
             return res.redirect('/admin/brand');
         }
         const newBrand = new Brand({
-            name: name.trim(),
+           name: normalizedName,
             description: description ? description.trim() : '',
-            offer: parseFloat(offer) || 0,
             image: imageFile.filename,
             isListed: isListed === 'on'
         });
@@ -115,13 +131,30 @@ exports.toggleBrandStatus = async (req, res) => {
 
 exports.editBrand = async (req, res) => {
     try {
-        const { name, description, offer } = req.body;
+        const { name, description} = req.body;
         const brandId = req.params.id;
         const imageFile = req.file;
+        if (!name || !name.trim()) {
+          req.session.message = {
+            icon: 'error',
+            title: 'Error',
+            text: 'Brand name is required'
+         };
+        return res.redirect('/admin/brand');
+      }
+        if (description && description.length > 300) {
+          req.session.message = {
+            icon: 'error',
+            title: 'Error',
+            text: 'Description must not exceed 300 characters'
+         };
+         return res.redirect('/admin/brand');
+       }
+        const normalizedName = name.trim().toUpperCase();
         const existingBrand = await Brand.findOne({
-            name: { $regex: new RegExp(`^${name.trim()}$`, 'i') },
+             name: normalizedName,
             _id: { $ne: brandId }
-        });
+        }).lean();
 
         if (existingBrand) {
             if (imageFile) {
@@ -142,9 +175,8 @@ exports.editBrand = async (req, res) => {
             return res.status(404).redirect('/admin/brand');
         }
         const updateData = {
-            name: name.trim(),
+             name: normalizedName,
             description: description ? description.trim() : '',
-            offer: parseFloat(offer) || 0,
         };
         if (imageFile) {
             if (brandToUpdate.image) {

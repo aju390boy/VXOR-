@@ -270,7 +270,6 @@
                         <th>No</th>
                         <th>Brand Name</th>
                         <th>Description</th>
-                        <th>Offer (%)</th>
                         <th>Image</th>
                         <th>List / Unlist</th>
                         <th>Actions</th>
@@ -283,7 +282,6 @@
                                 <td><%= index + 1 %></td>
                                 <td><%= brand.name %></td>
                                 <td><%= brand.description || 'N/A' %></td>
-                                <td><%= brand.offer %>%</td>
                                 <td>
                                     <% if (brand.image) { %>
                                         <img src="/uploads/brands/<%= brand.image %>" alt="<%= brand.name %> Image" class="w-16 h-16 object-cover rounded-md">
@@ -339,8 +337,6 @@
                 <input type="text" id="name" name="name" required class="mt-1" placeholder="Enter brand name" />
                 <label for="description">Description:</label>
                 <textarea id="description" name="description" class="mt-1" rows="3" placeholder="Short description about the brand"></textarea>
-                <label for="offer">Offer (%):</label>
-                <input type="number" id="offer" name="offer" min="0" max="100" value="0" class="mt-1" placeholder="e.g., 10 for 10% off" />
                 <label for="image">Brand Image:</label>
                 <input type="file" id="image" name="image" accept="image/*" required class="mt-1" />
                 <label for="isListedAdd" class="block mt-4">Status:</label>
@@ -365,8 +361,6 @@
             <input type="text" id="editName" name="name" required class="mt-1 mb-4" />
             <label for="editDescription">Description:</label>
             <textarea id="editDescription" name="description" class="mt-0 mb-1" rows="1"></textarea>
-            <label for="editOffer">Offer (%):</label>
-            <input type="number" id="editOffer" name="offer" min="0" max="100" class="mt-0 mb-1" />
             <label for="currentImage" class="block mt-4">Current Image:</label>
             <img id="currentImage" src="" alt="Current Brand Image" class="w-24 h-14 object-cover rounded-md mb-1 border border-gray-300">
             <label for="editImage">Change Image (optional):</label>
@@ -385,7 +379,6 @@
 
         document.getElementById("editName").value = name;
         document.getElementById("editDescription").value = description === 'N/A' ? '' : description;
-        document.getElementById("editOffer").value = offer;
         document.getElementById("editId").value = id;
 
         const currentImageElement = document.getElementById("currentImage");

@@ -22,18 +22,33 @@ exports.getCategories = async (req, res) => {
 
 exports.addCategory = async (req, res) => {
     try {
-        const { name, description, offer, isListed } = req.body;
-        const existingCategory = await Category.findOne({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
+        const { name, description, isListed } = req.body;
+        if (!name || !name.trim()) {
+        req.session.message = {
+        icon: 'error',
+        title: 'Error',
+        text: 'Category name is required'
+         };
+      return res.redirect('/admin/category');
+      }
+       if (description && description.length > 300) {
+       req.session.message = {
+        icon: 'error',
+        title: 'Error',
+        text: 'Description must not exceed 300 characters'
+      };
+      return res.redirect('/admin/category');
+      }
+        const normalizedName = name.trim().toUpperCase();
+        const existingCategory = await Category.findOne({ name: normalizedName }).lean();
         if (existingCategory) {
-          
            req.session.message={icon:'error',title:'error',text:'Category is already exist '};
            return res.redirect('/admin/category');
         }
 
         const newCategory = new Category({
-            name: name.trim(),
-            description: description ? description.trim() : '', 
-            offer: parseFloat(offer) || 0, 
+            name: normalizedName,
+            description: description ? description.trim() : '',  
             isListed: isListed === 'on'
         });
         await newCategory.save();
@@ -79,20 +94,36 @@ exports.loadEditForm = async (req, res) => {
 
 exports.editCategory = async (req, res) => {
     try {
-        const { name, description, offer } = req.body;
+        const { name, description} = req.body;
         const categoryId = req.params.id;
-        const existingCategory = await Category.findOne({ 
-            name: { $regex: new RegExp(`^${name}$`, 'i') }, 
-            _id: { $ne: categoryId }
-        });
+        if (!name || !name.trim()) {
+      req.session.message = {
+        icon: 'error',
+        title: 'Error',
+        text: 'Category name is required'
+      };
+      return res.redirect('/admin/category');
+    }
+    if (description && description.length > 300) {
+      req.session.message = {
+        icon: 'error',
+        title: 'Error',
+        text: 'Description must not exceed 300 characters'
+      };
+      return res.redirect('/admin/category');
+    }
+        const normalizedName = name.trim().toLowerCase();
+        const existingCategory = await Category.findOne({
+        name: normalizedName,
+        _id: { $ne: categoryId }
+       }).lean();
         if (existingCategory) {
              req.session.message={icon:'error',title:'Error',text:'Category already exist'}
              return res.redirect('/admin/category')
         }
         await Category.findByIdAndUpdate(categoryId, {
-            name: name.trim(), 
+            name: normalizedName, 
             description: description ? description.trim() : '', 
-            offer: parseFloat(offer) || 0, 
         }, { new: true, runValidators: true });
         req.session.message={icon:'success',title:'Success',text:'Category edited successfully '}
         res.redirect('/admin/category');

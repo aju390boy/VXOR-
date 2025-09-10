@@ -29,7 +29,6 @@ function findSimilarProducts(currentProduct, allProducts) {
     ) {
       score += 7;
     }
-
     // +5 points for being in the price range (using min_price)
     const priceDifference = Math.abs(
       product.min_price - currentProduct.min_price
@@ -37,8 +36,6 @@ function findSimilarProducts(currentProduct, allProducts) {
     if (priceDifference <= currentProduct.min_price * priceRange) {
       score += 5;
     }
-
-    // +3 points for a shared color
     const productColors = product.colorVariants.map((v) => v.colorName);
     const hasCommonColor = currentColorNames.some((color) =>
       productColors.includes(color)
@@ -46,13 +43,10 @@ function findSimilarProducts(currentProduct, allProducts) {
     if (hasCommonColor) {
       score += 3;
     }
-
     if (score > 0) {
       similarProducts.push({ product, score });
     }
   }
-
-  // Sort products by score (highest first)
   similarProducts.sort((a, b) => b.score - a.score);
 
   // Return the top 4 product documents
@@ -76,7 +70,6 @@ exports.getSingleProduct = async (req, res) => {
       isDeleted: false,
     }).lean();
     const similarProducts = findSimilarProducts(product, allOtherProducts);
-    console.log("Similar Products:", JSON.stringify(similarProducts, null, 2));
     let initialDisplayPrice = 0;
     let initialRegularPrice = 0;
     let initialImages = [];

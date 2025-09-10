@@ -268,7 +268,7 @@
             <tr>
               <th>No</th>
               <th>Category Name</th>
-              <th>Description</th> <th>Offer (%)</th>   <th>List / Unlist</th>
+              <th>Description</th>    <th>List / Unlist</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -279,7 +279,7 @@
            <tr id="category-row-<%= category._id %>">
             <td><%= index + 1 %></td>
             <td><%= category.name %></td>
-            <td><%= category.description || 'N/A' %></td> <td><%= category.offer %>%</td>               <td>
+            <td><%= category.description || 'N/A' %></td>             <td>
               <form action="/admin/category/toggle/<%= category._id %>" method="POST">
                 <label class="switch">
                   <input type="checkbox" name="status" onchange="this.form.submit()" <%= category.isListed ? 'checked' : '' %>>
@@ -335,9 +335,6 @@
         <label for="description">Description:</label>
         <textarea id="description" name="description" class="mt-1" rows="3" placeholder="Short description about the category"></textarea>
 
-        <label for="offer">Offer (%):</label>
-        <input type="number" id="offer" name="offer" min="0" max="100" value="0" class="mt-1" placeholder="e.g., 10 for 10% off" />
-
         <label for="isListedAdd" class="block mt-4">Status:</label>
         <label class="switch">
           <input type="checkbox" id="isListedAdd" name="isListed" checked>
@@ -363,9 +360,6 @@
       <label for="editDescription">Description:</label>
       <textarea id="editDescription" name="description" class="mt-1 mb-4" rows="3"></textarea>
 
-      <label for="editOffer">Offer (%):</label>
-      <input type="number" id="editOffer" name="offer" min="0" max="100" class="mt-1 mb-4" />
-
       <input type="hidden" id="editId" />
       <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg w-full transition-colors duration-200 text-lg mt-4">
           <i class="fas fa-save mr-2"></i> Update Category
@@ -379,28 +373,22 @@
 function openEditModal(id, name, description, offer) {
   const nameInput = document.getElementById("editName");
   const descInput = document.getElementById("editDescription");
-  const offerInput = document.getElementById("editOffer");
   const idInput = document.getElementById("editId");
   const form = document.getElementById("editCategoryForm");
   const modal = document.getElementById("editModal");
   
 
-  if (nameInput && descInput && offerInput && idInput && form && modal) {
+  if (nameInput && descInput &&  idInput && form && modal) {
     nameInput.value = name;
     descInput.value = description === 'N/A' ? '' : description;
-    offerInput.value = offer;
     idInput.value = id;
     form.action = `/admin/category/edit/${id}`;
     modal.style.display = "flex";
   }
 }
-
-
   function closeModal() {
     document.getElementById("editModal").style.display = "none";
   }
-
-  // Optional: close modal on outside click
   window.onclick = function (event) {
     const modal = document.getElementById("editModal");
     if (event.target == modal) {
@@ -428,13 +416,10 @@ function openEditModal(id, name, description, offer) {
             confirmButtonText: 'Yes, delete it!'
         }).then((result) => {
             if (result.isConfirmed) {
-                // Use axios to send an AJAX request
                 axios.post(`/admin/category/delete/${categoryId}`)
                     .then(response => {
                         if (response.data.success) {
                             Swal.fire('Deleted!', response.data.message, 'success');
-                            
-                            // Dynamically remove the category's row from the table
                             const row = document.getElementById(`category-row-${categoryId}`);
                             if (row) {
                                 row.remove();
@@ -458,4 +443,3 @@ function openEditModal(id, name, description, offer) {
 
 </body>
 </html>
-```

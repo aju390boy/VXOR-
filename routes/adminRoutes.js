@@ -11,6 +11,8 @@ const brandController=require('../controllers/admin/brandController.js')
 const addProductController=require('../controllers/admin/addProductController.js');
 const orderController=require('../controllers/admin/orderController.js')
 const orderdetailController = require('../controllers/admin/orderdetailController.js');
+const offerController = require('../controllers/admin/offerController.js');
+const couponController = require('../controllers/admin/couponController.js');
 const {
   addCategory,
   getCategories,
@@ -34,13 +36,6 @@ router.post('/customers/:id/block', isAuthenticated, customerController.blockCus
 router.post('/customers/:id/unblock',  isAuthenticated,customerController.unblockCustomer);
 router.get('/customers-search', customerController.getCustomersAjax);
 
-
-
-
-
-router.get('/offers', isAuthenticated, (req, res) => {
-  res.render('admin/offers');
-});
 
 
 
@@ -127,6 +122,33 @@ router.patch('/api/orders/:orderId/products/:productId/status', orderdetailContr
 
 ///Dashboard\\\
 router.get('/dashboard',isAuthenticated, dashboardController.getDashboard);
+
+
+////offer////
+// GET /admin/offers - Display all offers
+router.get('/offers', offerController.getAllOffers);
+// POST /admin/offers - Create a new offer
+router.post('/offers', offerController.createOffer);
+// PUT /admin/offers/:id - Update an offer
+router.put('/offers/:id', offerController.updateOffer);
+// PATCH /admin/offers/:id/toggle - Toggle offer status
+router.patch('/offers/:id/toggle', offerController.toggleOfferStatus);
+// DELETE /admin/offers/:id - Delete an offer
+router.delete('/offers/:id', offerController.deleteOffer);
+
+
+////coupon/////
+// GET /admin/coupons - Display all coupons
+router.get('/coupons', couponController.getAllCoupons);
+// POST /admin/coupons - Create a new coupon
+router.post('/coupons', couponController.createCoupon);
+// PUT /admin/coupons/:id - Update a coupon
+router.put('/coupons/:id', couponController.updateCoupon);
+// PATCH /admin/coupons/:id/toggle - Toggle coupon status
+router.patch('/coupons/:id/toggle', couponController.toggleCouponStatus);
+// DELETE /admin/coupons/:id - Delete a coupon
+router.delete('/coupons/:id', couponController.deleteCoupon);
+
 
 ////logout\\\\
 router.post('/logout', authController.logoutUser);
