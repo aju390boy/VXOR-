@@ -44,6 +44,11 @@
     .modal-content h2 { margin-top: 0; margin-bottom: 1.5rem; font-size: 1.75rem; color: #1a202c; text-align: center; }
     .modal-content .close { position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #a0aec0; transition: color 0.2s ease; }
     .modal-content .close:hover { color: #e53e3e; }
+    #editModal .modal-content form {
+    max-height: 80vh; /* Sets the max height to 65% of the browser window's height */
+    overflow-y: auto; /* Adds a scrollbar ONLY if the content is taller than the max-height */
+    padding-right: 10px; /* Adds a little space so the scrollbar doesn't overlap content */
+}
     @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
   </style>
 </head>

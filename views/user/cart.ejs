@@ -58,7 +58,14 @@
                         </div>
 
                         <div class="flex flex-col items-end gap-4">
-                            <span class="text-3xl font-bold mr-12 w-32 text-right">₹<%= item.price.toLocaleString() %></span>
+                            <div class="text-right mr-12 w-32">
+                              <% if (item.bestOffer) { %>
+                                 <span class="text-3xl font-bold text-red-500">₹<%= item.finalPrice.toLocaleString() %><span class="text-green-500 text-xs">(<%=  item.bestOffer.discountPercentage %>%OFF)</span></span>
+                                 <s class="text-2xl font-bold text-gray-200 mr-12 block">₹<%= item.originalPrice.toLocaleString() %></s>
+                              <% } else { %>
+                                <span class="text-3xl font-bold">₹<%= item.originalPrice.toLocaleString() %></span>
+                              <% } %>
+                            </div>
                             <div class="flex items-center gap-2 <%= item.isAvailable ? '' : 'pointer-events-none' %>">
                                 <button
                                     class="decrease-quantity-btn w-8 h-8 rounded-full flex items-center justify-center bg-gray-700 text-lg text-white hover:bg-indigo-600 transition-colors"
@@ -90,16 +97,29 @@
                 <div class="sticky top-8">
                     <div class="bg-gradient-to-br from-gray-900 to-gray-600 rounded-2xl p-8 shadow-xl">
                         <h2 class="text-2xl font-semibold mb-6 border-b border-gray-700 pb-4">Order Summary</h2>
-                        <div class="space-y-4 text-gray-300">
-                            <div class="flex justify-between"><span>Subtotal</span><span id="subtotal-value">₹<%= subtotal.toLocaleString() %></span></div>
-                            <div class="flex justify-between"><span>Shipping</span><span class="text-green-400">Free</span></div>
-                            <div class="flex justify-between"><span>Tax</span><span id="tax-value">₹<%= tax.toLocaleString() %></span></div>
-                        </div>
+                       <div class="space-y-4 text-gray-300">
+    <div class="flex justify-between">
+        <span>Subtotal (Original Price)</span>
+        <span id="subtotal-value">₹<%= subtotal %></span>
+    </div>
+    
+    <% if (totalDiscount > 0) { %>
+        <div class="flex justify-between text-green-400">
+            <span>Offer Discount</span>
+            <span>- ₹<%= totalDiscount %></span>
+        </div>
+    <% } %>
+
+    <div class="flex justify-between">
+        <span>Tax (5%)</span>
+        <span id="tax-value">₹<%= tax %></span>
+    </div>
+</div>
                         <div class="border-t border-gray-700 my-6"></div>
                         <div class="flex justify-between text-xl font-bold mb-6">
-                            <span>Total</span>
-                            <span id="total-value">₹<%= total.toLocaleString() %></span>
-                        </div>
+    <span>Total</span>
+    <span id="total-value">₹<%= total %></span>
+</div>
                         <button id="checkout-btn" class="w-full bg-gradient-to-br from-purple-900 to-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg text-lg transition-all duration-300 transform hover:scale-105 shadow-lg shadow-indigo-500/30">
                             Proceed to Checkout
                         </button>
@@ -212,7 +232,7 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         const cartItems = <%- JSON.stringify(cartItems) %>;
-        const message = <%- JSON.stringify(message) %>;
+        const message = <%- JSON.stringify(message || null) %>;
         if (message && message.text) {
             showAlert(message.icon, message.text);
         }

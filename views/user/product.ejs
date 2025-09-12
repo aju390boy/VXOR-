@@ -31,8 +31,6 @@
         <span class="text-sm toggle-arrow text-gray-400">▼</span>
       </div>
       <div id="categoryOptions" class="flex flex-col gap-1.5 mt-1.5">
-        <% // IMPORTANT: Loop through dynamic categories if available %>
-        <% // For now, use hardcoded values, but dynamically populate if possible %>
         <% const selectedCategories = Array.isArray(query.category) ? query.category : (query.category ? [query.category] : []); %>
         <label class="flex items-center text-xs"><input type="checkbox" name="category" value="MEN" class="mr-1.5 accent-gray-400" <%= selectedCategories.includes('MEN') ? 'checked' : '' %>> MEN</label>
         <label class="flex items-center text-xs"><input type="checkbox" name="category" value="WOMEN" class="mr-1.5 accent-gray-400" <%= selectedCategories.includes('WOMEN') ? 'checked' : '' %>> WOMEN</label>
@@ -107,7 +105,15 @@
             </div>
             <div class="p-2 text-center">
               <p class="font-bold text-white text-xs"><%= item.title %></p>
-              <p class="text-gray-400 font-bold text-xs">₹<%= item.display_price != null ? item.display_price.toFixed(2) : 'N/A' %></p>
+             <div class="text-gray-400 font-bold text-xs">
+    <% if (item.bestOffer) { %>
+        <s class="text-gray-500">₹<%= item.display_price.toFixed(0) %></s>
+        <span class="text-red-500">₹<%= item.discounted_price %></span>
+        <span class="text-green-500 text-xs">(<%= item.bestOffer.discountPercentage %>% OFF)</span>
+    <% } else { %>
+        <span>₹<%= item.display_price != null ? item.display_price.toFixed(0) : 'N/A' %></span>
+    <% } %>
+</div>
               <p class="text-xs">Rating: <%= '⭐'.repeat(item.rating) + (item.rating < 5 ? '☆' : '') %></p>
             </div>
           </div>
@@ -160,21 +166,28 @@
           const res = await axios.get(`/user/product-search?q=${encodeURIComponent(query)}`);
           const data = res.data;
           if (data.length > 0) {
-            resultsBox.innerHTML = data.map(item =>
-              `<a href="/user/product/${item._id}" class="item-link no-underline text-inherit">
-                <div class="item-block border border-gray-800 rounded-lg overflow-hidden hover:scale-105 transition bg-ye-500">
-                  <div class="product">
-                    <img src="${item.display_image_url}" alt="${item.title}" class="w-full h-60 object-cover" />
-                  </div>
-                  <div class="p-2 text-center">
-                    <p class="font-bold text-white text-xs">${item.title}</p>
-                    <p class="text-gray-400 font-bold text-xs">₹${item.display_price != null ? item.display_price.toFixed(2) : 'N/A'}</p>
-                    <p class="text-xs">Rating: ${'⭐'.repeat(item.rating) + (item.rating < 5 ? '☆' : '')}</p>
-                  </div>
-                </div>
-              </a>`).join('');
+            // Replace this line
+            resultsBox.innerHTML = data.map(item => `
+                <a href="/user/product/${item._id}" class="block p-2 hover:bg-gray-700">
+                    <div class="flex items-center">
+                        <img src="${item.display_image_url}" alt="${item.title}" class="w-10 h-10 object-cover mr-2">
+                        <div>
+                            <p class="font-bold text-white text-xs">${item.title}</p>
+                            
+                            <div class="text-gray-400 font-bold text-xs">
+                                ${item.bestOffer ? `
+                                    <s class="text-gray-500">₹${item.display_price.toFixed(0)}</s>
+                                    <span class="text-red-500">₹${item.discounted_price}</span>
+                                ` : `
+                                    <span>₹${item.display_price != null ? item.display_price.toFixed(0) : 'N/A'}</span>
+                                `}
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            `).join('');
             resultsBox.style.display = 'block';
-          } else {
+        } else {
             resultsBox.innerHTML = '<p class="no-result p-1.5 text-gray-600 text-center text-xs">No products found</p>';
             resultsBox.style.display = 'block';
           }

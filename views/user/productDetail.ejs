@@ -36,26 +36,29 @@
             <% } %>
         </div>
         <h2><%= product.title %></h2>
-        <p class="stock-status" id="stockStatus">IN STOCK</p> <div class="price-tag">
-            <span id="displayPrice">₹<%= product.display_price.toFixed(2) %></span>
-            <% if (product.regular_price && product.regular_price > product.display_price) { %>
-                <span class="original-price" id="originalPrice" style="text-decoration: line-through; color: #777; font-size: 1rem; margin-left: 10px;">
-                    ₹<%= product.regular_price.toFixed(2) %>
-                </span>
-                <span class="discount-percent" id="discountPercent">
-                    (<%= ((1 - (product.display_price / product.regular_price)) * 100).toFixed(0) %>% Off)
-                </span>
-            <% } else { %>
-                <span class="original-price" id="originalPrice" style="display:none;"></span>
-                <span class="discount-percent" id="discountPercent" style="display:none;"></span>
-            <% } %>
-        </div>
-        <% if (product.regular_price && product.regular_price > product.display_price) { %>
-            <p class="save-amount" id="saveAmount">You save ₹<%= (product.regular_price - product.display_price).toFixed(2) %></p>
-        <% } else { %>
-            <p class="save-amount" id="saveAmount" style="display:none;"></p>
-        <% } %>
+        <p class="stock-status" id="stockStatus">IN STOCK</p> 
+        <!-- //////////first updation/////// -->
+       <span id="offerPercentage" data-value="<%= bestOffer ? bestOffer.discountPercentage : 0 %>" class="hidden"></span>
 
+<div class="price-tag">
+    <% if (bestOffer) { %>
+        <% const discountedPrice = product.display_price * (1 - bestOffer.discountPercentage / 100); %>
+        <span id="displayPrice" class="text-3xl font-bold text-red-600">₹<%= discountedPrice.toFixed(0) %></span>
+        <span id="originalPrice" class="text-xl text-gray-500 line-through ml-2">₹<%= product.display_price.toFixed(0) %></span>
+        <span id="discountPercent" class="text-lg text-green-600 font-semibold ml-4">(<%= bestOffer.discountPercentage %>% OFF)</span>
+    <% } else { %>
+        <span id="displayPrice" class="text-3xl font-bold text-gray-900">₹<%= product.display_price.toFixed(0) %></span>
+        <span id="originalPrice" class="hidden"></span>
+        <span id="discountPercent" class="hidden"></span>
+    <% } %>
+</div>
+
+<% if (bestOffer) { %>
+    <p class="save-amount text-sm" id="saveAmount">Special Offer: <%= bestOffer.name %></p>
+<% } else { %>
+    <p class="save-amount hidden" id="saveAmount"></p>
+<% } %>
+<!-- ///////first updation end//////////// -->
         <% if (product.product_type && product.product_type.length) { %>
             <div class="available-types">
                 <h3>AVAILABLE TYPES</h3>
@@ -175,7 +178,18 @@
 
             <div class="product-card-info">
                 <h3 class="product-card-title"><%= similarProduct.title %></h3>
-                <p class="product-card-price">From ₹<%= (similarProduct.min_price || 0).toFixed(2) %></p>
+                <!-- //////////////second updation///////// -->
+              <% if (similarProduct.bestOffer) { %>
+    <% const discountedPrice = similarProduct.min_price * (1 - similarProduct.bestOffer.discountPercentage / 100); %>
+    <div class="product-card-price">
+        <s class="text-gray-500">₹<%= similarProduct.min_price.toFixed(0) %></s> 
+        <strong class="text-red-600">₹<%= discountedPrice.toFixed(0) %></strong>
+        <span class="text-xs text-green-600 font-semibold"><%= similarProduct.bestOffer.discountPercentage %>% OFF</span>
+    </div>
+<% } else { %>
+    <p class="product-card-price">From ₹<%= (similarProduct.min_price || 0).toFixed(0) %></p>
+<% } %>
+                <!-- ///////second updation end////////// -->
             </div>
         </a>
     <% }) %>
@@ -183,6 +197,7 @@
 <script>
     document.addEventListener("DOMContentLoaded", () => {
         const productData = <%- JSON.stringify(product) %>;
+         const offerPercentage = parseFloat(document.getElementById('offerPercentage').dataset.value) || 0;
         const mainImage = document.getElementById('mainImage');
         const thumbnailWrapper = document.getElementById('thumbnailWrapper');
         const quantityValueSpan = document.getElementById('quantityValue');
@@ -300,62 +315,68 @@
             updatePriceAndStock(); 
         }
 
+        /////////third updation///////
         function updatePriceAndStock() {
-            const selectedColorVariant = productData.colorVariants[currentSelectedColorIndex];
-            let priceFound = false;
-            let stockFound = false;
+        const selectedColorVariant = productData.colorVariants[currentSelectedColorIndex];
+        let priceFound = false;
+        let stockFound = false;
 
-            if (selectedColorVariant && selectedColorVariant.variants && currentSelectedSize) {
-                const selectedVariant = selectedColorVariant.variants.find(v => v.size === currentSelectedSize);
-                if (selectedVariant) {
-                    displayPriceSpan.textContent = `₹${selectedVariant.price.toFixed(2)}`;
-                    priceFound = true;
-                    const initialProductRegularPrice = productData.regular_price;
-
-                    if (initialProductRegularPrice && initialProductRegularPrice > selectedVariant.price) {
-                        originalPriceSpan.textContent = `₹${initialProductRegularPrice.toFixed(2)}`;
-                        originalPriceSpan.style.display = 'inline';
-                        const discount = ((1 - (selectedVariant.price / initialProductRegularPrice)) * 100).toFixed(0);
-                        discountPercentSpan.textContent = `(${discount}% Off)`;
-                        discountPercentSpan.style.display = 'inline';
-                        saveAmountSpan.textContent = `You save ₹${(initialProductRegularPrice - selectedVariant.price).toFixed(2)}`;
-                        saveAmountSpan.style.display = 'block';
-                    } else {
-                        originalPriceSpan.style.display = 'none';
-                        discountPercentSpan.style.display = 'none';
-                        saveAmountSpan.style.display = 'none';
-                    }
-
-                    if (selectedVariant.stock > 0) {
-                        stockStatusSpan.textContent = `IN STOCK (${selectedVariant.stock} available)`;
-                        stockStatusSpan.style.color = 'green';
-                        quantityValueSpan.dataset.maxStock = selectedVariant.stock;
-                    } else {
-                        stockStatusSpan.textContent = 'OUT OF STOCK';
-                        stockStatusSpan.style.color = 'red';
-                        quantityValueSpan.dataset.maxStock = 0;
-                    }
-                    stockFound = true;
+        if (selectedColorVariant && selectedColorVariant.variants && currentSelectedSize) {
+            const selectedVariant = selectedColorVariant.variants.find(v => v.size === currentSelectedSize);
+            
+            if (selectedVariant) {
+                const originalPrice = selectedVariant.price;
+                priceFound = true;
+                
+                if (offerPercentage > 0) {
+                    // Offer exists, calculate and display discounted price
+                    const discountedPrice = originalPrice * (1 - offerPercentage / 100);
+                    displayPriceSpan.textContent = `₹${discountedPrice.toFixed(0)}`;
+                    originalPriceSpan.textContent = `₹${originalPrice.toFixed(0)}`;
+                    discountPercentSpan.textContent = `(${offerPercentage}% OFF)`;
+                    originalPriceSpan.style.display = 'inline';
+                    discountPercentSpan.style.display = 'inline';
+                } else {
+                    // No offer, display regular price
+                    displayPriceSpan.textContent = `₹${originalPrice.toFixed(0)}`;
+                    originalPriceSpan.style.display = 'none';
+                    discountPercentSpan.style.display = 'none';
                 }
+                
+                // Stock logic (remains the same)
+                if (selectedVariant.stock > 0) {
+                    stockStatusSpan.textContent = `IN STOCK (${selectedVariant.stock} available)`;
+                    stockStatusSpan.style.color = 'green';
+                    quantityValueSpan.dataset.maxStock = selectedVariant.stock;
+                } else {
+                    stockStatusSpan.textContent = 'OUT OF STOCK';
+                    stockStatusSpan.style.color = 'red';
+                    quantityValueSpan.dataset.maxStock = 0;
+                }
+                stockFound = true;
             }
-            if (!priceFound) {
-                displayPriceSpan.textContent = `₹0.00`;
-                originalPriceSpan.style.display = 'none';
-                discountPercentSpan.style.display = 'none';
-                saveAmountSpan.style.display = 'none';
-            }
-            if (!stockFound) {
-                stockStatusSpan.textContent = 'Unavailable';
-                stockStatusSpan.style.color = 'orange';
-                quantityValueSpan.dataset.maxStock = 0;
-            }
-
-            if (currentQuantity > parseInt(quantityValueSpan.dataset.maxStock)) {
-                currentQuantity = Math.max(1, parseInt(quantityValueSpan.dataset.maxStock));
-                quantityValueSpan.textContent = currentQuantity;
-            }
-            updateQuantityButtons();
         }
+
+        if (!priceFound) {
+            displayPriceSpan.textContent = `₹0.00`;
+            originalPriceSpan.style.display = 'none';
+            discountPercentSpan.style.display = 'none';
+        }
+        if (!stockFound) {
+            stockStatusSpan.textContent = 'Unavailable';
+            stockStatusSpan.style.color = 'orange';
+            quantityValueSpan.dataset.maxStock = 0;
+        }
+
+        // Quantity adjustment logic (remains the same)
+        let currentQuantity = parseInt(quantityValueSpan.textContent);
+        if (currentQuantity > parseInt(quantityValueSpan.dataset.maxStock)) {
+            currentQuantity = Math.max(1, parseInt(quantityValueSpan.dataset.maxStock));
+            quantityValueSpan.textContent = currentQuantity;
+        }
+        updateQuantityButtons();
+    }
+        ////////third updation end///////
 
        
         if (productData && productData.colorVariants && productData.colorVariants.length > 0) {

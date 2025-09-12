@@ -1,5 +1,6 @@
 const Product=require('../../model/product.js');
 const Cart = require('../../model/cart.js')
+const {findBestOffer} = require('../../utils/offerHelper.js');
 
 exports.addToCart = async (req, res) => {
 
@@ -55,7 +56,7 @@ exports.getCart = async (req, res) => {
     const TAX_RATE = 0.05; 
     
     const message = req.session.message;
-    req.session.message = null;
+    delete req.session.message; // Clear message after reading
 
     try {
         const cart = await Cart.findOne({ userId })
@@ -63,8 +64,8 @@ exports.getCart = async (req, res) => {
                 path: 'items.productId',
                 select: 'title description colorVariants isListed category_id brand_id isDeleted',
                 populate: [ 
-                    { path: 'category_id', select: 'isListed' },
-                    { path: 'brand_id', select: 'isListed' }
+                    { path: 'category_id', select: 'name isListed' }, // Also populate name for the helper
+                    { path: 'brand_id', select: 'name isListed' }
                 ]
             })
             .lean();
@@ -73,63 +74,76 @@ exports.getCart = async (req, res) => {
             return res.render('user/cart', {
                 cartItems: [],
                 subtotal: 0,
+                totalDiscount: 0,
                 tax: 0,
                 total: 0,
                 message: message 
             });
         }
         
-        let subtotal = 0;
-        const cartItemsForEJS = cart.items.map(item => {
+        // 2. Initialize variables for original and offer-applied prices
+        let originalSubtotal = 0;
+        let offerSubtotal = 0;
+
+        // 3. Use Promise.all to handle async operations inside map
+        const cartItemsForEJS = await Promise.all(cart.items.map(async (item) => {
             const product = item.productId;
-            if (!product) {
-                console.error('Product not found for item in cart:', item._id);
-                return null;
-            }
+            if (!product) return null;
 
             const colorVariant = product.colorVariants.find(c => c.colorName === item.colorName);
             const sizeVariant = colorVariant ? colorVariant.variants.find(s => s.size === item.size) : null;
             
-            const price = sizeVariant ? sizeVariant.price : 0;
+            const originalPrice = sizeVariant ? sizeVariant.price : 0;
             const stock = sizeVariant ? sizeVariant.stock : 0;
-            const isAvailable = !product.isDeleted && 
-                                product.isListed && 
-                                product.category_id && 
-                                product.category_id.isListed && 
-                                product.brand_id && 
-                                product.brand_id.isListed &&
-                                stock > 0;
 
-            if (isAvailable) {
-                const itemTotal = price * item.quantity;
-                subtotal += itemTotal;
+            const isAvailable = !product.isDeleted && product.isListed && product.category_id?.isListed && product.brand_id?.isListed && stock > 0;
+
+            // 4. Find the best offer for each item
+            const bestOffer = isAvailable ? await findBestOffer(product._id, product.category_id?._id, product.brand_id?._id) : null;
+            
+            // 5. Calculate the final price after offer
+            let finalPrice = originalPrice;
+            if (bestOffer) {
+                finalPrice = originalPrice * (1 - bestOffer.discountPercentage / 100);
             }
 
-            const imagePath = colorVariant && colorVariant.images && colorVariant.images.length > 0 
-                ? `/uploads/products/${colorVariant.images[0]}` 
-                : '/images/placeholder.png';
+            if (isAvailable) {
+                originalSubtotal += originalPrice * item.quantity;
+                offerSubtotal += finalPrice * item.quantity;
+            }
+
+            const imagePath = colorVariant?.images?.[0] ? `/uploads/products/${colorVariant.images[0]}` : '/images/placeholder.png';
 
             return {
                 id: item._id.toString(),
+                productId: product._id.toString(),
                 name: product.title,
                 image: imagePath,
                 size: item.size,
                 colorName: item.colorName,
-                price: price,
+                originalPrice: originalPrice, // Price before offer
+                finalPrice: finalPrice,       // Price after offer
                 quantity: item.quantity,
                 stock: stock,
-                isAvailable: isAvailable
+                isAvailable: isAvailable,
+                bestOffer: bestOffer          // Pass offer details to EJS
             };
-        }).filter(item => item !== null);
+        }));
 
-        const tax = subtotal * TAX_RATE;
-        const total = subtotal + tax;
+        const validCartItems = cartItemsForEJS.filter(item => item !== null);
+
+        // 6. Calculate all final totals
+        const totalDiscount = originalSubtotal - offerSubtotal;
+        const tax = offerSubtotal * TAX_RATE;
+        const total = offerSubtotal + tax;
 
         res.render('user/cart', {
-            cartItems: cartItemsForEJS,
-            subtotal: subtotal.toFixed(2),
+            cartItems: validCartItems,
+            subtotal: originalSubtotal.toFixed(2), // The price before any discounts
+            totalDiscount: totalDiscount.toFixed(2), // The amount saved
+            finalTotal: offerSubtotal.toFixed(2),    // The price after offer, before tax
             tax: tax.toFixed(2),
-            total: total.toFixed(2),
+            total: total.toFixed(2),                 // The final amount to pay
             message: message 
         });
 

@@ -4,6 +4,8 @@ const bcrypt = require("bcrypt");
 const multer = require("multer");
 const path = require("path");
 const Address = require("../../model/address.js");
+const Wishlist = require('../../model/wishlist.js');
+const Wallet = require('../../model/wallet.js');
 const fs = require("fs").promises;
 const mongoose = require("mongoose");
 const Order = require("../../model/order.js");
@@ -11,6 +13,7 @@ const { log } = require("console");
 const Otp = require("../../model/otp.js");
 const { sendMail } = require("../../utils/otpMailer1.js");
 const crypto = require("crypto");
+const {findBestOffer} = require('../../utils/offerHelper.js');
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -108,13 +111,71 @@ exports.getProfileSection = async (req, res) => {
         );
         templatePath = "user/profile/partials/_profileDetails";
         break;
-      case "wishlist":
-      case "wallet":
-        templatePath = "user/profile/partials/_comingSoon";
-        data.message = `${
-          sectionName.charAt(0).toUpperCase() + sectionName.slice(1)
-        } Section is coming soon!`;
+      
+        case "wishlist": // --- NEW WISHLIST LOGIC ---
+        const wishlist = await Wishlist.findOne({ user_id: user._id })
+            .populate({
+                path: 'products.product_id',
+                model: 'Product', // Ensure you specify the model name
+                populate: [ // Nested populate to get data needed for offer checks
+                    { path: 'category_id', select: 'name' },
+                    { path: 'brand_id', select: 'name' }
+                ]
+            })
+            .lean();
+
+        let wishlistItemsWithOffers = [];
+        if (wishlist && wishlist.products.length > 0) {
+            // Use Promise.all to efficiently find offers for all items
+            wishlistItemsWithOffers = await Promise.all(
+                wishlist.products.map(async (item) => {
+                    const product = item.product_id;
+                    if (!product || product.isDeleted || !product.isListed) return null;
+                    
+                    // Find the best offer for this wishlist item
+                    const bestOffer = await findBestOffer(product._id, product.category_id?._id, product.brand_id?._id);
+
+                    // Prepare a clean object for the template
+                    const displayImageUrl = product.colorVariants?.[0]?.images?.[0]
+                        ? `/uploads/products/${product.colorVariants[0].images[0]}`
+                        : '/images/placeholder.png';
+                    
+                    let discountedPrice = null;
+                    if (bestOffer && product.min_price > 0) {
+                        discountedPrice = product.min_price * (1 - bestOffer.discountPercentage / 100);
+                    }
+
+                    return { 
+                        ...product, 
+                        bestOffer, 
+                        display_image_url: displayImageUrl,
+                        discounted_price: discountedPrice
+                    };
+                })
+            );
+        }
+        
+        data.wishlistItems = wishlistItemsWithOffers.filter(item => item !== null);
+        templatePath = "user/profile/partials/_wishlist"; // Your wishlist partial
         break;
+        case "wallet": // --- NEW WALLET LOGIC ---
+        let wallet = await Wallet.findOne({ user_id: user._id }).lean();
+
+        // If a user has no wallet yet, create a default view for them
+        if (!wallet) {
+            wallet = {
+                balance: 0,
+                transactions: []
+            };
+        } else {
+            // Reverse transactions to show the newest first
+            wallet.transactions.reverse();
+        }
+        
+        data.wallet = wallet;
+        templatePath = "user/profile/partials/_wallet";
+        break;
+
       case "orders":
         const orders = await Order.find({ user_id: user._id })
           .select("order_id total_amount payment_status createdAt products")

@@ -59,6 +59,8 @@ router.get('/cart/count',isAuthenticated,cartController.getCartCount);
 
 ////checkout////place order////success////
 router.get('/checkout',isAuthenticated,checkoutController.getCheckout);
+router.post('/apply-coupon', checkoutController.applyCoupon);
+router.post('/remove-coupon', checkoutController.removeCoupon);
 router.post('/place-order/cod',isAuthenticated,placeorderController.placeOrder);
 router.post('/checkout/address/set-default/:addressId',isAuthenticated, placeorderController.setDefaultAddress);
 router.get('/success',isAuthenticated,successController.getSuccess);
