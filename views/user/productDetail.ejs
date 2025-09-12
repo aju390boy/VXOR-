@@ -27,7 +27,9 @@
     </div>
 
     <div class="detail-info">
-        <p class="product-breadcrumb">Product / <%= product.category_id ? product.category_id.name : 'Category' %> / <%= product.title %></p>
+        <p class="product-breadcrumb">Product / <%= product.category_id ? product.category_id.name : 'Category' %> / <%= product.title %><button id="addToWishlistBtn" data-product-id="<%= product._id %>" title="Add to Wishlist">
+    <i class="fa-solid fa-heart"></i>
+</button></p>
         <div class="product-rating">
             <% if (product.rating > 0) { %>
                 <%= '⭐'.repeat(product.rating) %> (<%= product.rating %> Reviews)
@@ -575,7 +577,28 @@
                 }
             });
         }
+
+        //////wishlist //////
+        const wishlistBtn = document.getElementById('addToWishlistBtn');
+wishlistBtn.addEventListener('click', async () => {
+    const productId = wishlistBtn.dataset.productId;
+    try {
+        const response = await fetch(`/user/wishlist/add/${productId}`, { method: 'POST' });
+        const data = await response.json();
+
+        if (response.ok) {
+            // Change button style to show it's been added
+            wishlistBtn.innerHTML = '❤️'; // Example: Filled heart
+             showAlert('success', data.message);
+        } else {
+             showAlert('error', data.message);
+        }
+    } catch (error) {
+        showAlert('error', 'A network error occurred.');
+    }
+});
     });
+
 </script>
 <style>
     

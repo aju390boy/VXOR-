@@ -11,7 +11,8 @@ const checkoutController = require('../controllers/user/checkoutController.js');
 const placeorderController = require('../controllers/user/placeorderController.js');
 const successController = require('../controllers/user/successController.js');
 const orderdetailController = require('../controllers/user/orderdetailController..js');
-const orderController=require('../controllers/user/orderController.js')
+const orderController=require('../controllers/user/orderController.js');
+const wishlistController=require('../controllers/user/wishlistController.js')
 
 router.route('/home')
   .get(userController.getHome);
@@ -20,6 +21,7 @@ router.route('/product')
     .get(isAuthenticated, productController.getAllProducts);
 
 router.get('/product-search', productController.liveSearch);
+router.get('/product-variants/:productId', productController.getProductVariants);
 
 ///product Detail\\\\\
 
@@ -47,6 +49,11 @@ router.post('/profile/address/edit/:addressId', isAuthenticated, profileControll
 router.post('/profile/address/remove/:addressId', isAuthenticated, profileController.removeAddress);
 router.post('/profile/address/set-default/:addressId',isAuthenticated, profileController.setDefaultAddress);
 
+
+///wishlist///
+router.post('/wishlist/add/:productId', wishlistController.addToWishlist);
+router.delete('/wishlist/remove/:productId', wishlistController.removeFromWishlist);
+
 //////cart////
 // Route to add a product to the user's cart
 // The 'protect' middleware ensures the user is authenticated and `req.user` is available
@@ -73,6 +80,8 @@ router.get('/order-detail', isAuthenticated, orderdetailController.getOrderDetai
 router.post('/cancel-item',isAuthenticated, orderdetailController.cancelItem);
 router.post('/return-item',isAuthenticated, orderdetailController.returnItem);
 router.get('/invoice',isAuthenticated, orderdetailController.downloadInvoice);
+
+
 
 
 

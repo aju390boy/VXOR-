@@ -34,7 +34,8 @@
                     <div class="flex items-center gap-4">
                         <button 
                             class="move-to-cart-btn bg-gradient-to-br from-purple-900 to-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg text-sm transition-all duration-300 transform hover:scale-105"
-                            data-product-id="<%= item._id %>">
+                            data-product-id="<%= item._id %>"
+                            data-title="<%= item.title %>">
                             Move to Cart
                         </button>
                         
@@ -50,11 +51,11 @@
         </div>
     <% } else { %>
         <!-- Empty Wishlist State -->
-        <div class="w-full flex flex-col items-center justify-center text-center p-12">
-            <img src="/images/wishlist-empty.png" alt="An empty box with a heart" class="w-64 h-auto mb-6" />
+        <div class="w-full flex flex-col items-center justify-center text-center p-4">
+            <img src="/images/wishlist.png" alt="An empty box with a heart" class="w-96 h-auto mb-6" />
             <h2 class="text-3xl font-bold text-gray-200 mb-2">Your Wishlist is Empty</h2>
             <p class="text-gray-400 mb-6 max-w-md">Add items you love to your wishlist. We'll keep them here for you.</p>
-            <a href="/user/product" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg shadow-indigo-500/30">
+            <a href="/user/product" class="bg-purple-900 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg shadow-indigo-500/30">
                 Discover Products
             </a>
         </div>

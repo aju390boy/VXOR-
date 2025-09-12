@@ -67,7 +67,25 @@
     </div>
 </main>
 </div>
+<!-- ///variant selecting modal/// -->
+<div id="variantSelectorModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 hidden">
+    <div class="bg-gray-800 p-6 rounded-lg shadow-xl max-w-sm w-full relative">
+        <button id="closeVariantModalBtn" class="absolute top-4 right-4 text-gray-400 hover:text-white">&times;</button>
+        <h4 id="variantModalTitle" class="text-xl font-bold mb-4">Select Options</h4>
+        
+        <div class="color-options mb-4">
+            <h3>COLOR: <span id="variantModalSelectedColor"></span></h3>
+            <div id="variantModalColorSelector" class="flex items-center gap-2 mt-2"></div>
+        </div>
 
+        <div class="select-size mb-6">
+            <h3>SELECT SIZE</h3>
+            <div id="variantModalSizeSelector" class="flex flex-wrap gap-2 mt-2"></div>
+        </div>
+
+        <button id="modalAddToCartBtn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">Add to Cart</button>
+    </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -112,9 +130,37 @@
         form.querySelectorAll('.error-message').forEach(el => el.textContent = '');
         form.querySelectorAll('input').forEach(input => input.classList.remove('border-red-500'));
     };  
+    ////////
+     let variantsData = [];
+     function populateVariantModal(variants, productTitle) {
+        variantsData = variants; 
+        const titleEl = document.getElementById('variantModalTitle');
+        const colorSelector = document.getElementById('variantModalColorSelector');
+        const sizeSelector = document.getElementById('variantModalSizeSelector');
+        const selectedColorSpan = document.getElementById('variantModalSelectedColor');
+        
+        colorSelector.innerHTML = '';
+        sizeSelector.innerHTML = '';
+        titleEl.innerText = productTitle || 'Select Options';
+        selectedColorSpan.innerText = '';
+
+        if (!variants || variants.length === 0) return;
+
+        variants.forEach((colorVar, index) => {
+            const colorDot = document.createElement('span');
+            colorDot.className = 'w-6 h-6 rounded-full border-2 border-transparent cursor-pointer';
+            colorDot.style.backgroundColor = colorVar.colorName;
+            colorDot.dataset.colorName = colorVar.colorName;
+            colorDot.dataset.index = index;
+            colorSelector.appendChild(colorDot);
+        });
+    }
+    ///////////////
     document.addEventListener('DOMContentLoaded', () => {
         const profileContentArea = document.getElementById('profile-content');
         const sidebarLinks = document.querySelectorAll('.sidebar-link');
+        const variantModal = document.getElementById('variantSelectorModal');
+        let activeProductId = null;
 
         const loadSection = async (sectionName) => {
             try {
@@ -139,12 +185,14 @@
                 loadSection(sectionName);
             });
         });
-        profileContentArea.addEventListener('click', (e) => {
+        profileContentArea.addEventListener('click', async(e) => {
             const removeBtn = e.target.closest('.remove-address-btn');
             const editBtn = e.target.closest('.edit-address-btn');
             const setDefaultBtn = e.target.closest('.set-default-btn');
             const addNewAddressBtn = e.target.closest('#addNewAddressBtn');
             const editProfileModal = e.target.closest('#editProfileModal');
+            const removeWishlistBtn = e.target.closest('.remove-from-wishlist-btn'); 
+            const moveToCartBtn = e.target.closest('.move-to-cart-btn');
 
             if (removeBtn) {
                 const addressId = removeBtn.dataset.addressId;
@@ -194,10 +242,75 @@
                 });
             } else if (addNewAddressBtn) {
                 openModal('addAddressModal');
-            } else if (editProfileModal && e.target === editProfileModal) {
+            }else if (removeWishlistBtn) { // --- ADD THIS ENTIRE 'ELSE IF' BLOCK ---
+    const productId = removeWishlistBtn.dataset.productId;
+    const wishlistItemCard = removeWishlistBtn.closest('.flex.items-center');
+
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "This item will be removed from your wishlist.",
+        icon: 'warning',
+        width:'400px',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, remove it!',
+        cancelButtonText: 'Cancel',
+        reverseButtons: true,
+        customClass: { 
+            popup: 'swal-dark-bg', 
+            title: 'swal-dark-title', 
+            content: 'swal-dark-content', 
+            confirmButton: 'swal-dark-button', 
+            cancelButton: 'swal-dark-button' 
+        }
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                const response = await fetch(`/user/wishlist/remove/${productId}`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    // Remove the item from the page for instant feedback
+                    wishlistItemCard.remove();
+                    Swal.fire({ 
+                        icon: 'success', 
+                        title: 'Removed!', 
+                        text: data.message, 
+                        width:'400px',
+                        customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
+                    });
+                    window.location.href = '/user/profile?section=wishlist';
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Error!', text: data.message, width:'400px', customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' } });
+                }
+            } catch (error) {
+                console.error('Error removing from wishlist:', error);
+                Swal.fire({ icon: 'error', title: 'Network Error!', text: 'Could not connect to server.', width:'400px', customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' } });
+            }
+        }
+    });
+}else if (moveToCartBtn) { // --- ADD THIS ENTIRE 'ELSE IF' BLOCK ---
+                activeProductId = moveToCartBtn.dataset.productId;
+                const productTitle = moveToCartBtn.dataset.title;
+
+                try {
+                    const response = await fetch(`/user/product-variants/${activeProductId}`);
+                    if (!response.ok) throw new Error('Could not fetch product details.');
+                    const variants = await response.json();
+                    
+                    populateVariantModal(variants, productTitle);
+                    openModal('variantSelectorModal'); // Assuming you have a generic openModal function
+                } catch (error) {
+                    console.error("Could not fetch variants:", error);
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'Could not load product options.' });
+                }
+            } 
+else if (editProfileModal && e.target === editProfileModal) {
                  closeModal('editProfileModal');
             }
         });
+
         profileContentArea.addEventListener('submit', async (e) => {
             e.preventDefault();
             const form = e.target;
@@ -396,6 +509,79 @@
                 if (query === "") { loadSection('orders'); } else { debouncedSearch(query); }
             }
         });
+
+        //////
+        if (variantModal) {
+            const colorSelector = document.getElementById('variantModalColorSelector');
+            const sizeSelector = document.getElementById('variantModalSizeSelector');
+            const addToCartBtn = document.getElementById('modalAddToCartBtn');
+            const closeBtn = document.getElementById('closeVariantModalBtn');
+
+            colorSelector.addEventListener('click', (e) => {
+                if (e.target.classList.contains('w-6')) {
+                    colorSelector.querySelectorAll('.w-6').forEach(dot => dot.classList.remove('border-white'));
+                    e.target.classList.add('border-white');
+                    const colorIndex = e.target.dataset.index;
+                    const selectedColor = variantsData[colorIndex];
+                    document.getElementById('variantModalSelectedColor').innerText = selectedColor.colorName;
+
+                    sizeSelector.innerHTML = '';
+                    selectedColor.variants.forEach(sizeVar => {
+                        const sizeBtn = document.createElement('button');
+                        sizeBtn.className = 'border border-gray-600 px-3 py-1 rounded hover:bg-purple-600';
+                        sizeBtn.innerText = sizeVar.size;
+                        sizeBtn.dataset.size = sizeVar.size;
+                        sizeSelector.appendChild(sizeBtn);
+                    });
+                }
+            });
+
+            sizeSelector.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON') {
+                    sizeSelector.querySelectorAll('button').forEach(btn => btn.classList.remove('bg-purple-600'));
+                    e.target.classList.add('bg-purple-600');
+                }
+            });
+
+            addToCartBtn.addEventListener('click', async () => {
+                const selectedColorEl = colorSelector.querySelector('.border-white');
+                const selectedSizeEl = sizeSelector.querySelector('.bg-purple-600');
+
+                if (!selectedColorEl || !selectedSizeEl) {
+                    Swal.fire({ icon: 'error', title: 'Selection Missing', text: 'Please select a color and size.' });
+                    return;
+                }
+
+                const colorName = selectedColorEl.dataset.colorName;
+                const size = selectedSizeEl.dataset.size;
+
+                try {
+                    const cartResponse = await fetch('/user/cart', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ productId: activeProductId, colorName, size, quantity: 1 })
+                    });
+                    const cartData = await cartResponse.json();
+                    if (!cartResponse.ok) throw new Error(cartData.message);
+
+                    const wishlistResponse = await fetch(`/user/wishlist/remove/${activeProductId}`, { method: 'DELETE' });
+                    const wishlistData = await wishlistResponse.json();
+                    if (!wishlistResponse.ok) throw new Error(wishlistData.message);
+                    
+                    closeModal('variantSelectorModal');
+                    Swal.fire({ icon: 'success', title: 'Success!', text: 'Item moved to cart!' });
+                    loadSection('wishlist'); // Reload the wishlist section
+
+                } catch (error) {
+                    console.error("Move to cart error:", error);
+                    Swal.fire({ icon: 'error', title: 'Error', text: error.message || 'An error occurred.' });
+                }
+            });
+
+            closeBtn.addEventListener('click', () => closeModal('variantSelectorModal'));
+        }
+
+        //////
         const urlParams = new URLSearchParams(window.location.search);
         const defaultSection = urlParams.get('section') || 'profile';
         const initialLink = document.querySelector(`.sidebar-link[data-section="${defaultSection}"]`);
@@ -404,6 +590,8 @@
         } else {
             document.querySelector('.sidebar-link[data-section="profile"]')?.click();
         }
+
+
     });
 </script>
 

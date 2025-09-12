@@ -6,6 +6,7 @@ const path = require("path");
 const Address = require("../../model/address.js");
 const Wishlist = require('../../model/wishlist.js');
 const Wallet = require('../../model/wallet.js');
+const Cart = require('../../model/cart.js');
 const fs = require("fs").promises;
 const mongoose = require("mongoose");
 const Order = require("../../model/order.js");
@@ -112,52 +113,52 @@ exports.getProfileSection = async (req, res) => {
         templatePath = "user/profile/partials/_profileDetails";
         break;
       
-        case "wishlist": // --- NEW WISHLIST LOGIC ---
-        const wishlist = await Wishlist.findOne({ user_id: user._id })
-            .populate({
-                path: 'products.product_id',
-                model: 'Product', // Ensure you specify the model name
-                populate: [ // Nested populate to get data needed for offer checks
-                    { path: 'category_id', select: 'name' },
-                    { path: 'brand_id', select: 'name' }
-                ]
+        case "wishlist":
+     const cart = await Cart.findOne({ userId: user._id }).select('items.productId').lean();
+    const cartProductIds = new Set(cart ? cart.items.map(item => item.productId.toString()) : []);
+    const wishlist = await Wishlist.findOne({ user_id: user._id })
+        .populate({
+            path: 'products.product_id',
+            model: 'Product',
+            populate: [
+                { path: 'category_id', select: 'name' },
+                { path: 'brand_id', select: 'name' }
+            ]
+        })
+        .lean();
+    let processedWishlistItems = [];
+    if (wishlist && wishlist.products.length > 0) {
+        const filteredProducts = wishlist.products.filter(wishlistItem => {
+            const product = wishlistItem.product_id;
+            if (!product) {
+                return false; 
+            }
+            return !cartProductIds.has(product._id.toString());
+        });
+        processedWishlistItems = await Promise.all(
+            filteredProducts.map(async (item) => {
+                const product = item.product_id; 
+                if (product.isDeleted || !product.isListed) return null;
+                const bestOffer = await findBestOffer(product._id, product.category_id?._id, product.brand_id?._id);
+                const displayImageUrl = product.colorVariants?.[0]?.images?.[0]
+                    ? `/uploads/products/${product.colorVariants[0].images[0]}`
+                    : '/images/placeholder.png'; 
+                let discountedPrice = null;
+                if (bestOffer && product.min_price > 0) {
+                    discountedPrice = product.min_price * (1 - bestOffer.discountPercentage / 100);
+                }
+                return { 
+                    ...product, 
+                    bestOffer, 
+                    display_image_url: displayImageUrl,
+                    discounted_price: discountedPrice
+                };
             })
-            .lean();
-
-        let wishlistItemsWithOffers = [];
-        if (wishlist && wishlist.products.length > 0) {
-            // Use Promise.all to efficiently find offers for all items
-            wishlistItemsWithOffers = await Promise.all(
-                wishlist.products.map(async (item) => {
-                    const product = item.product_id;
-                    if (!product || product.isDeleted || !product.isListed) return null;
-                    
-                    // Find the best offer for this wishlist item
-                    const bestOffer = await findBestOffer(product._id, product.category_id?._id, product.brand_id?._id);
-
-                    // Prepare a clean object for the template
-                    const displayImageUrl = product.colorVariants?.[0]?.images?.[0]
-                        ? `/uploads/products/${product.colorVariants[0].images[0]}`
-                        : '/images/placeholder.png';
-                    
-                    let discountedPrice = null;
-                    if (bestOffer && product.min_price > 0) {
-                        discountedPrice = product.min_price * (1 - bestOffer.discountPercentage / 100);
-                    }
-
-                    return { 
-                        ...product, 
-                        bestOffer, 
-                        display_image_url: displayImageUrl,
-                        discounted_price: discountedPrice
-                    };
-                })
-            );
-        }
-        
-        data.wishlistItems = wishlistItemsWithOffers.filter(item => item !== null);
-        templatePath = "user/profile/partials/_wishlist"; // Your wishlist partial
-        break;
+        );
+    }
+    data.wishlistItems = processedWishlistItems.filter(item => item !== null);
+    templatePath = "user/profile/partials/_wishlist";
+    break;
         case "wallet": // --- NEW WALLET LOGIC ---
         let wallet = await Wallet.findOne({ user_id: user._id }).lean();
 
