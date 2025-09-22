@@ -1,5 +1,11 @@
-<div class="bg-gray-800 text-white text-center py-1 text-xs fixed top-0 w-full z-10">
- Get 25% OFF on your first order. <a href="/user/order" class="text-red-600 underline hover:text-gray-400">Order now</a>
+<div class="bg-gray-800 text-white text-center  text-xs fixed top-0 w-full z-10 flex justify-center items-center gap-2">
+  <% if (referralCode) { %>
+    <span class="font-awesome  text-gray-300 uppercase tracking-wide px-2 py-1 bg-gray-800 rounded shadow-lg">
+      Your Referral Code: <%= referralCode %>
+    </span>
+  <% } else { %>
+    <span class="text-gray-400">Referral code not available</span>
+  <% } %>
 </div>
 
 <nav class="flex justify-between items-center bg-black border-gray-400 py-3 px-6 fixed top-5 w-full z-[9]">
@@ -8,8 +14,8 @@
     </div>
     <div class="nav-center flex justify-center flex-grow gap-3">
         <a href="/user/home" class="text-gray-400 font-semibold hover:text-white transition text-sm">HOME</a>
-        <a href="/user/category" class="text-gray-400 font-semibold hover:text-white transition text-sm">CATEGORY</a>
-        <a href="/user/brand" class="text-gray-400 font-semibold hover:text-white transition text-sm">BRAND</a>
+        <a href="/user/product" class="text-gray-400 font-semibold hover:text-white transition text-sm">CATEGORY</a>
+        <a href="/user/product" class="text-gray-400 font-semibold hover:text-white transition text-sm">BRAND</a>
         <a href="/user/about" class="text-gray-400 font-semibold hover:text-white transition text-sm">ABOUT</a>
         <a href="/user/contact" class="text-gray-400 font-semibold hover:text-white transition text-sm">CONTACT</a>
     </div>

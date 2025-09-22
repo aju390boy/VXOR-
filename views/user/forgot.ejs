@@ -1,4 +1,21 @@
 <main>
+     <div id="toast-container" class="fixed top-2 right-4  mt-1.5 z-50">
+        <div id="toast-alert" class="hidden max-w-sm w-full rounded-xl shadow-lg p-1.5 transition-all duration-300">
+            <div class="flex items-center space-x-3">
+                <!-- Success Icon -->
+                <svg id="toast-icon-success" class="h-8 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <!-- Error Icon -->
+                <svg id="toast-icon-error" class="hidden h-8 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                <div class="flex-1">
+                    <p id="toast-message" class="text-sm font-extrabold"></p>
+                </div>
+            </div>
+        </div>
+    </div>
     <section class="forgot-container">
         <h2>Recover Your Account</h2>
 
@@ -6,17 +23,84 @@
             <p style="color:red;"><%= error %></p>
         <% } %>
 
-        <form action="/forgot-password" method="POST">
+        <div>
             <input
                 type="text"
                 name="emailOrPhone"
                 placeholder="Email or phone"
+                id="emailId"
                 required
                 value="<%= typeof emailOrPhone !== 'undefined' ? emailOrPhone : '' %>"
             />
-            <button type="submit">Send OTP</button>
-        </form>
+            <button type="button" id="sendOtp" class="mt-8 bg-gradient-to-br from-purple-600 to-indigo-600 p-2 rounded-md">Send OTP</button>
+        </div>
 
         <p class="login-text">Remember your password? <a href="/login">Login</a></p>
     </section>
 </main>
+
+<script type="module">
+    import throttle  from '/js/throttle.js';
+    const otp=document.getElementById('sendOtp');
+    
+     const toastContainer = document.getElementById('toast-container');
+    const toastAlert = document.getElementById('toast-alert');
+    const toastIconSuccess = document.getElementById('toast-icon-success');
+    const toastIconError = document.getElementById('toast-icon-error');
+    const toastMessageText = document.getElementById('toast-message');
+
+    function showToast(icon, text) {
+        toastMessageText.textContent = text;
+        toastAlert.classList.remove('hidden');
+        
+        
+        toastAlert.classList.remove('bg-green-600', 'bg-red-600');
+
+        if (icon === 'success') {
+            toastAlert.classList.add('bg-green-600');
+            toastIconSuccess.classList.remove('hidden');
+            toastIconError.classList.add('hidden');
+        } else if (icon === 'error') {
+            toastAlert.classList.add('bg-red-600');
+            toastIconSuccess.classList.add('hidden');
+            toastIconError.classList.remove('hidden');
+        }
+        
+      
+        setTimeout(() => {
+            toastAlert.classList.add('hidden');
+        }, 5000);
+    }
+
+    const  handleOtp= async (event)=>{
+        event.preventDefault();
+        const email=document.getElementById('emailId').value.trim();
+        
+       try{
+        const response=await fetch('forgot-password',{
+            method:'POST',
+            headers:{'content-type':'application/json'},
+            body:JSON.stringify({emailOrPhone : email})
+        });
+        const result = await response.json();
+        if(result.success){
+            showToast(`success`,`otp successfully send to ${email}`);
+            setTimeout(()=>{
+                window.location.href = `/verify-otp?email=${encodeURIComponent(email)}&context=forgot-password`;
+
+            },1000)
+          
+        }else{
+                 showToast("error", result.message || "Failed to send OTP");
+        }
+       }catch(err){
+        showToast('error','server error occured');
+        console.log(err)
+       }
+
+
+    }
+
+    otp.addEventListener('click',throttle(handleOtp,3000));
+
+</script>

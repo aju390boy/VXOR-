@@ -140,7 +140,7 @@
       <div class="my-8 inline-block fade-in-up delay-anim-3">
          <p class="text-sm text-gray-400">
           Your Order ID is <br class="sm:hidden">
-          <span class="mt-2 inline-block font-mono text-white bg-black/20 px-4 py-2 rounded-lg tracking-wider text-base border border-gray-700">#<%= orderId %></span>
+          <span class="mt-2 inline-block font-mono text-white bg-black/20 px-4 py-2 rounded-lg tracking-wider text-base border border-gray-700"><%= customId ||orderId %></span>
         </p>
       </div>
     <% } %>
@@ -151,9 +151,9 @@
          class="bg-white/10 border border-white/20 hover:bg-white/20 px-8 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg focus:outline-none focus:ring-4 focus:ring-white/30">
         Continue Shopping
       </a>
-      <a href="/user/profile?section=orders" 
+      <a href="/user/orders/<%=orderId%>"
          class="bg-transparent border border-white/20 hover:bg-white/10 px-8 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-white/20">
-        View My Orders
+        View Order Details
       </a>
     </div>
   </div>

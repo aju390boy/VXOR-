@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - Orders</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
    <link rel="stylesheet" href="/styles/admin/adminnavbar.css">
@@ -39,7 +38,46 @@
     color: #475569; /* Slate gray */
     font-weight: 500;
 }
-
+ .card-glow {
+    box-shadow:
+      0 4px 6px rgba(0,0,0,0.1),
+      0 0 20px rgba(96,165,250,0.3);
+    transition: box-shadow 0.3s ease;
+  }
+  .card-glow:hover {
+    box-shadow:
+      0 6px 12px rgba(0,0,0,0.15),
+      0 0 28px rgba(96,165,250,0.5);
+  }
+  /* Status colors for order-level panels */
+  .order-cancel {
+    border-left: 6px solid #ef4444; /* Red-500 */
+    background: linear-gradient(90deg, #fef2f2, #fee2e2);
+  }
+  .order-return {
+    border-left: 6px solid #f59e0b; /* Amber-500 */
+    background: linear-gradient(90deg, #fffbeb, #fef3c7);
+  }
+  /* Item status badges */
+  .status-requested { background-color: #facc15; color: #92400e; }
+  .status-delivered { background-color: #bbf7d0; color: #166534; }
+  .status-default { background-color: #c7d2fe; color: #3730a3; }
+  /* Button styles */
+  .btn-approve {
+    background-color: #22c55e; /* green-500 */
+    color: white;
+  }
+  .btn-approve:hover {
+    background-color: #16a34a; /* green-600 */
+  }
+  .btn-reject {
+    background-color: white;
+    border: 1.5px solid #ef4444;
+    color: #ef4444;
+  }
+  .btn-reject:hover {
+    background-color: #fee2e2;
+  }
 .status-PACKED {
     background-color: #fde68a; /* Light yellow */
     color: #92400e; /* Dark orange */
@@ -85,15 +123,9 @@
     </style>
 </head>
 <body class="flex flex-col min-h-screen bg-gray-100">
-
-    <!-- Navbar - Fixed on top -->
     <%- include('../partials/admin/adminnavbar') %>
-
-    <!-- Main container for sidebar and content -->
 <div class="flex flex-grow">
-    
     <%- include('../partials/admin/adminsidebar', { current: 'orders' }) %>
-
    <main class="main-content-div flex-1 w-[85%] overflow-x-hidden overflow-y-auto bg-slate-50 p-4 md:p-8">
     <div class="max-w-7xl mx-auto">
         <header class="mb-4">
@@ -103,7 +135,6 @@
             </a>
             <h1 class="text-3xl font-bold text-slate-800">Order #<%= order.order_id %></h1>
         </header>
-
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             <div class="bg-white rounded-xl shadow-lg p-6">
                 <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center">
@@ -119,7 +150,6 @@
                     <p class="text-sm text-slate-500">Customer details not available.</p>
                 <% } %>
             </div>
-
             <div class="bg-white rounded-xl shadow-lg p-6">
                 <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center">
                     <i class="fas fa-truck mr-3 text-purple-500"></i>
@@ -136,7 +166,6 @@
                     <p class="text-sm text-slate-500">No address provided.</p>
                 <% } %>
             </div>
-
             <div class="bg-white rounded-xl shadow-lg p-6">
                 <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center">
                     <i class="fas fa-receipt mr-3 text-purple-500"></i>
@@ -167,146 +196,259 @@
                 </div>
             </div>
         </div>
+        <!-- timeline -->
+       <div class="bg-white rounded-3xl shadow-lg p-10 max-w-7xl mx-auto font-sans text-gray-800">
 
-        <div class="bg-white rounded-xl shadow-lg p-6 md:p-8">
-            <h2 class="text-xl font-semibold text-slate-800 mb-6 flex items-center">
-                <i class="fas fa-stream mr-3 text-slate-400"></i>
-                Order Timeline
-            </h2>
-            <div class="space-y-8">
-                <% if (order.products && order.products.length > 0) { %>
-                    <% order.products.forEach((item, index) => { %>
-                        <% const product = item.product_id; %>
-                        <div class="flex gap-4">
-                            <div class="flex flex-col items-center">
-                                <div class="w-8 h-8 rounded-full flex items-center justify-center 
-                                    <%= item.status.includes('REQUESTED') ? 'bg-yellow-500' : (item.status === 'DELIVERED' || item.status === 'RETURNED' ? 'bg-green-600' : 'bg-purple-600') %>">
-                                    <i class="fas <%= item.status.includes('REQUESTED') ? 'fa-exclamation' : (item.status === 'DELIVERED' ? 'fa-check' : 'fa-box') %> text-white text-sm"></i>
-                                </div>
-                                <% if (index < order.products.length - 1) { %>
-                                    <div class="w-px h-full bg-slate-200 mt-2"></div>
-                                <% } %>
-                            </div>
+  <h2 class="text-3xl font-bold mb-12 flex items-center gap-3 border-b pb-5">
+    <i class="fas fa-stream text-blue-600"></i>
+    Order Timeline
+  </h2>
 
-                            <div class="flex-1 pb-4">
-                                <div class="border border-slate-200 rounded-lg p-4 transition-all hover:shadow-md">
-                                    <div class="flex items-start justify-between">
-                                        <div class="flex items-center gap-4">
-                                             <img class="h-16 w-12 rounded-lg object-cover" src="<%= item.image %>" alt="<%= item.title %>">
-                                           <div>
-                                            <div class="mt-2">
-                                                <h3 class="font-semibold text-slate-800"><%= product?.title || 'Product Not Found' %></h3>
-                                                <p class="text-sm text-slate-500 mt-2">Qty: <%= item.quantity %> • Price: ₹<%= item.price.toFixed(2)  %> • Color:<%= item.colorName %> • Size:<%= item.size %></p>
-                                            </div>
-                                             <p class="font-bold text-slate-900 mt-2"> Status :
-                                            <span class="px-3 py-1 text-xs font-bold rounded-full 
-                                            <%= item.status === 'DELIVERED' ? 'bg-green-100 text-green-800' :
-                                                item.status === 'SHIPPED' ? 'bg-blue-100 text-blue-800' :
-                                                item.status.includes('REQUESTED') ? 'bg-yellow-100 text-yellow-800' :
-                                                item.status === 'CANCELLED' ? 'bg-red-100 text-red-800' :
-                                                'bg-slate-100 text-slate-700' %>">
-                                           <%= item.status %>
-                                        </span>
-                                        </p>
-                                        </div>
-                                        
-                                    </div>
+  <div class="space-y-10">
 
-                                    <%# ACTION SECTION: Appears for pending requests %>
-                                    <% if (item.status === 'RETURN REQUESTED' || item.status === 'CANCELLATION REQUESTED') { %>
-                                        <div class="mt-4 pt-4 border-t border-dashed border-slate-200 bg-yellow-50/70 rounded-b-lg -m-4 p-4">
-                                            <div class="flex justify-between items-center">
-                                                <div>
-                                                    <h4 class="font-semibold text-yellow-900 text-sm">Action Required</h4>
-                                                    <p class="text-sm text-yellow-800 italic mt-1">
-                                                        Reason: "<%= item.status === 'RETURN REQUESTED' ? item.return_reason : item.cancellation_reason %>"
-                                                    </p>
-                                                </div>
-                                                <div class="flex gap-2">
-                                                    <button data-order-id="<%= order._id %>" data-product-id="<%= item._id %>" data-action="approve" class="action-btn px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 shadow-sm">Approve</button>
-                                                    <button data-order-id="<%= order._id %>" data-product-id="<%= item._id %>" data-action="reject" class="action-btn px-4 py-2 text-sm font-medium text-red-700 bg-white border border-red-300 rounded-lg hover:bg-red-50">Reject</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    <% } %>
-                                </div>
-                            </div>
-                        </div>
-                    <% }); %>
-                <% } %>
-            </div>
+    <!-- Order Cancellation Request -->
+    <% if (order.order_cancellation_reason && order.order_cancellation_reason.reason) { %>
+      <div class="order-cancel rounded-xl p-6 card-glow">
+        <h3 class="text-xl font-semibold mb-2">Order Cancellation Requested</h3>
+        <p class="italic mb-4 pl-4 border-l-4 border-red-400">Reason: "<%= order.order_cancellation_reason.reason %>"</p>
+        <div class="flex gap-4">
+          <button data-order-id="<%= order._id %>" data-action="approve" data-level="order" class="btn-approve px-6 py-2 rounded-lg font-semibold shadow">
+            Approve
+          </button>
+          <button data-order-id="<%= order._id %>" data-action="reject" data-level="order" class="btn-reject px-6 py-2 rounded-lg font-semibold shadow">
+            Reject
+          </button>
         </div>
+      </div>
+    <% } %>
+
+    <!-- Order Return Request -->
+    <% if (order.order_return_reason && order.order_return_reason.reason) { %>
+      <div class="order-return rounded-xl p-6 card-glow">
+        <h3 class="text-xl font-semibold mb-2">Order Return Requested</h3>
+        <p class="italic mb-4 pl-4 border-l-4 border-amber-400">Reason: "<%= order.order_return_reason.reason %>"</p>
+        <div class="flex gap-4">
+          <button data-order-id="<%= order._id %>" data-action="approve" data-level="order" class="btn-approve px-6 py-2 rounded-lg font-semibold shadow">
+            Approve
+          </button>
+          <button data-order-id="<%= order._id %>" data-action="reject" data-level="order" class="btn-reject px-6 py-2 rounded-lg font-semibold shadow">
+            Reject
+          </button>
+        </div>
+      </div>
+    <% } %>
+
+    <!-- Products Timeline -->
+    <% if (order.products && order.products.length > 0) { %>
+      <% order.products.forEach((item, index) => { %>
+        <% const product = item.product_id; %>
+        <div class="rounded-xl border border-gray-200 p-6 grid grid-cols-12 gap-6 card-glow hover:shadow-xl transition duration-300">
+
+          <!-- Product Image -->
+          <div class="col-span-2 flex justify-center items-center rounded-lg overflow-hidden shadow-md">
+            <img src="<%= item.image %>" alt="<%= product?.title || 'Product Not Found' %>" class="object-cover h-28 w-20 grayscale hover:grayscale-0 transition duration-500"/>
+          </div>
+
+          <!-- Status Badge with Icon -->
+          <div class="col-span-1 flex flex-col items-center justify-center relative">
+            <div class="w-12 h-12 rounded-full flex items-center justify-center
+              <%= item.status && item.status.includes('REQUESTED') ? 'status-requested' : (item.status === 'DELIVERED' || item.status === 'RETURNED') ? 'status-delivered' : 'status-default' %> 
+              shadow-lg">
+              <i class="fas <%= item.status && item.status.includes('REQUESTED') ? 'fa-exclamation' : (item.status === 'DELIVERED' ? 'fa-check' : 'fa-box') %> text-lg"></i>
+            </div>
+           
+          </div>
+
+          <!-- Product Info and Controls -->
+          <div class="col-span-9 flex flex-col justify-between text-gray-700">
+
+            <div>
+              <h3 class="text-xl font-semibold mb-1 tracking-wide text-gray-900"><%= product?.title || 'Product Not Found' %></h3>
+              <p class="text-gray-600 mb-1">Qty: <span class="font-semibold"><%= item.quantity %></span> • Price: <span class="font-semibold">₹<%= item.price.toFixed(2) %></span></p>
+              <p class="text-gray-600 tracking-wide mb-4">Color: <%= item.colorName %> &bull; Size: <%= item.size %></p>
+            </div>
+
+            <div class="flex flex-wrap gap-10 items-center">
+
+              <!-- Status Selection -->
+              <div>
+                <label class="text-sm font-semibold block mb-1 tracking-wide text-gray-900">Status</label>
+                <select class="status-select rounded border border-gray-300 bg-yellow-100 py-2 px-3 text-sm cursor-pointer focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        data-product-id="<%= item._id %>" data-order-id="<%= order._id %>">
+                  <% ['PENDING', 'CONFIRMED', 'PROCESSING', 'PACKED', 'SHIPPED', 'DELIVERED', 'CANCELLATION REQUESTED', 'CANCELLED', 'RETURN REQUESTED', 'RETURNED'].forEach(statusOption => { %>
+                    <option value="<%= statusOption %>" <%= item.status === statusOption ? 'selected' : '' %>>
+                      <%= statusOption.replace(/_/g, ' ') %>
+                    </option>
+                  <% }) %>
+                </select>
+              </div>
+
+              <!-- Expected Delivery -->
+              <div>
+                <label class="text-sm font-semibold block mb-1 tracking-wide text-gray-900">Expected Delivery</label>
+                <input type="date" class="expected-delivery rounded border bg-purple-100 py-2 px-3 text-sm cursor-pointer focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                       value="<%= item.expected_delivery ? item.expected_delivery.toISOString().split('T')[0] : '' %>"
+                       data-product-id="<%= item._id %>" data-order-id="<%= order._id %>"  min="<%= new Date().toISOString().split('T')[0] %>" />
+              </div>
+
+             <!-- Action Buttons and Reasons -->
+<% if (item.status === 'RETURN REQUESTED' || item.status === 'CANCELLATION REQUESTED' && item?.return_reason?.reason ||  item?.cancellation_reason?.reason) { %>
+  <div class="mt-4 p-4 rounded-xl border 
+       <%= item.status === 'RETURN REQUESTED' ? 'border-yellow-400 bg-yellow-50' : 'border-red-400 bg-red-50' %> shadow-sm">
+
+    <h4 class="font-semibold mb-2 
+       <%= item.status === 'RETURN REQUESTED' ? 'text-yellow-600' : 'text-red-600' %>">
+      <%= item.status === 'RETURN REQUESTED' ? 'Return Requested' : 'Cancellation Requested' %>
+    </h4>
+
+    <p class="italic mb-4 text-sm 
+       <%= item.status === 'RETURN REQUESTED' ? 'text-yellow-700' : 'text-red-700' %>">
+      Reason: "<%= item.status === 'RETURN REQUESTED' ? item.return_reason?.reason : item.cancellation_reason?.reason %>"
+    </p>
+
+    <div class="flex gap-4">
+      <button data-order-id="<%= order._id %>" data-product-id="<%= item._id %>" data-action="approve" data-level="product"
+              class="btn-approve px-5 py-2 rounded-lg font-semibold shadow hover:bg-green-700 transition duration-300">
+        Approve
+      </button>
+      <button data-order-id="<%= order._id %>" data-product-id="<%= item._id %>" data-action="reject" data-level="product"
+              class="btn-reject px-5 py-2 rounded-lg font-semibold border border-red-400 hover:bg-red-100 transition duration-300">
+        Reject
+      </button>
     </div>
+  </div>
+<% } %>
+            </div>
+          </div>
+        </div>
+        <!-- product timeline -->
+      <% }) %>
+    <% } else { %>
+      <p class="text-center text-gray-500">No products found in this order.</p>
+    <% } %>
+
+  </div>
+</div>
+    <!-- timeline -->
 </main>
 </div>
-    <!-- Modals would go here -->
     <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // Select ALL action buttons, not just one by ID
-    const actionButtons = document.querySelectorAll('.action-btn');
+  // Handle status dropdown change
+  document.querySelectorAll('.status-select').forEach(select => {
+    select.addEventListener('change', async (e) => {
+      const productId = e.target.dataset.productId;
+      const orderId = e.target.dataset.orderId;
+      const newStatus = e.target.value;
 
-    // Attach a click event listener to each button
-    actionButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
-            const { orderId, productId, action } = e.currentTarget.dataset;
-            
-            // Determine the text for the confirmation modal
-            const isApprove = action === 'approve';
-            const title = `Confirm ${isApprove ? 'Approval' : 'Rejection'}`;
-            const text = `Are you sure you want to ${action} this request?`;
-            const confirmButtonText = `Yes, ${action} it!`;
-
-            // Use SweetAlert2 for a better UX
-            Swal.fire({
-                title: title,
-                text: text,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: isApprove ? '#16a34a' : '#dc2626',
-                cancelButtonColor: '#6b7280',
-                confirmButtonText: confirmButtonText
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // If confirmed, call the function to perform the fetch request
-                    handleStatusUpdate(orderId, productId, action);
-                }
-            });
+      try {
+        const res = await fetch(`/admin/orders/${orderId}/products/${productId}/status`, {
+          method: 'PATCH',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({status: newStatus}),
         });
+        const data = await res.json();
+        if(!res.ok) throw new Error(data.message || 'Status update failed');
+        Swal.fire({
+          icon: 'success',
+          title: 'Success',
+          text: 'Status updated successfully',
+          timer: 1500,
+          showConfirmButton: false
+        });
+        // Optionally: reload or dynamically update UI here
+      } catch (err) {
+        Swal.fire('Error', err.message, 'error');
+      }
     });
+  });
 
-    const handleStatusUpdate = async (orderId, productId, action) => {
-        try {
-            const response = await fetch(`/admin/api/orders/${orderId}/products/${productId}/status`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: action })
-            });
+  // Handle expected delivery date change
+  document.querySelectorAll('.expected-delivery').forEach(input => {
+    input.addEventListener('change', async (e) => {
+      const productId = e.target.dataset.productId;
+      const orderId = e.target.dataset.orderId;
+      const newDate = e.target.value;
 
-            const data = await response.json();
+      try {
+        const res = await fetch(`/admin/orders/${orderId}/products/${productId}/expected-delivery`, {
+          method: 'PATCH',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({expectedDelivery: newDate}),
+        });
+        const data = await res.json();
+        if(!res.ok) throw new Error(data.message || 'Update failed');
+        Swal.fire({
+          icon: 'success',
+          title: 'Success',
+          text: 'Expected delivery updated',
+          timer: 1500,
+          showConfirmButton: false
+        });
+      } catch (err) {
+        Swal.fire('Error', err.message, 'error');
+      }
+    });
+  });
 
-            if (!response.ok) {
-                throw new Error(data.message || 'An unknown error occurred.');
-            }
+  // Handle approve/reject button clicks (order-level and product-level)
+  document.querySelectorAll('.btn-approve, .btn-reject').forEach(button => {
+    button.addEventListener('click', async (e) => {
+      const btn = e.currentTarget;
+      const orderId = btn.dataset.orderId;
+      const productId = btn.dataset.productId || null;
+      const action = btn.dataset.action;
+      const level = btn.dataset.level; // 'order' or 'product'
 
-            // Show success message and then reload the page
-            await Swal.fire({
-                title: 'Success!',
-                text: data.message,
-                icon: 'success',
-                timer: 2000,
-                showConfirmButton: false
-            });
-            window.location.reload();
+      const confirmation = await Swal.fire({
+        title: `Confirm ${action.charAt(0).toUpperCase() + action.slice(1)}`,
+        text: `Are you sure you want to ${action} this ${level === 'order' ? 'order' : 'product request'}?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: action === 'approve' ? '#16a34a' : '#dc2626',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: `Yes, ${action} it!`
+      });
 
-        } catch (error) {
-            console.error('Failed to update status:', error);
-            Swal.fire({
-                title: 'Error!',
-                text: error.message,
-                icon: 'error'
-            });
-        }
-    };
+      if(!confirmation.isConfirmed) return;
+
+      let url = '';
+      let body = {};
+
+      if(level === 'order') {
+        url = `/admin/orders/${orderId}/request-action`;
+        body = { action };
+      } else if(level === 'product' && productId) {
+        url = `/admin/orders/${orderId}/products/${productId}/request-action`;
+        body = { action };
+      } else {
+        Swal.fire('Error', 'Invalid action or identifiers', 'error');
+        return;
+      }
+
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Failed to process request');
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Success',
+          text: data.message,
+          timer: 1500,
+          showConfirmButton: false
+        });
+        // Reload page or update UI dynamically here
+        window.location.reload();
+      } catch(err) {
+        Swal.fire('Error', err.message, 'error');
+      }
+    });
+  });
 });
 </script>
 </body>

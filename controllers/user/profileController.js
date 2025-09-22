@@ -75,6 +75,7 @@ exports.getProfilePage = async (req, res) => {
 exports.getProfileSection = async (req, res) => {
   const { sectionName } = req.params;
   const user = req.user;
+  console.log(`user details : ${user}`)
   try {
     let data = { user: null };
     let templatePath = "";
@@ -159,41 +160,42 @@ exports.getProfileSection = async (req, res) => {
     data.wishlistItems = processedWishlistItems.filter(item => item !== null);
     templatePath = "user/profile/partials/_wishlist";
     break;
-        case "wallet": // --- NEW WALLET LOGIC ---
+        case "wallet": 
         let wallet = await Wallet.findOne({ user_id: user._id }).lean();
-
-        // If a user has no wallet yet, create a default view for them
         if (!wallet) {
             wallet = {
                 balance: 0,
                 transactions: []
             };
         } else {
-            // Reverse transactions to show the newest first
             wallet.transactions.reverse();
         }
-        
         data.wallet = wallet;
         templatePath = "user/profile/partials/_wallet";
         break;
-
       case "orders":
-        const orders = await Order.find({ user_id: user._id })
-          .select("order_id total_amount payment_status createdAt products")
-          .sort({ createdAt: -1 })
-          .populate({
+       const orders = await Order.find({ user_id: user._id })
+        .select("order_id total_amount payment_status createdAt products")
+        .sort({ createdAt: -1 })
+        .populate({
             path: "products.product_id",
-
             select: "title colorVariants",
-          })
-          .lean();
-        data.orders = orders;
-        templatePath = "user/profile/partials/_orderList";
-        break;
+        })
+        .lean();
+        orders.forEach(order => {
+        const firstProduct = order.products?.[0]?.product_id;
+        if (firstProduct && firstProduct.colorVariants?.[0]?.images?.[0]) {
+            order.display_image_url = `/uploads/products/${firstProduct.colorVariants[0].images[0]}`;
+        } else {
+            order.display_image_url = '/images/placeholder.png';
+        }
+    });
+    data.orders = orders;
+    templatePath = "user/profile/partials/_orderList";
+    break;
       case "address":
         const addresses = await Address.find({ user_id: user._id }).lean();
         data.addresses = addresses;
-
         data.defaultAddress = addresses.find((address) => address.isDefault);
         templatePath = "user/profile/partials/_address";
         break;

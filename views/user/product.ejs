@@ -1,6 +1,22 @@
 <% title = 'VIXOR | Products'; -%>
 
 <div class="flex justify-between items-center px-6 py-2 bg-gray-900 mt-10 flex-wrap gap-1">
+  <!-- alert -->
+    <div id="toast-container" class="fixed top-0 right-2 -translate-x-1/2 mt-4 z-50">
+    <div id="toast-alert" class="hidden max-w-sm w-full rounded-xl shadow-lg p-2 transition-all duration-300">
+        <div class="flex items-center space-x-3">
+           <svg id="toast-icon-success" class="h-8 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+            </svg>
+           <svg id="toast-icon-error" class="hidden h-8 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+            </svg>
+            <div class="flex-1">
+                <p id="toast-message" class="text-sm font-medium"></p>
+            </div>
+        </div>
+    </div>
+</div>
   <div class="breadcrumb text-xs text-gray-400">
     <a href="/user/home" class="text-gray-400 font-bold hover:text-white">HOME</a> > <span>PRODUCTS</span>
   </div>
@@ -93,12 +109,14 @@
       <button type="button" class="filter-btn clear px-3 py-1.5 text-xs font-bold bg-gray-700 text-white rounded hover:bg-red-700" onclick="window.location.href='/user/product'">Clear All</button>
     </div>
   </div>
+  <!-- ////////produts section/////// -->
   <div class="w-4/5 p-3 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-5" id="productList">
     <% if (products.length === 0) { %>
       <p class="text-white text-center w-full col-span-full text-sm font-bold">No products match your filters </p>
     <% } else { %>
       <% products.forEach(item => { %>
-        <a href="/user/product/<%= item._id %>" class="item-link no-underline text-inherit">
+        <div class="item-link no-underline text-inherit">
+  <a href="/user/product/<%= item._id %>" >
           <div class="item-block border border-gray-800 rounded-lg overflow-hidden hover:scale-105 transition bg-black-400">
             <div class="product">
               <img src="<%= item.display_image_url %>" alt="<%= item.title %>" class="w-full h-60 object-cover">
@@ -115,12 +133,20 @@
     <% } %>
 </div>
               <p class="text-xs">Rating: <%= '⭐'.repeat(item.rating) + (item.rating < 5 ? '☆' : '') %></p>
+              
             </div>
+            </a>
+            <div class="flex justify-start items-start">
+     <button class="addToWishlistBtn" data-product-id="<%= item._id %>" title="Add to Wishlist">
+          <i class="fa-solid fa-heart text-xl <%= wishlistIds.includes(item._id.toString()) ? 'text-red-500' : 'text-gray-400 hover:text-red-500' %>"></i>
+    </button>
+</div>
           </div>
-        </a>
+        </div>
       <% }) %>
     <% } %>
   </div>
+  <!-- ///////products section end////// -->
 </div>
 
 <script>
@@ -130,6 +156,10 @@
     const priceRange = document.getElementById("priceRange");
     const priceValue = document.getElementById("priceValue");
     const sortSelect = document.getElementById("sortSelect");
+    const toastAlert = document.getElementById('toast-alert');
+        const toastMessage = document.getElementById('toast-message');
+        const successIcon = document.getElementById('toast-icon-success');
+        const errorIcon = document.getElementById('toast-icon-error');
     priceValue.textContent = `Up to ₹${parseFloat(priceRange.value).toLocaleString('en-IN')}`;
     priceRange.addEventListener('input', () => {
       priceValue.textContent = `Up to ₹${parseFloat(priceRange.value).toLocaleString('en-IN')}`;
@@ -145,6 +175,7 @@
             const res = await axios.get(`/user/product?${params.toString()}`);
             productList.innerHTML = res.data.html;
             history.pushState(null, '', `/user/product?${params.toString()}`);
+            setupWishlistButtons(); 
         } catch (err) {
             console.error('Filter or Sort failed:', err);
         }
@@ -226,6 +257,84 @@
     setCheckboxState();
     initializeToggleState(serverQuery); 
     priceValue.textContent = `Up to ₹${parseFloat(priceRange.value).toLocaleString('en-IN')}`;
+let timeoutId;
+  ///////////
+        function showAlert(type, message) {
+    clearTimeout(timeoutId);
+
+    // Set the message
+    toastMessage.textContent = message;
+    toastAlert.classList.remove('bg-white', 'bg-green-500', 'bg-red-500');
+    toastMessage.classList.remove('text-gray-900');
+
+    if (type === 'success') {
+        toastAlert.classList.add('bg-green-500');
+        toastMessage.classList.add('text-white');
+        successIcon.classList.remove('hidden');
+        errorIcon.classList.add('hidden');
+    } else if (type === 'error') {
+        toastAlert.classList.add('bg-red-500');
+        toastMessage.classList.add('text-white');
+        successIcon.classList.add('hidden');
+        errorIcon.classList.remove('hidden');
+    }
+
+    toastAlert.classList.remove('hidden', 'animate-fadeOut');
+    void toastAlert.offsetWidth; 
+    toastAlert.classList.add('animate-slideIn', 'animate-fadeOut');
+
+    timeoutId = setTimeout(() => {
+        toastAlert.classList.add('hidden');
+    }, 3000);
+}
+
+  /////////////
+   //////wishlist //////
+      function setupWishlistButtons() {
+  const wishlistButtons = document.querySelectorAll('.addToWishlistBtn');
+  
+  wishlistButtons.forEach(button => {
+    button.addEventListener('click', async (event) => {
+      const productId = button.dataset.productId;
+      const icon = button.querySelector('i');
+      button.disabled = true;
+      
+      try {
+        // Check if product is already in wishlist by icon class
+        const isInWishlist = icon.classList.contains('text-red-500');
+        const url = isInWishlist 
+          ? `/user/wishlist/remove/${productId}`  // call remove route
+          : `/user/wishlist/add/${productId}`;    // call add route
+        
+        const method = isInWishlist ? 'DELETE' : 'POST';
+        
+        const response = await fetch(url, { method });
+        const data = await response.json();
+        
+        if (response.ok) {
+          if (isInWishlist) {
+            // Removed from wishlist
+            icon.classList.remove('text-red-500');
+            icon.classList.add('text-gray-400', 'hover:text-red-500');
+          } else {
+            // Added to wishlist
+            icon.classList.remove('text-gray-400', 'hover:text-red-500');
+            icon.classList.add('text-red-500');
+          }
+          showAlert('success', data.message || (isInWishlist ? 'Removed from wishlist' : 'Added to wishlist'));
+        } else {
+          showAlert('error', data.message || 'Operation failed');
+          button.disabled = false;
+        }
+      } catch (error) {
+        showAlert('error', 'Network error occurred.');
+        button.disabled = false;
+      }
+    });
+  });
+}
+setupWishlistButtons();
+
   });
   function toggleSection(id, element) {
     const section = document.getElementById(id);
@@ -256,4 +365,5 @@
           }
       });
   };
+
 </script>

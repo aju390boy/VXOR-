@@ -1,7 +1,9 @@
 const User = require("../../model/user.js");
 const Otp = require("../../model/otp");
+const Referral = require('../../model/referral.js');
 const bcrypt = require("bcrypt");
 const { sendMail } = require("../../utils/otpMailer1.js");
+const {createUniqueReferralCode} = require('../../utils/referalHelper.js');
 const crypto = require("crypto");
 
 exports.signup = (req, res) => {
@@ -9,43 +11,43 @@ exports.signup = (req, res) => {
 };
 
 exports.signupadd = async (req, res) => {
-  const { firstname, lastname, mobile, email, password, confirmPassword } =
-    req.body;
+  const { firstname, lastname, mobile, email, password, confirmPassword, referralCode: inputReferralCode } = req.body;
 
   const errors = [];
-  if (!firstname.trim() ||!lastname.trim() ||!mobile.trim() ||!email.trim() ||!password.trim() ||!confirmPassword.trim()) {
-    errors.push("All fields are required.");
+  if (
+    !firstname.trim() ||
+    !lastname.trim() ||
+    !mobile.trim() ||
+    !email.trim() ||
+    !password.trim() ||
+    !confirmPassword.trim()
+  ) {
+    errors.push('All fields are required.');
   }
   if (password !== confirmPassword) {
-    errors.push("Passwords do not match.");
+    errors.push('Passwords do not match.');
   }
-  const passwordRegex =
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+}{"':;?/>.<,])(.{8,})$/;
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+}{"':;?/>.<,])(.{8,})$/;
   if (password && !passwordRegex.test(password)) {
     errors.push(
-      "Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character."
+      'Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character.'
     );
   }
   if (mobile && !/^\d{10}$/.test(mobile)) {
-    errors.push("Mobile number must be 10 digits.");
+    errors.push('Mobile number must be 10 digits.');
   }
   if (errors.length > 0) {
-    return res
-      .status(400)
-      .json({ success: false, message: errors.join("<br>") });
+    return res.status(400).json({ success: false, message: errors.join('<br>') });
   }
 
   try {
     let user = await User.findOne({ email });
 
     if (user && user.isVerified) {
-      return res
-        .status(409)
-        .json({
-          success: false,
-          message:
-            "User with this email already exists and is verified. Please login.",
-        });
+      return res.status(409).json({
+        success: false,
+        message: 'User with this email already exists and is verified. Please login.',
+      });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -60,24 +62,43 @@ exports.signupadd = async (req, res) => {
       await user.save();
     } else {
       user = new User({
-        firstname: firstname,
-        lastname: lastname,
-        mobile: mobile,
-        email: email,
+        firstname,
+        lastname,
+        mobile,
+        email,
         password: hashedPassword,
         isVerified: false,
       });
       await user.save();
     }
+
+    // Create unique referral code for this user after they are saved
+    const newReferralCode = await createUniqueReferralCode(user._id);
+    const newReferral = new Referral({
+      code: newReferralCode,
+      referrer_user_id: user._id,
+    });
+    await newReferral.save();
+
+    // If signup form had a referralCode input (inputReferralCode),
+    // find that referral and link referred_user_id to this user
+    if (inputReferralCode) {
+      const existingReferral = await Referral.findOne({ code: inputReferralCode });
+      if (existingReferral && !existingReferral.referred_user_id) {
+        existingReferral.referred_user_id = user._id;
+        await existingReferral.save();
+      }
+    }
+
     await Otp.deleteMany({ email: email });
     const newOtpRecord = new Otp({
       email: email,
       otp: otpCode,
-      context: "signup",
+      context: 'signup',
       expiresAt: new Date(Date.now() + 10 * 60 * 1000),
     });
 
-    console.log("OTP document being saved (signup):", {
+    console.log('OTP document being saved (signup):', {
       email: newOtpRecord.email,
       otp: newOtpRecord.otp,
       context: newOtpRecord.context,
@@ -86,26 +107,23 @@ exports.signupadd = async (req, res) => {
 
     await newOtpRecord.save();
 
-    const emailSubject = "VXOR: Verify Your Account";
+    const emailSubject = 'VXOR: Verify Your Account';
     const emailHtml = `<p>Dear ${firstname},</p>
-                           <p>Your One-Time Password (OTP) for Nutrixo account verification is: <strong>${otpCode}</strong></p>
-                           <p>This OTP is valid for 10 minutes. Do not share it with anyone.</p>
-                           <p>Thank you,<br>VXOR Team</p>`;
+      <p>Your One-Time Password (OTP) for Nutrixo account verification is: <strong>${otpCode}</strong></p>
+      <p>This OTP is valid for 10 minutes. Do not share it with anyone.</p>
+      <p>Thank you,<br>VXOR Team</p>`;
     await sendMail(email, emailSubject, emailHtml);
+
     res.status(201).json({
       success: true,
-      message: "Account created! Please check your email for OTP verification.",
-      redirectTo: `/verify-otp?email=${encodeURIComponent(
-        email
-      )}&context=signup`,
+      message: 'Account created! Please check your email for OTP verification.',
+      redirectTo: `/verify-otp?email=${encodeURIComponent(email)}&context=signup`,
     });
   } catch (err) {
-    console.error("Error during signup:", err);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "An error occurred on the server while creating your account.",
-      });
+    console.error('Error during signup:', err);
+    res.status(500).json({
+      success: false,
+      message: 'An error occurred on the server while creating your account.',
+    });
   }
 };

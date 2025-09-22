@@ -26,19 +26,11 @@ exports.postForgotPassword = async (req, res) => {
     } else if (isMobile) {
       user = await User.findOne({ mobile: emailOrPhone });
     } else {
-      return res.redirect(
-        `/forgot-password?error=${encodeURIComponent(
-          "Please enter a valid email or 10-digit phone number."
-        )}`
-      );
+     return res.json({ success: false, message: "Please enter a valid email or 10-digit phone number." });
     }
 
     if (!user) {
-      return res.redirect(
-        `/forgot-password?error=${encodeURIComponent(
-          "No account found for this email/phone."
-        )}`
-      );
+      return res.json({ success: false, message: "No account found for this email/phone." });
     }
 
     const otpCode = crypto.randomInt(100000, 999999).toString();
@@ -65,18 +57,10 @@ exports.postForgotPassword = async (req, res) => {
 
     await sendMail(user.email, emailSubject, emailHtml);
 
-    res.redirect(
-      `/verify-otp?email=${encodeURIComponent(
-        user.email
-      )}&context=forgot-password`
-    );
+    res.json({success:true,message: "OTP sent", email: user.email})
   } catch (err) {
     console.error("Error in postForgotPassword:", err);
-    res.redirect(
-      `/forgot-password?error=${encodeURIComponent(
-        "An error occurred. Please try again."
-      )}`
-    );
+    res.json({success:false,message:'error occurd in sever '})
   }
 };
 

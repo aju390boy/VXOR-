@@ -140,7 +140,7 @@
   </div>
   <div class="w-full md:w-1/2 px-2">
     <label for="startDate">Start Date:</label>
-    <input type="date" id="startDate" name="startDate" required class="mt-1" />
+    <input type="date" id="startDate" name="startDate" required class="mt-1"  min="<%= new Date().toISOString().split('T')[0] %>"  onchange="document.getElementById('endDate').min = this.value"/>
   </div>
   <div class="w-full md:w-1/2 px-2">
     <label for="endDate">End Date:</label>

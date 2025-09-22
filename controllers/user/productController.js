@@ -3,7 +3,9 @@ const User = require("../../model/user.js");
 const Category = require("../../model/category.js");
 const Brand = require("../../model/brand.js");
 const mongoose = require("mongoose");
+const Wishlist = require('../../model/wishlist.js');
 const {findBestOffer} = require('../../utils/offerHelper.js');
+
 
 const formatProductForListing = (product, bestOffer = null) => {
     let displayImageUrl = "/uploads/products/placeholder.png";
@@ -27,8 +29,11 @@ const formatProductForListing = (product, bestOffer = null) => {
 exports.getAllProducts = async (req, res) => {
   try {
     const { category, brand, price, rating, color, size, sort } = req.query;
+    const wishlist = await Wishlist.findOne({ user_id: req.user._id }).lean();
+    const wishlistProductIds = wishlist ? wishlist.products.map(p => p.product_id.toString()) : [];
     let queryObj = { isDeleted: false, isListed: true };
     let pipeline = [{ $match: queryObj }];
+
     if (category) {
       const categoriesToFind = Array.isArray(category) ? category : [category];
       const categoryDocs = await Category.find({
@@ -148,13 +153,14 @@ exports.getAllProducts = async (req, res) => {
             </a>
           `).join("")
         : '<p class="text-white text-center w-full col-span-full text-sm font-bold">No products match your filters</p>';
-    res.json({ html: html });
+    res.json({ html: html ,wishlistIds: wishlistProductIds});
 }else {
       res.render("user/product", {
         products: formattedProducts,
         sortOptions: displaySortOptions,
         title: "VIXOR | Products",
         query: req.query,
+        wishlistIds: wishlistProductIds,
       });
     }
   } catch (error) {

@@ -194,6 +194,79 @@
             const removeWishlistBtn = e.target.closest('.remove-from-wishlist-btn'); 
             const moveToCartBtn = e.target.closest('.move-to-cart-btn');
 
+
+            ///////////////
+            if (event.target.id === 'addMoneyBtn') {
+        const amountInput = document.getElementById('addAmountInput');
+        const amount = amountInput.value;
+
+        if (!amount || amount < 10) {
+            Swal.fire({ icon: 'error', title: 'Invalid Amount', text: 'Please enter an amount of at least ₹10.'});
+            return;
+        }
+
+        try {
+            // Step 1: Create an order on your server
+            const response = await fetch('/user/wallet/add-money', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ amount: amount })
+            });
+
+            const data = await response.json();
+            if (!data.success) {
+                throw new Error(data.message);
+            }
+
+            const order = data.order;
+
+            // Step 2: Open Razorpay Checkout
+            const options = {
+                key: data.keyId,
+                amount: order.amount,
+                currency: "INR",
+                name: "VIXOR Wallet",
+                description: "Add Money to Wallet",
+                order_id: order.id,
+                handler: async function (response) {
+                    // Step 3: Verify the payment on your server
+                    const verifyResponse = await fetch('/user/wallet/verify-payment', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_signature: response.razorpay_signature,
+                            amount: amount
+                        })
+                    });
+                    
+                    const verifyData = await verifyResponse.json();
+                    if (verifyData.success) {
+                        Swal.fire({ icon: 'success', title: 'Success!', text: verifyData.message })
+                            .then(() => {
+                                loadSection('wallet'); // Reload the wallet section to show new balance
+                            });
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Payment Failed', text: verifyData.message });
+                    }
+                },
+                prefill: {
+                    name: "<%= user.name %>",
+                    email: "<%= user.email %>"
+                },
+                theme: { color: "#5222D0" }
+            };
+            
+            const rzp1 = new Razorpay(options);
+            rzp1.open();
+
+        } catch (error) {
+            console.error(error);
+            Swal.fire({ icon: 'error', title: 'Error', text: error.message || 'Could not initiate payment.' });
+        }
+    }
+            ///////////////
             if (removeBtn) {
                 const addressId = removeBtn.dataset.addressId;
                 Swal.fire({ title: 'Are you sure?', text: "You won't be able to revert this!", icon: 'warning', width:'400px', showCancelButton: true, confirmButtonText: 'Yes, remove it!', cancelButtonText: 'No, cancel!', reverseButtons: true, customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button', cancelButton: 'swal-dark-button' }
@@ -570,8 +643,7 @@ else if (editProfileModal && e.target === editProfileModal) {
                     
                     closeModal('variantSelectorModal');
                     Swal.fire({ icon: 'success', title: 'Success!', text: 'Item moved to cart!' });
-                    loadSection('wishlist'); // Reload the wishlist section
-
+                    window.location.href='/user/profile?section=wishlist'
                 } catch (error) {
                     console.error("Move to cart error:", error);
                     Swal.fire({ icon: 'error', title: 'Error', text: error.message || 'An error occurred.' });

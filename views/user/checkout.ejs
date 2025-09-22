@@ -113,31 +113,23 @@
 </div>
 </div>
    <!-- //////////end address////// -->
-
+<!-- /////payment method////// -->
     <div class="bg-gray-900 rounded-2xl p-6 mt-2 bg-gradient-to-br from-gray-800 via-gray-700 to-gray-900">
         <h2 class="text-2xl font-bold text-white mb-6 ">Payment Method</h2>
         <div class="space-y-4">
             <div @click="selectedPayment = 'credit_card'" :class="{'border-blue-500 bg-gray-800/50': selectedPayment === 'credit_card', 'border-gray-700': selectedPayment !== 'credit_card'}" >
                 <div class="flex items-center">
-                    <input type="radio" name="payment_method" value="credit_card" x-model="selectedPayment" class="h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 focus:ring-blue-500">
+                    <input id="razorpayRadio" type="radio" name="paymentMethod" value="razorpay" checked class="h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 focus:ring-blue-500">
                     <label class="ml-3 flex items-center gap-4 text-sm font-medium text-white">
                         <svg class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor"><path d="M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7zm3 3h8M6 15h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
-                        Credit / Debit Card
+                        Pay Online (upi,cards,etc)
                     </label>
                 </div>
             </div>
-            <div @click="selectedPayment = 'upi'" :class="{'border-blue-500 bg-gray-800/50': selectedPayment === 'upi', 'border-gray-700': selectedPayment !== 'upi'}" >
-                <div class="flex items-center">
-                    <input type="radio" name="payment_method" value="upi" x-model="selectedPayment" class="h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 focus:ring-blue-500">
-                    <label class="ml-3 flex items-center gap-4 text-sm font-medium text-white">
-                        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c5.52 0 10 4.48 10 10s-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2zm0 2a8 8 0 1 0 0 16c4.42 0 8-3.58 8-8 0-.34-.02-.67-.07-1H12v3h5a6 6 0 1 1-2.11-6.58l1.42-1.42A7.96 7.96 0 0 0 12 4z"/></svg>
-                        UPI
-                    </label>
-                </div>
-            </div>
-            <div @click="selectedPayment = 'wallet'" :class="{'border-blue-500 bg-gray-800/50': selectedPayment === 'wallet', 'border-gray-700': selectedPayment !== 'wallet'}" >
+            
+            <div @click="selectedPayment = 'WALLET'" :class="{'border-blue-500 bg-gray-800/50': selectedPayment === 'wallet', 'border-gray-700': selectedPayment !== 'wallet'}" >
   <div class="flex items-center">
-    <input type="radio" name="payment_method" value="wallet" x-model="selectedPayment" class="h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 focus:ring-blue-500" <%= walletBalance > 0 ? '' : 'disabled' %>>
+    <input id="walletRadio" type="radio" name="paymentMethod" value="WALLET" class="h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 focus:ring-blue-500" <%= walletBalance > 0 ? '' : 'disabled' %>>
     <label class="ml-3 flex items-center gap-4 text-sm font-medium text-white">
       <svg class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor"><path d="M21 7h-1V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h13a2 2 0 002-2v-2h1a2 2 0 002-2v-6a2 2 0 00-2-2zm-3 10H5V5h13v2h-1a2 2 0 00-2 2v6a2 2 0 002 2h1v2zm3-4h-4V9h4v4z"/></svg> <div class="flex flex-col">
         <span>WALLET</span>
@@ -149,9 +141,9 @@
   </div>
 </div>
             <% if (isCodAvailable) { %>
-                <div @click="selectedPayment = 'cod'" :class="{'border-blue-500 bg-gray-800/50': selectedPayment === 'cod', 'border-gray-700': selectedPayment !== 'cod'}" >
+                <div @click="selectedPayment = 'COD'" :class="{'border-blue-500 bg-gray-800/50': selectedPayment === 'cod', 'border-gray-700': selectedPayment !== 'cod'}" >
                     <div class="flex items-center">
-                        <input type="radio" name="payment_method" value="cod" x-model="selectedPayment" class="h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 focus:ring-blue-500">
+                        <input id="codRadio" type="radio" name="paymentMethod" value="COD" class="h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 focus:ring-blue-500" <%= isCodAvailable ? '' : 'disabled' %>> 
                         <label class="ml-3 flex items-center gap-4 text-sm font-medium text-white">
                              <svg class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4h10a1 1 0 110 2H13.5c1.78 1.04 2.86 2.73 3 5H17a1 1 0 110 2h-3.07c-.44 1.73-1.66 3.12-3.43 4.07L17 20a1 1 0 01-.45 1.9H7a1 1 0 110-2h5.12l-4.5-2.5a1 1 0 01.48-1.9H12c1.3 0 2.32-.84 2.74-2H7a1 1 0 110-2h7.92c-.32-1.42-1.25-2.32-2.92-2H7a1 1 0 110-2h10a1 1 0 110 2H7V4z"/></svg>
                             Cash on Delivery
@@ -161,10 +153,9 @@
             <% } %>
         </div>
     </div>
+    <!-- /////////end payment method//////// -->
 
 </div>
-                   <!-- ///////////////////////////////left side end -->
-
                  <!-- Right Side: Your Order -->
                  <div class="lg:w-1/3 bg-gray-800 p-6 rounded-lg shadow-lg bg-gradient-to-br from-gray-800 via-gray-700 to-gray-900">
                    <h3 class="text-xl font-semibold mb-4">Your Order</h3>
@@ -467,52 +458,128 @@ document.querySelectorAll('.apply-coupon-from-modal-btn').forEach(button => {
     
    
     const placeOrderBtn = document.getElementById('place-order-btn');
+    //////payment integration////////
     async function handlePlaceOrder() {
-        if (placeOrderBtn.disabled) {
-            console.log("Button is disabled, cannot place order.");
-            return;
-        }
-        placeOrderBtn.disabled = true;
-        placeOrderBtn.classList.add('bg-gray-500', 'cursor-not-allowed');
-        placeOrderBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
-        try {
-            const addressId = address ? address._id : null;
-            if (!addressId) {
-                console.error("Address ID not found. Cannot place order.");
-                showToast('error', 'Please select a valid address.');
-                return;
-            }
-            const response = await fetch('/user/place-order/cod', {
+    if (placeOrderBtn.disabled) return;
+
+    if (!address || !address._id) {
+    showToast('error', 'Please add or select a default shipping address.');
+    return;
+}
+const addressId = address._id;
+
+    const selectedPaymentInput = document.querySelector('input[name="paymentMethod"]:checked');
+    if (!selectedPaymentInput) {
+        showToast('error', 'Please select a payment method.');
+        return;
+    }
+    const paymentMethod = selectedPaymentInput.value;
+
+    placeOrderBtn.disabled = true;
+    placeOrderBtn.innerText = 'Processing...';
+
+    // --- LOGIC FOR DIFFERENT PAYMENT METHODS ---
+    try {
+        // For COD and Wallet, we place the order directly
+        if (paymentMethod === 'COD' || paymentMethod === 'WALLET') {
+            const response = await fetch('/user/place-order', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json' 
-                },
-                body: JSON.stringify({
-                    addressId: addressId, 
-                    cartItems: cartItems
-                })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ addressId, paymentMethod })
             });
+
+            const result = await response.json();
             if (response.ok) {
-                const result = await response.json();
-                console.log('Order placed successfully:', result);
-                showToast('success', result.message || 'Order placed successfully!');
-                 window.location.href = result.redirectUrl;
+                window.location.href = result.redirectUrl;
             } else {
-                const errorData = await response.json();
-                console.error('Failed to place order:', errorData);
-                showToast('error', errorData.message || 'An error occurred. Please try again.');
+                showToast('error', result.message || 'An error occurred.');
+                placeOrderBtn.disabled = false;
+                placeOrderBtn.innerText = 'Place Order';
             }
-        } catch (error) {
-            console.error('An error occurred:', error);
-            showToast('error', 'Network error. Please check your connection.');
-        } finally {
+
+        } else if (paymentMethod === 'razorpay') {
+            const createOrderResponse = await fetch('/user/create-payment-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ addressId, paymentMethod })
+            });
+            const data = await createOrderResponse.json();
+            if (!createOrderResponse.ok) throw new Error(data.message);
+            const razorpayOrder = data.order;
+            const dbOrderId = data.dbOrderId; 
+            const customId = data.customId;
+            const options = {
+                key: data.keyId,
+                amount: razorpayOrder.amount,   
+                currency: "INR",
+                name: "VIXOR",
+                description: "Order Payment",
+                order_id: razorpayOrder.id,
+                handler: async function (response) {
+                    const verifyResponse = await fetch('/user/verify-payment', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            payment: response,
+                            order: razorpayOrder,
+                            dbOrderId: dbOrderId,
+                            customId:customId
+                        })
+                    });
+                    const verifyData = await verifyResponse.json();
+                    if (verifyData.success) {
+                        window.location.href = verifyData.redirectUrl;
+                    } else {
+                        showToast('error', verifyData.message || 'Payment verification failed.');
+                         window.location.href = `/user/failure?orderId=${dbOrderId}&customId=${customId}`;
+                    }
+                },
+                prefill: {
+                    name: "<%= user.name %>",
+                    email: "<%= user.email %>"
+                },
+                theme: { color: "#5222D0" }
+            };
+            
+            const rzp1 = new Razorpay(options);
+            
+            // Add listener for payment failure
+            rzp1.on('payment.failed', async function (response) {
+                showToast('error', `Payment failed: ${response.error.description}`);
+                 placeOrderBtn.disabled = false;
+                placeOrderBtn.innerText = 'Place Order';
+                try {
+        await fetch('/user/order-failed', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ dbOrderId: dbOrderId ,customId:customId}) // Pass the database order ID
+        });
+    } catch (error) {
+        console.error('Could not notify server of payment failure:', error);
+    }
+    
+    // Now redirect to the failure page
+    window.location.href = `/user/failure?orderId=${dbOrderId}&customId=${customId}`;
+            });
+
+            rzp1.open(); // Open the modal
+        }
+
+    } catch (error) {
+        console.error('An error occurred during place order:', error);
+        showToast('error', 'An unexpected error occurred. Please try again.');
+    } finally {
+        // Re-enable the button if something goes wrong with Razorpay modal opening
+        if (!placeOrderBtn.disabled) { // Check if it wasn't already re-enabled
             placeOrderBtn.disabled = false;
-            placeOrderBtn.classList.remove('bg-gray-500', 'cursor-not-allowed');
-            placeOrderBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+            placeOrderBtn.innerText = 'Place Order';
         }
     }
-    document.getElementById('place-order-btn').addEventListener('click', handlePlaceOrder);
-
+}
+    if (placeOrderBtn) {
+    placeOrderBtn.addEventListener('click', handlePlaceOrder);
+}
+//////////payment integration end ////////////////
     ////////////////////////////////////////////
     if (applyCouponBtn) {
         applyCouponBtn.addEventListener('click', async () => {

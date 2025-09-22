@@ -2,54 +2,11 @@
 const User=require('../../model/user.js')
 const bcrypt=require('bcrypt')
 
-////Post login\\\\
-exports.postLogin = async (req, res) => {
-    try {
-        const { email, password } = req.body;
-
-       
-        if (!email.trim() || !password.trim()) {
-            return res.status(400).json({ status: false, message: 'Email and password are required.' });
-        }
-
-        const user = await User.findOne({ email });
-
-        if (!user) {
-            return res.status(401).json({ status: false, message: 'Invalid credentials' }); 
-        }
-
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return res.status(401).json({ status: false, message: 'Invalid credentials' }); 
-        }
-
-        req.session.user = {
-            _id: user._id,
-            email: user.email,
-        };
-
-        req.session.save((err) => {
-            if (err) {
-                console.error('Session save error:', err);
-                return res.status(500).json({ status: false, message: 'Login failed due to session error.' });
-            }
-            res.status(200).json({ status: true, message: 'Login successful!' });
-        });
-
-    } catch (err) {
-        console.error('Login error:', err);
-        res.status(500).json({ status: false, message: 'An internal server error occurred during login.' });
-    }
-};
-
-
-
-
-
-
 
 exports.login=(req,res)=> {
- res.render('user/login', { title: 'Sign up', isAuthPage: true });
+    const message= req.session.message;
+    delete req.session.message;
+ res.render('user/login', { title:'Login',message, isAuthPage: true });
 }
 
 exports.googleLoginSuccess = (req, res) => {

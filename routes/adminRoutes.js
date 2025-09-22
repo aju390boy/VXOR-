@@ -13,6 +13,7 @@ const orderController=require('../controllers/admin/orderController.js')
 const orderdetailController = require('../controllers/admin/orderdetailController.js');
 const offerController = require('../controllers/admin/offerController.js');
 const couponController = require('../controllers/admin/couponController.js');
+const salesController = require('../controllers/admin/salesController.js');
 const {
   addCategory,
   getCategories,
@@ -111,18 +112,29 @@ router.route('/addproducts')
 /////orders///
 router.get('/orders', isAuthenticated, orderController.renderOrdersPage);
 router.get('/api/orders', isAuthenticated, orderController.getOrders);
+////currently not using this,we can use this in order detail page//////// 
 router.patch('/api/orders/:orderId/status', isAuthenticated, orderController.updateOrderStatus);
+
+
 ///order detail////
 router.get('/api/orders/:orderId', isAuthenticated, orderdetailController.getSingleOrder);
-router.patch('/api/orders/:orderId/cancel', isAuthenticated, orderdetailController.cancelOrderItem);
-router.patch('/api/orders/:orderId/return', isAuthenticated, orderdetailController.processReturnRequest);
-router.patch('/api/orders/:orderId/products/:productId/status', orderdetailController.updateProductStatusInOrder);
-
+//////new logic for order detail page/////////
+// Update product item status
+router.patch('/orders/:orderId/products/:productId/status',isAuthenticated, orderdetailController.updateProductStatus);
+// Update product item expected delivery date
+router.patch('/orders/:orderId/products/:productId/expected-delivery', isAuthenticated, orderdetailController.updateProductExpectedDelivery);
+// Approve or Reject cancellation/return request for product or order
+router.post('/orders/:orderId/request-action',isAuthenticated, orderdetailController.handleOrderRequestAction);
+router.post('/orders/:orderId/products/:productId/request-action',isAuthenticated, orderdetailController.handleProductRequestAction);
 
 
 ///Dashboard\\\
 router.get('/dashboard',isAuthenticated, dashboardController.getDashboard);
 
+///sales///
+router.get('/sales',isAuthenticated,salesController.renderSalesPage);
+router.get('/sales/download/pdf',isAuthenticated,salesController.downloadPdfReport);
+router.get('/sales/download/excel',isAuthenticated,salesController.downloadExcelReport)
 
 ////offer////
 // GET /admin/offers - Display all offers

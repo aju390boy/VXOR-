@@ -2,6 +2,7 @@ const Product = require("../../model/product.js");
 const Category = require("../../model/category.js");
 const Brand = require("../../model/brand.js");
 const mongoose = require("mongoose");
+const Wishlist = require('../../model/wishlist.js');
 const {findBestOffer} = require('../../utils/offerHelper.js');
 
 function findSimilarProducts(currentProduct, allProducts) {
@@ -41,6 +42,8 @@ function findSimilarProducts(currentProduct, allProducts) {
 exports.getSingleProduct = async (req, res) => {
   try {
     const productId = req.params.id;
+    const wishlist = await Wishlist.findOne({ user_id: req.user._id }).lean();
+    const wishlistProductIds = wishlist ? wishlist.products.map(p => p.product_id.toString()) : [];
     const product = await Product.findById(productId)
       .populate("category_id")
       .populate("brand_id")
@@ -81,10 +84,12 @@ exports.getSingleProduct = async (req, res) => {
                 ...product, 
                 display_price: initialDisplayPrice,
                 images: initialImages,
-                sizes: initialAvailableSizes // <-- FIXED: Added this line back
+                sizes: initialAvailableSizes ,// <-- FIXED: Added this line back
+                
             },
             bestOffer, 
             similarProducts: similarProducts,
+            wishlistIds:wishlistProductIds,
             title: product.title || "Product Details",
         });
   } catch (err) {

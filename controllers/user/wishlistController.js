@@ -31,19 +31,48 @@ exports.addToWishlist = async (req, res) => {
     }
 };
 
+
+
+// exports.removeFromWishlist = async (req, res) => {
+//     try {
+//         const userId = req.user._id;
+//         const { productId } = req.params;
+
+//         await Wishlist.updateOne(
+//             { user_id: userId },
+//             { $pull: { products: { product_id: productId } } }
+//         );
+
+//         res.status(200).json({ success: true, message: 'Item removed from wishlist.' });
+//     } catch (error) {
+//         console.error("Error removing from wishlist:", error);
+//         res.status(500).json({ success: false, message: 'Server error.' });
+//     }
+// };
+
 exports.removeFromWishlist = async (req, res) => {
-    try {
-        const userId = req.user._id;
-        const { productId } = req.params;
+  try {
+    const userId = req.user._id;
+    const { productId } = req.params;
 
-        await Wishlist.updateOne(
-            { user_id: userId },
-            { $pull: { products: { product_id: productId } } }
-        );
+    const wishlist = await Wishlist.findOne({ user_id: userId });
 
-        res.status(200).json({ success: true, message: 'Item removed from wishlist.' });
-    } catch (error) {
-        console.error("Error removing from wishlist:", error);
-        res.status(500).json({ success: false, message: 'Server error.' });
+    if (!wishlist) {
+      return res.status(404).json({ success: false, message: 'Wishlist not found.' });
     }
+
+    const productIndex = wishlist.products.findIndex(item => item.product_id.toString() === productId);
+
+    if (productIndex === -1) {
+      return res.status(404).json({ success: false, message: 'Product not found in wishlist.' });
+    }
+
+    wishlist.products.splice(productIndex, 1);
+    await wishlist.save();
+
+    res.status(200).json({ success: true, message: 'Product removed from wishlist successfully.' });
+  } catch (error) {
+    console.error("Error removing from wishlist:", error);
+    res.status(500).json({ success: false, message: 'Server error.' });
+  }
 };

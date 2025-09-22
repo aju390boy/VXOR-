@@ -35,18 +35,15 @@ exports.renderOrdersPage = async (req, res) => {
 
 
 exports.getOrders = async (req, res) => {
-    const { page = 1, limit = 10, search, status, sort } = req.query;
-
+    const { page = 1, limit = 10, search, paymentStatus, sort } = req.query;
     let query = {};
     const conditions = []; 
-    if (status) {
-        conditions.push({ products: { $elemMatch: { status: status } } });
+   if (paymentStatus) {
+        conditions.push({ payment_status: paymentStatus });
     }
     if (search) {
         const searchRegex = { $regex: search, $options: 'i' };
         const orConditions = [];
-
-       
         orConditions.push({ order_id: searchRegex });
         if (mongoose.isValidObjectId(search)) {
             orConditions.push({ _id: search });
@@ -69,24 +66,18 @@ exports.getOrders = async (req, res) => {
     if (conditions.length > 0) {
         query = { $and: conditions };
     }
-
     const sortOptions = { createdAt: sort === 'date-asc' ? 1 : -1 };
-
     try {
         const orders = await Order.find(query)
             .sort(sortOptions)
             .skip((page - 1) * limit)
             .limit(parseInt(limit))
             .populate('user_id', 'firstname lastname email')
-            .lean();
-            
+            .lean();  
         const totalOrders = await Order.countDocuments(query);
-
-        
         res.status(200).json({
             orders: orders.map(order => ({
                 ...order,
-                displayStatus: order.products.length > 0 ? order.products[0].status : 'N/A',
                 user: order.user_id 
                     ? { name: `${order.user_id.firstname} ${order.user_id.lastname}`, email: order.user_id.email } 
                     : { name: 'Deleted User', email: 'N/A' },
@@ -102,6 +93,7 @@ exports.getOrders = async (req, res) => {
 };
 
 exports.updateOrderStatus = async (req, res) => {
+    console.log('anfoanjlsdkjalfsndflknsadn*********************************************************************************')
     const { orderId } = req.params;
     const { status } = req.body;
 
@@ -114,9 +106,12 @@ exports.updateOrderStatus = async (req, res) => {
             newPaymentStatus = 'REFUNDED';
             break;
         case 'CANCELLED':
-            newPaymentStatus = 'FAILED';
+            newPaymentStatus = 'REFUNDED';
             break;
         case 'RETURN REQUESTED':
+            newPaymentStatus = 'PROCESSING';
+            break;
+        case 'CANCELLATION REQUESTED':
             newPaymentStatus = 'PROCESSING';
             break;
         default:

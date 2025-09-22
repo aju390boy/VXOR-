@@ -10,7 +10,7 @@
             <input type="email" name="email" placeholder="E-mail" required>
             <input type="password" name="password" placeholder="Password" required>
             <input type="password" name="confirmPassword" placeholder="Confirm Password" required>
-
+             <input type="text" name="referralCode" placeholder="Referral Code (optional)">
             <button type="submit">CREATE ACCOUNT</button>
         </form>
 
@@ -79,6 +79,7 @@
                     if (result.redirectTo) {
                         window.location.href = result.redirectTo;
                     } else {
+                        
                         window.location.href = '/login';
                     }
                 });
