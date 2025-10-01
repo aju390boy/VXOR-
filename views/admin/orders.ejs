@@ -55,6 +55,18 @@
   background-color: #c7d2fe; /* Light Indigo */
   color: #3730a3;
 }
+.concern-CANCELLATION {
+        background-color: #fcd34d; /* Yellow-300 */
+        color: #92400e; /* Darker Yellow/Brown */
+    }
+    .concern-RETURN {
+        background-color: #f97316; /* Orange-600 */
+        color: white;
+    }
+    .concern-NONE {
+        background-color: #d1d5db; /* Gray-300 */
+        color: #374151; /* Dark Gray */
+    }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 min-h-screen">
@@ -111,6 +123,7 @@
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">User</th>
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Amount</th>
                                 <th scope="col" class="status-row px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"> Payment Status</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Concerns</th>
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
@@ -241,6 +254,15 @@
         ${paymentStatus}
     </span>
 `;
+    const concernCell = document.createElement('td');
+    concernCell.className = "px-4 py-4 whitespace-nowrap";
+    const concernValue = order.concern ? order.concern.toUpperCase() : 'NONE'; 
+    const concernClass = `concern-${concernValue}`;
+    concernCell.innerHTML = `
+        <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${concernClass}">
+            ${concernValue}
+        </span>
+    `; 
     const actionsCell = document.createElement('td');
     actionsCell.className = "px-4 py-4 whitespace-nowrap text-sm font-medium";
     const viewBtn = document.createElement('button');
@@ -248,7 +270,7 @@
     viewBtn.textContent = 'View';
     viewBtn.dataset.orderId = order._id;
     actionsCell.appendChild(viewBtn);
-    row.append(orderIdCell, dateCell, userCell, totalCell, statusCell, actionsCell);
+    row.append(orderIdCell, dateCell, userCell, totalCell, statusCell,concernCell, actionsCell);
     viewBtn.addEventListener('click', () => {
         window.location.href = `/admin/api/orders/${viewBtn.dataset.orderId}`;
     });

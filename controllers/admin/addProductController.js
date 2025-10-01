@@ -240,8 +240,7 @@ exports.getEditProductPage = async (req, res, next) => {
 };
 
 //  edit product\\
-exports.updateProduct = async (req, res, next) => {
-  console.log("arrived");
+exports.updateProduct = async (req, res) => {
   try {
     const productId = req.params.id;
     const {
@@ -253,138 +252,102 @@ exports.updateProduct = async (req, res, next) => {
       colorVariants,
       deletedImages,
     } = req.body;
+    console.log('Product ID:', productId);
+    console.log('Received color variants payload:', JSON.stringify(colorVariants, null, 2));
+    console.log('Uploaded file fieldnames:', (req.files || []).map(f => f.fieldname));
+    console.log('Color variants received with colorIds:', 
+      (colorVariants || []).map(v => ({ colorId: v.colorId, colorName: v.colorName }))
+    );
     const errors = [];
+    if (!mongoose.Types.ObjectId.isValid(productId))
+      errors.push('Invalid product ID.');
+    if (errors.length > 0)
+      return res.status(400).json({ message: 'Validation failed', errors });
+    const product = await Product.findById(productId);
+    if (!product) return res.status(404).json({ message: 'Product not found.' });
+    console.log('Existing color variants in DB:', product.colorVariants.map(v => ({ id: String(v._id), colorName: v.colorName })));
+    if (title !== undefined) product.title = title;
+    if (description !== undefined) product.description = description;
+    if (category_id !== undefined && category_id !== '') product.category_id = category_id;
+    if (brand_id !== undefined && brand_id !== '') product.brand_id = brand_id;
+    if (warranty !== undefined) product.warranty = warranty;
 
-    if (!mongoose.Types.ObjectId.isValid(productId)) {
-      errors.push("Invalid product ID.");
+    const delImgs = Array.isArray(deletedImages) ? deletedImages : [];
+    if (delImgs.length > 0) {
+      product.colorVariants.forEach(variant => {
+        variant.images = variant.images.filter(img => !delImgs.includes(img));
+      });
     }
-    const containsLetter = /[a-zA-Z]/.test(title);
-    if (!title || title.trim().length < 3 || !containsLetter) {
-      if (!title || title.trim().length === 0) {
-        errors.push("Product title is required.");
-      } else if (!containsLetter) {
-        errors.push(
-          "Product title must contain at least one alphabetical character."
-        );
-      } else {
-        errors.push("Product title must be at least 3 characters long.");
-      }
-    }
-    if (!mongoose.Types.ObjectId.isValid(category_id)) {
-      errors.push("Invalid category selected.");
-    }
-    if (!mongoose.Types.ObjectId.isValid(brand_id)) {
-      errors.push("Invalid brand selected.");
-    }
-    if (warranty && (isNaN(parseInt(warranty)) || parseInt(warranty) < 0)) {
-      errors.push("Warranty must be a positive number.");
-    }
-    if (!colorVariants || colorVariants.length === 0) {
-      errors.push("At least one color variant is required.");
-    }
-    const existingImagesCount = colorVariants.reduce((count, variant) => {
-      const existing = Object.values(variant.images || {}).filter(
-        (img) => img.filename
-      );
-      return count + existing.length;
-    }, 0);
+    if (Array.isArray(colorVariants)) {
+      const existingMap = new Map();
+      product.colorVariants.forEach(v => existingMap.set(String(v._id), v));
 
-    if (req.files.length + existingImagesCount === 0) {
-      errors.push("At least one image must exist for the product.");
-    }
-    colorVariants.forEach((variant, i) => {
-      if (!variant.colorName || variant.colorName.trim() === "") {
-        errors.push(`Color name is required for variant #${i + 1}.`);
-      }
-      if (!variant.variants || Object.keys(variant.variants).length === 0) {
-        errors.push(
-          `At least one size variant is required for color #${i + 1}.`
-        );
-      } else {
-        Object.values(variant.variants).forEach((sizeVariant, j) => {
-          if (!sizeVariant.size || sizeVariant.size.trim() === "") {
-            errors.push(
-              `Size is required for size variant #${j + 1} of color #${i + 1}.`
-            );
-          }
-          if (
-            isNaN(parseFloat(sizeVariant.price)) ||
-            parseFloat(sizeVariant.price) < 0
-          ) {
-            errors.push(
-              `Price must be a positive number for size variant #${
-                j + 1
-              } of color #${i + 1}.`
-            );
-          }
-          if (
-            isNaN(parseInt(sizeVariant.stock)) ||
-            parseInt(sizeVariant.stock) < 0
-          ) {
-            errors.push(
-              `Stock must be a positive number for size variant #${
-                j + 1
-              } of color #${i + 1}.`
-            );
-          }
-        });
-      }
-    });
+      const updatedVariants = [];
 
-    if (errors.length > 0) {
-      return res
-        .status(400)
-        .json({ message: "Validation failed", errors: errors });
-    }
-    const productToUpdate = await Product.findById(productId);
-    if (!productToUpdate) {
-      return res.status(404).json({ message: "Product not found." });
-    }
-    productToUpdate.title = title;
-    productToUpdate.description = description;
-    productToUpdate.warranty = warranty;
-    productToUpdate.category_id = category_id;
-    productToUpdate.brand_id = brand_id;
-    const imagesToDelete = JSON.parse(deletedImages);
-    if (imagesToDelete && imagesToDelete.length > 0) {
-    }
-    const updatedColorVariants = [];
-    if (colorVariants && Array.isArray(colorVariants)) {
-      for (const variant of colorVariants) {
-        const newImages = req.files.filter(
-          (file) =>
-            file.fieldname ===
-            `colorVariants[${colorVariants.indexOf(variant)}][images]`
+      for (const [index, variant] of colorVariants.entries()) {
+        const colorId = variant.colorId;
+        const existingVariant = colorId && existingMap.has(String(colorId)) ? existingMap.get(String(colorId)) : null;
+
+        const newFiles = (req.files || []).filter(f =>
+          f.fieldname === `colorVariants[${index}][images]`
         );
-        let existingVariant = variant.colorId
-          ? productToUpdate.colorVariants.id(variant.colorId)
-          : null;
+        const newImages = newFiles.map(f => `/${f.filename}`);
+
         if (existingVariant) {
-          existingVariant.colorName = variant.colorName;
-          existingVariant.variants = variant.variants;
-          if (newImages && newImages.length > 0) {
-            const newImageUrls = newImages.map(
-              (file) => `/uploads/products/${file.filename}`
-            );
-            existingVariant.images =
-              existingVariant.images.concat(newImageUrls);
+          console.log('Found existing variant:', { id: String(existingVariant._id), colorName: existingVariant.colorName });
+          console.log(`Processing variant index ${index} with colorId:`, variant.colorId, typeof variant.colorId);
+
+          if (variant.colorName !== undefined) existingVariant.colorName = variant.colorName;
+
+          if (variant.variants !== undefined) {
+            existingVariant.variants = Object.values(variant.variants).map(size => ({
+              size: size.size,
+              price: parseFloat(size.price),
+              stock: parseInt(size.stock, 10),
+            }));
           }
+
+          if (variant.images !== undefined || newImages.length > 0) {
+            const existingImgs = existingVariant.images;
+            const clientImgs = (variant.images || []).map(img => {
+              if (typeof img === 'string') return img;
+              if (img.url) return img.url;
+              if (img.filename) return `/${img.filename}`;
+              return '';
+            }).filter(Boolean);
+
+            const delSet = new Set(delImgs);
+            const keptExisting = existingImgs.filter(img => !delSet.has(img));
+            const keptClient = clientImgs.filter(img => !delSet.has(img));
+
+            const mergedImages = new Set([...keptExisting, ...keptClient, ...newImages]);
+            existingVariant.images = Array.from(mergedImages);
+          }
+          updatedVariants.push(existingVariant);
+          existingMap.delete(String(colorId));
         } else {
-          const newVariant = {
+          console.log('No matching existing variant found, will create new one.');
+          const sizes = Object.values(variant.variants || {}).map(size => ({
+            size: size.size,
+            price: parseFloat(size.price),
+            stock: parseInt(size.stock, 10),
+          }));
+          updatedVariants.push({
             colorName: variant.colorName,
-            variants: variant.variants,
-            images: newImages.map(
-              (file) => `/uploads/products/${file.filename}`
-            ),
-          };
-          productToUpdate.colorVariants.push(newVariant);
+            images: newImages,
+            variants: sizes,
+          });
         }
       }
+      for (const leftoverVariant of existingMap.values()) {
+        updatedVariants.push(leftoverVariant);
+      }
+      product.colorVariants = updatedVariants;
     }
-    await productToUpdate.save();
-    res.status(200).json({ message: "Product updated successfully!" });
+    await product.save();
+    return res.status(200).json({ message: 'Product updated successfully.' });
   } catch (err) {
-    console.error("Error updating product:", err);
-    res.status(500).json({ message: "Failed to update product." });
+    console.error('Error updating product:', err);
+    return res.status(500).json({ message: 'Failed to update the product.', error: err.message });
   }
 };

@@ -42,6 +42,7 @@ const orderSchema = new mongoose.Schema({
   payment_details: { transactionId: { type: String }, paidAt: { type: Date }},
   coupon_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Coupon' },
   coupon_discount: { type: Number, min: 0, default: 0 },
+  concern:{type:String,enum:['RETURN','CANCELLATION','NONE'],default:'NONE'}, 
   total_offer_applied: { type: Number, min: 0, default: 0 },
   tax: { type: Number, min: 0, default: 0 },
   total_amount: { type: Number, min: 0, required: true }

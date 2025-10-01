@@ -1,7 +1,6 @@
 const Referral = require('../../model/referral.js');
 
 async function referralCodeMiddleware(req, res, next) {
-    console.log('req.user in referralCodeMiddleware:', req.user);
   try {
     if (req.user && req.user._id) {
       const referral = await Referral.findOne({ referrer_user_id: req.user._id });

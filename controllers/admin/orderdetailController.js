@@ -237,6 +237,7 @@ exports.handleOrderRequestAction = async (req, res) => {
       session.endSession();
       return res.status(400).json({ message: 'Invalid action' });
     }
+    order.concern = 'NONE';
     await order.save({ session });
     await session.commitTransaction();
     session.endSession();
@@ -319,6 +320,7 @@ exports.handleProductRequestAction = async (req, res) => {
       session.endSession();
       return res.status(400).json({ message: 'Invalid action' });
     }
+    order.concern = 'NONE';
     await order.save({ session });
     await session.commitTransaction();
     session.endSession();
@@ -331,7 +333,7 @@ exports.handleProductRequestAction = async (req, res) => {
   }
 };
 
-
+////increment quantity/////////
 async function incrementProductQuantity(productId, colorName, size, quantityToAdd) {
   try {
     const product = await Product.findById(productId);
@@ -354,6 +356,8 @@ async function incrementProductQuantity(productId, colorName, size, quantityToAd
   }
 }
 
+
+/////refund wallet///////
 async function refundToWallet(userId, amount, orderId, description) {
   let wallet = await Wallet.findOne({ user_id: userId });
   if (!wallet) wallet = new Wallet({ user_id: userId, balance: 0, transactions: [] });

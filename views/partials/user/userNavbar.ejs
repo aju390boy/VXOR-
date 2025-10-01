@@ -1,14 +1,68 @@
-<div class="bg-gray-800 text-white text-center  text-xs fixed top-0 w-full z-10 flex justify-center items-center gap-2">
-  <% if (referralCode) { %>
-    <span class="font-awesome  text-gray-300 uppercase tracking-wide px-2 py-1 bg-gray-800 rounded shadow-lg">
-      Your Referral Code: <%= referralCode %>
-    </span>
-  <% } else { %>
-    <span class="text-gray-400">Referral code not available</span>
-  <% } %>
+<style>
+  
+  .referral-container {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+
+    background-color: #1f2937; /* Tailwind gray-800 */
+    z-index: 9999 !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
+    text-align: center !important;
+    will-change: transform; /* Optimize for animation */
+  }
+
+  #scrollingText {
+    display: inline-block;
+    white-space: nowrap;
+    min-width: 100vw; /* full viewport width */
+    color: silver; /* Neon Green */
+    font-weight: bold;
+    
+  }
+
+  .fluorescent-amount {
+    color: #ff073a; /* Fluorescent red */
+   
+    font-weight: bolder;
+  }
+  .fluorescent-amount1 {
+    color: #ff073a; /* Fluorescent red */
+   
+    font-weight: bolder;
+  }
+  .referral-code {
+  color: #19e54a; /* Bright green */
+  font-weight: bold;
+  letter-spacing: 0.02em;
+  text-shadow: 0 0 8px #33ff77;
+}
+.scrolling-item {
+  position: absolute; /* So they don't push each other */
+  white-space: nowrap;
+  top: 0;
+  left: 0;
+  font-weight: bold;
+ margin-right: 40px; 
+  display: inline-block;
+}
+
+  
+</style>
+
+
+<div class="referral-container">
+  <div id="scrollingText" class="vibrant-text text-xs inline-block " ></div>
 </div>
 
-<nav class="flex justify-between items-center bg-black border-gray-400 py-3 px-6 fixed top-5 w-full z-[9]">
+
+
+<nav class="flex justify-between items-center bg-black border-gray-400 py-3 px-6  fixed top-6 w-full z-[9]">
     <div class="nav-left">
         <a class="text-xl font-bold"><span class="text-white">V</span><span class="text-white">X</span><span class="text-red-600">O</span>R</a>
     </div>
@@ -40,3 +94,35 @@
         <a href="/user/profile" class="text-lg"><i class="fa-solid fa-user"></i></a>
     </div>
 </nav>
+<script>
+ document.addEventListener('DOMContentLoaded', () => {
+  const container = document.querySelector('.referral-container');
+  const scrollingText = document.getElementById('scrollingText');
+  const referralCode = "<%= referralCode %>";
+  const fluorescentAmountForReferrar = "$100";
+  const fluorescentAmountForReferrered = "$50";
+  const combinedText = [
+    "Welcome to VXOR — not just protection, it’s a flex",
+    `Friends bring rewards! Use referral code ${referralCode} and collect ${fluorescentAmountForReferrar} for each successful invite.`,
+    `Join the VXOR fam with a referral code and grab ${fluorescentAmountForReferrered} on your first successful order.` , 
+    "Respect for riding with VXOR — catch you on the next lap"
+  ].join('    ');
+  scrollingText.innerHTML = combinedText
+    .replace(referralCode, `<span class="referral-code">${referralCode}</span>`)
+    .replace(fluorescentAmountForReferrar, `<span class="fluorescent-amount">${fluorescentAmountForReferrar}</span>`)
+    .replace(fluorescentAmountForReferrered, `<span class="fluorescent-amount1">${fluorescentAmountForReferrered}</span>`);
+  const speed = 0.8;
+  const textWidth = scrollingText.offsetWidth;
+  const containerWidth = container.offsetWidth;
+  let position = containerWidth;
+  function animate() {
+    position -= speed;
+    if (-position >= textWidth) {
+      position = containerWidth; 
+    }
+    scrollingText.style.transform = `translateX(${position}px)`;
+    requestAnimationFrame(animate);
+  }
+  animate();
+});
+</script>

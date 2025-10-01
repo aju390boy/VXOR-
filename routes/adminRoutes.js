@@ -7,6 +7,7 @@ const customerController=require('../controllers/admin/customerController.js')
 const authController=require('../controllers/admin/authController.js')
 const productController = require('../controllers/admin/productController.js');
 const { isAuthenticated, isNotAuthenticated } = require('../middlewares/admin/viewsMiddleware.js');
+const {multerErrorHandler} = require('../middlewares/admin/multerErrorHandler.js');
 const brandController=require('../controllers/admin/brandController.js')
 const addProductController=require('../controllers/admin/addProductController.js');
 const orderController=require('../controllers/admin/orderController.js')
@@ -50,24 +51,19 @@ router.post('/category/edit/:id', editCategory);
 router.post('/category/delete/:id', deleteCategory);
 
 
-
+//Add Products\\\
+router.route('/addproducts')
+.get(isAuthenticated,addProductController.getAddProductPage)
+.post(addProductController.upload.any(), 
+    multerErrorHandler,
+    addProductController.addProduct
+);
+////edit product////
 router.route('/editproduct/:id')
 .get(isAuthenticated, addProductController.getEditProductPage)
-.post( isAuthenticated,
+.patch( isAuthenticated,
     addProductController.upload.any(), 
-    (err, req, res, next) => {
-        if (err instanceof multer.MulterError) {
-            console.error("Multer error:", err.message);
-            return res.status(400).json({ message: "File upload error: " + err.message });
-        } else if (err && err.code === 'FILE_TYPE_ERROR') {
-            console.error("File type error:", err.message);
-            return res.status(400).json({ message: err.message });
-        } else if (err) {
-            console.error("Unknown file upload error:", err);
-            return res.status(500).json({ message: "An unexpected error occurred during file upload." });
-        }
-        next();
-    },
+    multerErrorHandler,
    addProductController.updateProduct
 );
 // products
@@ -85,29 +81,7 @@ router.post('/brand/edit/:id', brandController.uploadBrandImage.single('image'),
 router.post('/brand/delete/:id', brandController.deleteBrand);
 
 
-//Add Products\\\
-router.route('/addproducts')
-.get(isAuthenticated,addProductController.getAddProductPage)
-.post(addProductController.upload.any(), 
-    (err, req, res, next) => {
-        
-        if (err instanceof multer.MulterError) {
-            console.error("Multer error:", err.message);
-            
-            return res.status(400).json({ message: "File upload error: " + err.message });
-        } else if (err && err.code === 'FILE_TYPE_ERROR') {
-            console.error("File type error:", err.message);
-            return res.status(400).json({ message: err.message });
-        } else if (err) {
-           
-            console.error("Unknown file upload error:", err);
-            return res.status(500).json({ message: "An unexpected error occurred during file upload." });
-        }
-        next(); 
-    },
-   
-    addProductController.addProduct
-);
+
 
 /////orders///
 router.get('/orders', isAuthenticated, orderController.renderOrdersPage);

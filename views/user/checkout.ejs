@@ -140,17 +140,60 @@
     </label>
   </div>
 </div>
-            <% if (isCodAvailable) { %>
-                <div @click="selectedPayment = 'COD'" :class="{'border-blue-500 bg-gray-800/50': selectedPayment === 'cod', 'border-gray-700': selectedPayment !== 'cod'}" >
-                    <div class="flex items-center">
-                        <input id="codRadio" type="radio" name="paymentMethod" value="COD" class="h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 focus:ring-blue-500" <%= isCodAvailable ? '' : 'disabled' %>> 
-                        <label class="ml-3 flex items-center gap-4 text-sm font-medium text-white">
-                             <svg class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4h10a1 1 0 110 2H13.5c1.78 1.04 2.86 2.73 3 5H17a1 1 0 110 2h-3.07c-.44 1.73-1.66 3.12-3.43 4.07L17 20a1 1 0 01-.45 1.9H7a1 1 0 110-2h5.12l-4.5-2.5a1 1 0 01.48-1.9H12c1.3 0 2.32-.84 2.74-2H7a1 1 0 110-2h7.92c-.32-1.42-1.25-2.32-2.92-2H7a1 1 0 110-2h10a1 1 0 110 2H7V4z"/></svg>
-                            Cash on Delivery
-                        </label>
-                    </div>
-                </div>
-            <% } %>
+           <%
+    // Assuming 'total_amount' is available in your EJS context.
+    // Replace '5000' with your actual limit for Rs.
+    const codLimit = 5000;
+    const isOverLimit = totals.grandTotal > codLimit;
+    const issDisabled = !isCodAvailable || isOverLimit;
+    let selectedPayment=null;
+    const isSelected = selectedPayment === 'COD'; // Use 'COD' for strict comparison
+%>
+
+<% if (isCodAvailable) { %>
+    <div
+        @click="selectedPayment = 'COD'"
+        :class="{
+            // Highlight border/background if selected
+            'border-blue-500 bg-gray-800/50': isSelected,
+            'border-gray-700': !isSelected,
+            // Add a visual cue if disabled but selected to prevent accidental clicks
+            'opacity-60 cursor-not-allowed': isDisabled
+        }"
+       
+    >
+        <div class="flex items-center">
+            <input
+                id="codRadio"
+                type="radio"
+                name="paymentMethod"
+                value="COD"
+                class="h-4 w-4 text-blue-600 bg-gray-700 border-gray-600 focus:ring-blue-500"
+                <%= issDisabled ? 'disabled' : '' %>
+                :checked="isSelected"
+            >
+            <label
+                for="codRadio"
+                class="ml-3 flex items-center gap-4 text-sm font-medium"
+                :class="{
+                    'text-red-400': isDisabled, // Text color red if disabled
+                    'text-green-400': !isDisabled, // Text color green if NOT disabled
+                    'text-white': isSelected && !isDisabled, // Keep white if selected and not disabled
+                    'cursor-pointer': !isDisabled
+                }"
+            >
+                <svg class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4h10a1 1 0 110 2H13.5c1.78 1.04 2.86 2.73 3 5H17a1 1 0 110 2h-3.07c-.44 1.73-1.66 3.12-3.43 4.07L17 20a1 1 0 01-.45 1.9H7a1 1 0 110-2h5.12l-4.5-2.5a1 1 0 01.48-1.9H12c1.3 0 2.32-.84 2.74-2H7a1 1 0 110-2h7.92c-.32-1.42-1.25-2.32-2.92-2H7a1 1 0 110-2h10a1 1 0 110 2H7V4z"/></svg>
+                Cash on Delivery
+            </label>
+        </div>
+
+        <% if (isOverLimit) { %>
+            <p class=" ml-16 text-xs font-thin text-red-600 ">
+                 COD not available for orders over Rs. <%= codLimit.toLocaleString('en-IN') %>. Your total is Rs. <%=totals.grandTotal %>.
+            </p>
+        <% } %>
+    </div>
+<% } %>
         </div>
     </div>
     <!-- /////////end payment method//////// -->
