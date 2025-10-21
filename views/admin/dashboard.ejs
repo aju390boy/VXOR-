@@ -152,23 +152,65 @@
         <% }) %>
     </div>
 </div>
-                    <div class="bg-white rounded-2xl shadow-lg p-6">
-                        <h3 class="text-xl font-semibold text-slate-800 mb-4">Best Selling</h3>
-                        <ul class="space-y-4">
-                            <% bestSelling.forEach(product => { %>
-                                <li class="flex items-center space-x-4">
-                                    <div class="flex-shrink-0 w-12 h-12">
-                                        <% const firstColorVariant = product.colorVariants.length > 0 ? product.colorVariants[0] : null; %>
-                                        <img src="/uploads/products/<%= firstColorVariant?.images?.[0] || 'placeholder.png' %>" alt="<%= product.title %>" class="w-12 h-12 rounded-lg object-cover">
-                                    </div>
-                                    <div class="flex-grow">
-                                        <p class="text-sm font-semibold text-slate-800 truncate"><%= product.title %></p>
-                                        <p class="text-xs text-slate-500">Sales: <%= product.totalSalesCount %></p>
-                                    </div>
-                                </li>
-                            <% }) %>
-                        </ul>
+<!-- BEST SELLING -->
+ <div class="bg-white rounded-2xl shadow-lg p-6">
+<form method="GET" action="/admin/dashboard" class="mb-4">
+    <select name="bestSellingType" onchange="this.form.submit()" class="border rounded px-3 py-2 bg-slate-100 focus:outline-none focus:ring focus:border-indigo-500">
+        <option value="products" <%= bestSellingType === 'products' ? 'selected' : '' %>>Products</option>
+        <option value="category" <%= bestSellingType === 'category' ? 'selected' : '' %>>Category</option>
+        <option value="brand" <%= bestSellingType === 'brand' ? 'selected' : '' %>>Brand</option>
+    </select>
+</form>
+    <h3 class="text-xl font-semibold text-slate-800 mb-4">
+        Best Selling <%= bestSellingType.charAt(0).toUpperCase() + bestSellingType.slice(1) %>
+    </h3>
+    <ul class="space-y-4">
+        <% if (bestSellingType === 'products') { %>
+            <% bestSelling.forEach(product => { %>
+                <li class="flex items-center space-x-4">
+                    <div class="flex-shrink-0 w-12 h-12">
+                        <% 
+                            const firstColorVariant = product.colorVariants?.[0];
+                            const productImage = firstColorVariant?.images?.[0] || 'placeholder.png';
+                        %>
+                        <img src="/uploads/products/<%= productImage %>" alt="<%= product.title %>" class="w-12 h-12 rounded-lg object-cover">
                     </div>
+                    <div class="flex-grow">
+                        <p class="text-sm font-semibold text-slate-800 truncate"><%= product.title %></p>
+                        <p class="text-xs text-slate-500">Sales: <%= product.min_price || '—' %></p>
+                    </div>
+                </li>
+            <% }) %>
+        <% } else if (bestSellingType === 'category') { %>
+            <% bestSelling.forEach(cat => { %>
+                <li class="flex flex-col space-y-1">
+                    <div class="flex-shrink-0 w-12 h-12">
+                       <% const productImage = cat.productImages?.[0] || 'placeholder.png'; %>
+<img src="/uploads/products/<%= productImage %>" ...>
+
+                    </div>
+                    <span class="font-semibold text-slate-800"><%= cat.categoryName || 'Category' %></span>
+                    <span class="text-xs text-slate-500">Sales: <%= cat.totalSalesCount || '—' %></span>
+                    <span class="text-xs text-slate-400">Popular Products: <%= cat.products?.join(', ') || '' %></span>
+                </li>
+            <% }) %>
+        <% } else if (bestSellingType === 'brand') { %>
+            <% bestSelling.forEach(brand => { %>
+                <li class="flex flex-col space-y-1">
+                    <div class="flex-shrink-0 w-12 h-12">
+                        <% const productImage = brand.productImages?.[0] || 'placeholder.png'; %>
+<img src="/uploads/products/<%= productImage %>" ...>
+                    </div>
+                    <span class="font-semibold text-slate-800"><%= brand.brandName || 'Brand' %></span>
+                    <span class="text-xs text-slate-500">Sales: <%= brand.totalSalesCount || '—' %></span>
+                    <span class="text-xs text-slate-400">Popular Products: <%= brand.products?.join(', ') || '' %></span>
+                </li>
+            <% }) %>
+        <% } %>
+    </ul>
+</div>
+
+                    <!-- BEST SELLING END -->
                 </div>
 
                 <div class="bg-white rounded-2xl shadow-lg p-6">

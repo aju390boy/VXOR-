@@ -1,5 +1,6 @@
 const { resolveContent } = require('nodemailer/lib/shared');
 const Category = require('../../model/category');
+const Product = require('../../model/offer.js');
 
 exports.getCategories = async (req, res) => {
     try {
@@ -141,9 +142,10 @@ exports.deleteCategory = async (req, res) => {
         const deletedCategory = await Category.findByIdAndDelete(categoryId);
         
         if (!deletedCategory) {
+            console.log('hello')
             return res.status(404).json({ success: false, message: 'Category not found.' });
         }
-        res.json({ success: true, message: 'Successfully deleted category.' });
+        res.json({ success: true, message: `Successfully deleted category `});
         
     } catch (err) {
         console.error("Error deleting category:", err.message);

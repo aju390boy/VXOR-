@@ -115,84 +115,136 @@ exports.getProfileSection = async (req, res) => {
         break;
       
         case "wishlist":
-     const cart = await Cart.findOne({ userId: user._id }).select('items.productId').lean();
-    const cartProductIds = new Set(cart ? cart.items.map(item => item.productId.toString()) : []);
-    const wishlist = await Wishlist.findOne({ user_id: user._id })
-        .populate({
-            path: 'products.product_id',
-            model: 'Product',
-            populate: [
-                { path: 'category_id', select: 'name' },
-                { path: 'brand_id', select: 'name' }
-            ]
-        })
-        .lean();
-    let processedWishlistItems = [];
-    if (wishlist && wishlist.products.length > 0) {
-        const filteredProducts = wishlist.products.filter(wishlistItem => {
-            const product = wishlistItem.product_id;
-            if (!product) {
-                return false; 
-            }
-            return !cartProductIds.has(product._id.toString());
-        });
-        processedWishlistItems = await Promise.all(
-            filteredProducts.map(async (item) => {
-                const product = item.product_id; 
-                if (product.isDeleted || !product.isListed) return null;
-                const bestOffer = await findBestOffer(product._id, product.category_id?._id, product.brand_id?._id);
-                const displayImageUrl = product.colorVariants?.[0]?.images?.[0]
-                    ? `/uploads/products/${product.colorVariants[0].images[0]}`
-                    : '/images/placeholder.png'; 
-                let discountedPrice = null;
-                if (bestOffer && product.min_price > 0) {
-                    discountedPrice = product.min_price * (1 - bestOffer.discountPercentage / 100);
-                }
-                return { 
-                    ...product, 
-                    bestOffer, 
-                    display_image_url: displayImageUrl,
-                    discounted_price: discountedPrice
-                };
-            })
-        );
-    }
-    data.wishlistItems = processedWishlistItems.filter(item => item !== null);
-    templatePath = "user/profile/partials/_wishlist";
-    break;
-        case "wallet": 
-        let wallet = await Wallet.findOne({ user_id: user._id }).lean();
-        if (!wallet) {
-            wallet = {
-                balance: 0,
-                transactions: []
-            };
-        } else {
-            wallet.transactions.reverse();
-        }
-        data.wallet = wallet;
-        templatePath = "user/profile/partials/_wallet";
-        break;
-      case "orders":
-       const orders = await Order.find({ user_id: user._id })
-        .select("order_id total_amount payment_status createdAt products")
-        .sort({ createdAt: -1 })
-        .populate({
-            path: "products.product_id",
-            select: "title colorVariants",
-        })
-        .lean();
-        orders.forEach(order => {
-        const firstProduct = order.products?.[0]?.product_id;
-        if (firstProduct && firstProduct.colorVariants?.[0]?.images?.[0]) {
-            order.display_image_url = `/uploads/products/${firstProduct.colorVariants[0].images[0]}`;
-        } else {
-            order.display_image_url = '/images/placeholder.png';
-        }
+  const pageWishlist = parseInt(req.query.page) || 1;
+  const limitWishlist = parseInt(req.query.limit) || 5;
+  const skipWishlist = (pageWishlist - 1) * limitWishlist;
+
+  const cart = await Cart.findOne({ userId: user._id }).select('items.productId').lean();
+  const cartProductIds = new Set(cart ? cart.items.map(item => item.productId.toString()) : []);
+
+  const wishlist = await Wishlist.findOne({ user_id: user._id })
+    .populate({
+      path: 'products.product_id',
+      model: 'Product',
+      populate: [{ path: 'category_id', select: 'name' }, { path: 'brand_id', select: 'name' }]
+    })
+    .lean();
+
+  let filteredProducts = [];
+  if (wishlist && wishlist.products.length > 0) {
+    filteredProducts = wishlist.products.filter(wishlistItem => {
+      const product = wishlistItem.product_id;
+      if (!product) return false;
+      return !cartProductIds.has(product._id.toString());
     });
-    data.orders = orders;
-    templatePath = "user/profile/partials/_orderList";
-    break;
+  }
+
+  const totalWishlistCount = filteredProducts.length;
+  const pagedProducts = filteredProducts.slice(skipWishlist, skipWishlist + limitWishlist);
+
+  const processedWishlistItems = await Promise.all(
+    pagedProducts.map(async (item) => {
+      const product = item.product_id;
+      if (product.isDeleted || !product.isListed) return null;
+      const bestOffer = await findBestOffer(product._id, product.category_id?._id, product.brand_id?._id);
+      const displayImageUrl = product.colorVariants?.[0]?.images?.[0]
+        ? `/uploads/products/${product.colorVariants[0].images[0]}`
+        : '/images/placeholder.png';
+      let discountedPrice = null;
+      if (bestOffer && product.min_price > 0) {
+        discountedPrice = product.min_price * (1 - bestOffer.discountPercentage / 100);
+      }
+      return {
+        ...product,
+        bestOffer,
+        display_image_url: displayImageUrl,
+        discounted_price: discountedPrice
+      };
+    })
+  );
+  data.wishlistItems = processedWishlistItems.filter(item => item !== null);
+  data.pagination = {
+    totalPages: Math.ceil(totalWishlistCount / limitWishlist),
+    currentPage: pageWishlist,
+    limit: limitWishlist,
+  };
+
+  templatePath = "user/profile/partials/_wishlist";
+  break;
+
+        case "wallet":
+  // Parse pagination parameters from query (default page=1, limit=10)
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 5;
+  const skip = (page - 1) * limit;
+
+  // Fetch wallet data
+  let wallet = await Wallet.findOne({ user_id: user._id }).lean();
+
+  // Default wallet if none found
+  if (!wallet) {
+    wallet = { balance: 0, transactions: [] };
+  }
+
+  // Count total transactions to calculate total pages
+  const totalTxns = wallet.transactions.length;
+
+  // Paginate transactions array in-memory (if transactions stored embedded)
+  // For large transactions list, consider storing separately and paginating at DB level
+  const pagedTransactions = wallet.transactions
+    .slice()  // clone array to avoid mutations
+    .reverse() // Reverse for latest first
+    .slice(skip, skip + limit);
+
+  const totalPages = Math.ceil(totalTxns / limit);
+
+  // Pass paginated transactions and pagination info to template
+  data.wallet = {
+    ...wallet,
+    transactions: pagedTransactions,
+    pagination: { totalPages, currentPage: page, limit },
+  };
+
+  templatePath = "user/profile/partials/_wallet";
+  break;
+
+      case "orders":
+  const pageOrders = parseInt(req.query.page) || 1;
+  const limitOrders = parseInt(req.query.limit) || 10;
+  const skipOrders = (pageOrders - 1) * limitOrders;
+
+  const totalOrdersCount = await Order.countDocuments({ user_id: user._id });
+
+  const orders = await Order.find({ user_id: user._id })
+    .select("order_id total_amount payment_status createdAt products")
+    .sort({ createdAt: -1 })
+    .skip(skipOrders)
+    .limit(limitOrders)
+    .populate({
+      path: "products.product_id",
+      select: "title colorVariants",
+    })
+    .lean();
+
+  orders.forEach(order => {
+    const firstProduct = order.products?.[0]?.product_id;
+    order.display_image_url = (firstProduct && firstProduct.colorVariants?.[0]?.images?.[0]) ?
+      `/uploads/products/${firstProduct.colorVariants[0].images[0]}` :
+      '/images/placeholder.png';
+  });
+  console.log(`count : ${ Math.ceil(totalOrdersCount / limitOrders)}`);
+  console.log(`current pages : ${pageOrders}`);
+  console.log(`limit :${limitOrders}`);
+  data.orders = orders,
+  pagination = {
+  totalPages: Math.ceil(totalOrdersCount / limitOrders), // e.g. 6 if 11/2=5.5=>6
+  currentPage: pageOrders,
+  limit: limitOrders,
+};
+
+  templatePath = "user/profile/partials/_orderList";
+  break;
+
       case "address":
         const addresses = await Address.find({ user_id: user._id }).lean();
         data.addresses = addresses;

@@ -136,10 +136,14 @@ exports.placeOrder = async (req, res) => {
     }
 };
 
+
+
 exports.createPaymentOrder = async (req, res) => {
     try {
         const { addressId, paymentMethod } = req.body;
         const userId = req.user._id;
+        let existingOrder = await Order.findOne({ user_id: userId,payment_status: { $in: ['PENDING', 'FAILED']}});
+
         const cart = await Cart.findOne({ userId }).populate({ path: 'items.productId', populate: ['category_id', 'brand_id']});
         if (!cart || cart.items.length === 0) {
             return res.status(400).json({ message: "Cart is empty." });
@@ -172,34 +176,57 @@ exports.createPaymentOrder = async (req, res) => {
         let finalAmount = totalAfterOffers - couponDiscount;
         const tax = finalAmount > 0 ? finalAmount * 0.05 : 0;
         finalAmount += tax;
-        const newOrder = new Order({
-            user_id: userId,
-            address_id: addressId,
-            products: productsToOrder, 
-            total_amount: finalAmount.toFixed(2),
-            payment_status: 'PENDING',
-            payment_method: 'ONLINE',
-            total_offer_applied: originalSubtotal - totalAfterOffers,
-            couponDiscount: couponDiscount,
-            coupon_discount: couponDiscount, 
-            tax:tax
-        });
-        await newOrder.save();
-        const options = {
-            amount: Math.round(finalAmount * 100), 
-            currency: "INR",
-            receipt: newOrder.order_id
-        };
-        const razorpayOrder = await razorpay.orders.create(options);
-        await Order.updateOne({ _id: newOrder._id }, { $set: { payment_Id: razorpayOrder.id } });
-        console.log(`new order : ${newOrder.order_id}`)
-        res.json({
-            success: true,
-            order: razorpayOrder,
-            keyId: process.env.RAZORPAY_KEY_ID,
-            dbOrderId: newOrder._id ,
-            customId:newOrder.order_id
-        });
+
+
+        let orderDoc;
+         if (existingOrder) {
+  // Update existing order
+  existingOrder.address_id = addressId;
+  existingOrder.payment_method = paymentMethod;
+  existingOrder.products = productsToOrder;
+  existingOrder.total_amount = finalAmount.toFixed(2);
+  existingOrder.payment_status = 'PENDING';
+  existingOrder.total_offer_applied = originalSubtotal - totalAfterOffers;
+  existingOrder.couponDiscount = couponDiscount;
+  existingOrder.coupon_discount = couponDiscount;
+  existingOrder.tax = tax;
+
+  await existingOrder.save();
+  orderDoc = existingOrder;
+} else {
+  // Create new order
+  const newOrder = new Order({
+    user_id: userId,
+    address_id: addressId,
+    products: productsToOrder,
+    total_amount: finalAmount.toFixed(2),
+    payment_status: 'PENDING',
+    payment_method: paymentMethod,
+    total_offer_applied: originalSubtotal - totalAfterOffers,
+    couponDiscount: couponDiscount,
+    coupon_discount: couponDiscount,
+    tax: tax,
+  });
+
+   await newOrder.save();
+   orderDoc = newOrder;
+}
+   const options = {
+   amount: Math.round(finalAmount * 100),
+   currency: "INR",
+   receipt: orderDoc.order_id,
+};
+    const razorpayOrder = await razorpay.orders.create(options);
+    orderDoc.payment_Id = razorpayOrder.id;
+    await orderDoc.save();
+
+    res.json({
+    success: true,
+    order: razorpayOrder,
+    keyId: process.env.RAZORPAY_KEY_ID,
+    dbOrderId: orderDoc._id,
+    customId: orderDoc.order_id,
+});
     } catch (error) {
         console.error("Error creating payment order:", error);
         res.status(500).json({ success: false, message: "Could not initiate payment." });
@@ -264,6 +291,9 @@ exports.varifyPayment = async (req, res) => {
         res.status(500).json({ success: false, message: "Server error during verification." });
     }
 };
+
+
+
 exports.setDefaultAddress = async (req, res) => {
     try {
         const { addressId } = req.params;

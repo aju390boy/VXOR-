@@ -4,6 +4,7 @@ const Category = require("../../model/category.js");
 const multer = require("multer");
 const path = require("path");
 const mongoose = require("mongoose");
+const { rmSync } = require("fs");
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -59,6 +60,8 @@ exports.addProduct = async (req, res) => {
     const parsedColorVariants = Object.values(rawColorVariants || {});
     const errors = [];
     const containsLetter = /[a-zA-Z]/.test(title);
+    const descriptionCheck=/[0-9]/.test(description);
+
 
     const [categoryExists, brandExists] = await Promise.all([
       Category.findById(category_id),
@@ -80,6 +83,13 @@ exports.addProduct = async (req, res) => {
         );
       } else {
         errors.push("Product title must be at least 3 characters long.");
+      }
+    }
+    if(!description || descriptionCheck){
+      if(!description || description.trim().length===0){
+        errors.push('Product description required');
+      }else if(descriptionCheck){
+        errors.push('Product description doesnt allowed digits');
       }
     }
     if (!mongoose.Types.ObjectId.isValid(category_id)) {
@@ -119,12 +129,21 @@ exports.addProduct = async (req, res) => {
           `At least one size variant is required for color #${i + 1}.`
         );
       } else {
+         const sizeNames = [];
         Object.values(variant.variants).forEach((sizeVariant, j) => {
           if (!sizeVariant.size || sizeVariant.size.trim() === "") {
             errors.push(
               `Size is required for size variant #${j + 1} of color #${i + 1}.`
             );
           }
+          const currentSize = sizeVariant.size.trim().toLowerCase();
+      if (sizeNames.includes(currentSize)) {
+        errors.push(
+          `Duplicate size variant "${sizeVariant.size}" found for color #${i + 1}. Each size must be unique.`
+        );
+      } else {
+        sizeNames.push(currentSize);
+      }
           if (
             isNaN(parseFloat(sizeVariant.price)) ||
             parseFloat(sizeVariant.price) < 0
@@ -145,6 +164,7 @@ exports.addProduct = async (req, res) => {
               } of color #${i + 1}.`
             );
           }
+          
         });
       }
     });
@@ -261,6 +281,129 @@ exports.updateProduct = async (req, res) => {
     const errors = [];
     if (!mongoose.Types.ObjectId.isValid(productId))
       errors.push('Invalid product ID.');
+
+/////////////////
+// Validate related objects existence only if IDs are provided
+if (category_id !== undefined && category_id !== '') {
+  if (!mongoose.Types.ObjectId.isValid(category_id)) 
+    errors.push('Invalid category ID.');
+  else {
+    const categoryExists = await Category.findById(category_id);
+    if (!categoryExists) errors.push('The selected category does not exist.');
+  }
+}
+
+if (brand_id !== undefined && brand_id !== '') {
+  if (!mongoose.Types.ObjectId.isValid(brand_id)) 
+    errors.push('Invalid brand ID.');
+  else {
+    const brandExists = await Brand.findById(brand_id);
+    if (!brandExists) errors.push('The selected brand does not exist.');
+  }
+}
+
+// Validate title if it's provided
+if (title !== undefined) {
+  if (title.trim().length < 3 || !/[a-zA-Z]/.test(title))
+    errors.push('Product title must be at least 3 characters, contain at least one letter.');
+}
+
+// Validate description if it's provided
+if (description !== undefined) {
+  if (description.trim().length === 0) 
+    errors.push('Product description is required.');
+  if (/[0-9]/.test(description))
+    errors.push('Product description should not contain digits.');
+}
+if (warranty !== undefined && warranty !== '') {
+  if (isNaN(parseInt(warranty, 10)) || parseInt(warranty, 10) < 0)
+    errors.push('Warranty must be a positive number.');
+}
+
+// Validate colorVariants only if provided
+if (colorVariants !== undefined) {
+  if (!Array.isArray(colorVariants)) {
+    errors.push('Color variants must be an array.');
+  } else {
+    if (colorVariants.length === 0) {
+      errors.push('At least one color variant must be provided.');
+    }
+    colorVariants.forEach((variant, i) => {
+      if ('colorName' in variant) {
+        if (!variant.colorName || variant.colorName.trim() === '') {
+          errors.push(`Color name is required for variant #${i + 1}.`);
+        }
+      }
+      if ('images' in variant) {
+        if (!Array.isArray(variant.images)) {
+          errors.push(`Images for color #${i + 1} should be an array.`);
+        }
+      }
+
+      //  Only validate size variants if they are provided
+      if ('variants' in variant) {
+        const variantsObj = variant.variants;
+        if (
+          !variantsObj ||
+          (typeof variantsObj === 'object' && Object.keys(variantsObj).length === 0)
+        ) {
+          errors.push(`At least one size variant is required for color #${i + 1}.`);
+        } else {
+          const sizeNames = [];
+          Object.values(variantsObj).forEach((sizeVariant, j) => {
+            if ('size' in sizeVariant) {
+              if (!sizeVariant.size || sizeVariant.size.trim() === '') {
+                errors.push(
+                  `Size is required for size #${j + 1} of color #${i + 1}.`
+                );
+              }
+            }
+
+            // Prevent duplicate sizes
+            if (sizeVariant.size) {
+              const sizeKey = sizeVariant.size.trim().toLowerCase();
+              if (sizeNames.includes(sizeKey)) {
+                errors.push(
+                  `Duplicate size "${sizeVariant.size}" in color #${i + 1}.`
+                );
+              } else {
+                sizeNames.push(sizeKey);
+              }
+            }
+
+            // Validate price only if provided
+            if ('price' in sizeVariant) {
+              if (
+                isNaN(parseFloat(sizeVariant.price)) ||
+                parseFloat(sizeVariant.price) < 0
+              ) {
+                errors.push(
+                  `Price must be a positive number for size #${j + 1} of color #${i + 1}.`
+                );
+              }
+            }
+
+            // Validate stock only if provided
+            if ('stock' in sizeVariant) {
+              if (
+                isNaN(parseInt(sizeVariant.stock, 10)) ||
+                parseInt(sizeVariant.stock, 10) < 0
+              ) {
+                errors.push(
+                  `Stock must be a positive number for size #${j + 1} of color #${i + 1}.`
+                );
+              }
+            }
+          });
+        }
+      }
+    });
+  }
+}
+
+/////////////////
+
+
     if (errors.length > 0)
       return res.status(400).json({ message: 'Validation failed', errors });
     const product = await Product.findById(productId);
@@ -298,33 +441,61 @@ exports.updateProduct = async (req, res) => {
           console.log(`Processing variant index ${index} with colorId:`, variant.colorId, typeof variant.colorId);
 
           if (variant.colorName !== undefined) existingVariant.colorName = variant.colorName;
-
-          if (variant.variants !== undefined) {
-            existingVariant.variants = Object.values(variant.variants).map(size => ({
-              size: size.size,
-              price: parseFloat(size.price),
-              stock: parseInt(size.stock, 10),
-            }));
-          }
-
-          if (variant.images !== undefined || newImages.length > 0) {
-            const existingImgs = existingVariant.images;
-            const clientImgs = (variant.images || []).map(img => {
-              if (typeof img === 'string') return img;
-              if (img.url) return img.url;
-              if (img.filename) return `/${img.filename}`;
-              return '';
-            }).filter(Boolean);
-
-            const delSet = new Set(delImgs);
-            const keptExisting = existingImgs.filter(img => !delSet.has(img));
-            const keptClient = clientImgs.filter(img => !delSet.has(img));
-
-            const mergedImages = new Set([...keptExisting, ...keptClient, ...newImages]);
-            existingVariant.images = Array.from(mergedImages);
-          }
-          updatedVariants.push(existingVariant);
-          existingMap.delete(String(colorId));
+///////size variants//////////////////
+      if (variant.variants !== undefined) {
+           const newSizeVariants = Object.values(variant.variants);
+           const existingSizesMap = new Map();
+                 existingVariant.variants.forEach(sz => {
+                 existingSizesMap.set(sz.size.trim().toLowerCase(), sz);
+     });
+           newSizeVariants.forEach(sz => {
+         const sizeKey = sz.size.trim().toLowerCase();
+         const parsedSize = {
+          size: sz.size,
+          price: parseFloat(sz.price),
+          stock: parseInt(sz.stock, 10),
+       };
+       if (existingSizesMap.has(sizeKey)) {
+        // Update existing size 
+          const existing = existingSizesMap.get(sizeKey);
+            existing.price = parsedSize.price;
+            existing.stock = parsedSize.stock;
+    } else {
+      // Add new size
+      existingSizesMap.set(sizeKey, parsedSize);
+    }
+  });
+  existingVariant.variants = Array.from(existingSizesMap.values());
+}
+/////////////color variants/////////////
+      if (variant.images !== undefined || newImages.length > 0) {
+  function normalizeImagePath(path) {
+    if (!path) return null;
+    const filename = path.split('/').pop();
+    return `/${filename}`; 
+  }
+  const clientImgs = (variant.images || []).map(img => {
+    if (typeof img === "string") return normalizeImagePath(img);
+    if (img.url) return normalizeImagePath(img.url);
+    if (img.filename) return normalizeImagePath(img.filename);
+    return null;
+  }).filter(Boolean);
+  let mergedImages = [...clientImgs];
+  const maxImages = 3;
+  for (const file of newImages) {
+    const normalizedPath = file.filename ? normalizeImagePath(file.filename) :
+                           (file.startsWith("/") ? normalizeImagePath(file) : `/${file.replace(/^\//, '')}`);
+    const firstEmptyIndex = mergedImages.findIndex(img => !img || img.trim() === "");
+    if (firstEmptyIndex !== -1) {
+      mergedImages[firstEmptyIndex] = normalizedPath;
+    } else if (mergedImages.length < maxImages) {
+      mergedImages.push(normalizedPath);
+    }
+  }
+  existingVariant.images = mergedImages.slice(0, maxImages);
+}
+updatedVariants.push(existingVariant);
+existingMap.delete(String(colorId));
         } else {
           console.log('No matching existing variant found, will create new one.');
           const sizes = Object.values(variant.variants || {}).map(size => ({
@@ -344,6 +515,8 @@ exports.updateProduct = async (req, res) => {
       }
       product.colorVariants = updatedVariants;
     }
+    product.markModified('colorVariants');
+
     await product.save();
     return res.status(200).json({ message: 'Product updated successfully.' });
   } catch (err) {
@@ -351,3 +524,23 @@ exports.updateProduct = async (req, res) => {
     return res.status(500).json({ message: 'Failed to update the product.', error: err.message });
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

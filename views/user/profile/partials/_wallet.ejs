@@ -1,29 +1,28 @@
 <%# views/user/profile/partials/_wallet.ejs %>
 <div class="px-6 md:px-12 py-8 text-white">
-    
 
     <div class="bg-gradient-to-br from-gray-900 to-gray-600 rounded-2xl p-8 mb-8 shadow-xl text-center">
         <p class="text-lg text-gray-400 mb-2">Available Balance</p>
         <p class="text-5xl font-extrabold text-white tracking-tight">₹<%= wallet.balance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></p>
     </div>
     <div class="bg-gray-800 rounded-lg p-6 mt-8">
-    <h3 class="text-xl font-bold mb-4">Add Money to Wallet</h3>
-    <div class="flex items-center gap-4">
-        <input 
-            type="number" 
-            id="addAmountInput" 
-            placeholder="Enter amount" 
-            class="flex-grow bg-gray-700 px-4 py-2 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
-            min="10"
-        />
-        <button 
-            id="addMoneyBtn" 
-            class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">
-            Add Money
-        </button>
+        <h3 class="text-xl font-bold mb-4">Add Money to Wallet</h3>
+        <div class="flex items-center gap-4">
+            <input 
+                type="number" 
+                id="addAmountInput" 
+                placeholder="Enter amount" 
+                class="flex-grow bg-gray-700 px-4 py-2 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                min="10"
+            />
+            <button 
+                id="addMoneyBtn" 
+                class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">
+                Add Money
+            </button>
+        </div>
+        <p class="text-xs text-gray-500 mt-2">Minimum amount is ₹10.</p>
     </div>
-    <p class="text-xs text-gray-500 mt-2">Minimum amount is ₹10.</p>
-</div>
 
     <h2 class="text-2xl font-bold mb-6">Transaction History</h2>
     <div class="space-y-4">
@@ -60,4 +59,14 @@
             </div>
         <% } %>
     </div>
+
+    <!-- Pagination Controls -->
+    <div class="pagination-container" data-section="wallet">
+        <div class="pagination flex justify-center mt-6 space-x-4">
+            <button class="prevPageBtn px-3 py-1 bg-gray-700 rounded" <%= wallet.pagination.currentPage === 1 ? 'disabled' : '' %>>Previous</button>
+            <span class="pageIndicator">Page <%= wallet.pagination.currentPage %> / <%= wallet.pagination.totalPages %></span>
+            <button class="nextPageBtn px-3 py-1 bg-gray-700 rounded" <%= wallet.pagination.currentPage === wallet.pagination.totalPages ? 'disabled' : '' %>>Next</button>
+        </div>
+    </div>
+
 </div>

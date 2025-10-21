@@ -33,7 +33,7 @@
                 <div id="custom-date-range" class="<%= query.filter === 'custom' ? '' : 'hidden' %> flex items-end gap-4">
                     <div>
                         <label for="startDate" class="block text-sm font-medium text-gray-700">Start Date</label>
-                        <input type="date" name="startDate" id="startDate" min="<%= new Date().toISOString().split('T')[0] %>"  onchange="document.getElementById('endDate').min = this.value" value="<%= query.startDate || '' %>" class="mt-1 p-2 border border-gray-300 rounded-md">
+                        <input type="date" name="startDate" id="startDate"   onchange="document.getElementById('endDate').min = this.value" value="<%= query.startDate || '' %>" class="mt-1 p-2 border border-gray-300 rounded-md">
                     </div>
                     <div>
                         <label for="endDate" class="block text-sm font-medium text-gray-700">End Date</label>
@@ -84,8 +84,8 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= new Date(order.createdAt).toLocaleDateString() %></td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= order.user_id.firstname %> <%= order.user_id.lastname %></td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">₹<%= order.total_amount.toFixed(2) %></td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-red-500">-₹<%= (order.offerDiscount + order.couponDiscount ||0).toFixed(2) %></td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= order.total_offer_applied ||0 %></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-green-500">₹<%= order.coupon_discount || 0 %></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-green-500"><%= order.total_offer_applied ||0 %></td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= order.payment_method %></td>
                         </tr>
                     <% }) %>

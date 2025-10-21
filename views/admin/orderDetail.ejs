@@ -185,9 +185,17 @@
                            <%= order.payment_status %>
                         </span>
                     </div>
-                     <div class="pt-2 mt-2 border-t border-slate-200 flex justify-between items-baseline">
-                        <span class="text-slate-500">Tax</span>
-                        <span class="font-bold text-s text-purple-700">₹<%=  order.tax %></span>
+                     <div class="flex justify-between items-baseline">
+                        <span class="text-slate-500 text-sm">Coupon Applied</span>
+                        <span class="font-bold text-sm text-purple-700">₹<%=  order.coupon_discount %></span>
+                    </div>
+                     <div class="flex justify-between items-baseline">
+                        <span class="text-slate-500 text-sm">Offer Applied</span>
+                        <span class="font-bold text-sm text-purple-700">₹<%=order.total_offer_applied%></span>
+                    </div>
+                     <div class=" flex justify-between items-baseline">
+                        <span class="text-slate-500 text-sm">Tax</span>
+                        <span class="font-bold text-sm text-purple-700">₹<%=  order.tax %></span>
                     </div>
                     <div class="pt-2 mt-2 border-t border-slate-200 flex justify-between items-baseline">
                         <span class="font-bold text-slate-800">Total</span>

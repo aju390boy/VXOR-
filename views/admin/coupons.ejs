@@ -123,6 +123,23 @@
           </tbody>
         </table>
     </div>
+    <!-- pagination -->
+      <% if (totalPages > 1) { %>
+  <div class="pagination">
+    <% if (currentPage > 1) { %>
+      <a href="?page=<%= currentPage - 1 %>">&laquo;</a>
+    <% } %>
+
+    <% for (let i = 1; i <= totalPages; i++) { %>
+      <a href="?page=<%= i %>" class="<%= currentPage === i ? 'active' : '' %>"><%= i %></a>
+    <% } %>
+
+    <% if (currentPage < totalPages) { %>
+      <a href="?page=<%= currentPage + 1 %>">&raquo;</a>
+    <% } %>
+  </div>
+<% } %>
+    <!-- pagination -->
     <div class="add-category-section mt-8">
       <h2>ADD NEW COUPON</h2>
       <form action="/admin/coupons" method="POST" class="add-category-form flex flex-wrap -mx-2">

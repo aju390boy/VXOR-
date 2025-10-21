@@ -3,42 +3,42 @@ const Product = require('../../model/product.js');
 const Brand = require('../../model/brand.js');
 const Category = require('../../model/category.js');
 
-/**
- * @desc    Display all offers
- * @route   GET /admin/offers
- */
+
 exports.getAllOffers = async (req, res) => {
     try {
-        const offers = await Offer.find({}).sort({ createdAt: -1 });
+        const query = {}; 
+        const page = parseInt(req.query.page) || 1;
+        const limit = 2;
+        const skip = (page - 1) * limit;
+       
+    
+        const totalOffers = await Offer.countDocuments(query);
+        const totalPages = Math.ceil(totalOffers / limit);
+        const offers = await Offer.find(query).skip(skip).limit(limit);
         const categories = await Category.find({ isListed: true });
         const products = await Product.find({ isDeleted: false });
         const brands = await Brand.find({ isListed: true });
-        // 1. Retrieve the message from the session
         const message = req.session.message;
-        // 2. Clear the message from the session
         delete req.session.message; 
-
         res.render('admin/offers', {
             offers,
             categories,
             products,
             brands,
-            message, // 3. Pass the retrieved message to the template
+            currentPage:page,
+            totalPages,
+            message,
             current: 'offers',
             layout:false
         });
     } catch (error) {
         console.error(error);
-        // On error, we still set a session message for the redirect
         req.session.message = { type: 'error', text: 'An error occurred while fetching offers.' };
         res.redirect('/admin/dashboard');
     }
 };
 
-/**
- * @desc    Create a new offer
- * @route   POST /admin/offers
- */
+
 exports.createOffer = async (req, res) => {
     try {
         const { 
@@ -53,8 +53,6 @@ exports.createOffer = async (req, res) => {
 
         // --- MANUAL VALIDATION BLOCK ---
         const errors = [];
-        
-        // 1. Name validation (Required + Unique)
         if (!name || name.trim() === '') {
             errors.push('Offer name is required.');
         } else {
@@ -63,14 +61,10 @@ exports.createOffer = async (req, res) => {
                 errors.push('An offer with this name already exists.');
             }
         }
-        
-        // 2. Discount Percentage validation (Number between 1-90)
         const discount = Number(discountPercentage);
         if (isNaN(discount) || discount < 1 || discount > 90) {
             errors.push('Discount must be a number between 1 and 90.');
         }
-
-        // 3. Date validation (Valid dates + End date is after start date)
         const start = new Date(startDate);
         const end = new Date(endDate);
         if (isNaN(start.getTime()) || !startDate) {
@@ -84,8 +78,6 @@ exports.createOffer = async (req, res) => {
         }
 
         // --- END OF VALIDATION ---
-
-        // If there are any errors, redirect back with the messages
         if (errors.length > 0) {
             req.session.message = { type: 'error', text: errors.join(' ') };
             return res.redirect('/admin/offers');
@@ -109,10 +101,7 @@ exports.createOffer = async (req, res) => {
     }
 };
 
-/**
- * @desc    Update an existing offer
- * @route   PUT /admin/offers/:id
- */
+
 exports.updateOffer = async (req, res) => {
     try {
         const { id } = req.params;
@@ -125,30 +114,22 @@ exports.updateOffer = async (req, res) => {
             applicable_on_product,
             applicable_on_brand
         } = req.body;
-
-        // --- MANUAL VALIDATION BLOCK ---
         const errors = [];
-
-        // 1. Name validation (Required + Unique, excluding the current document)
         if (!name || name.trim() === '') {
             errors.push('Offer name is required.');
         } else {
             const existingOffer = await Offer.findOne({ 
                 name: { $regex: new RegExp(`^${name.trim()}$`, 'i') },
-                _id: { $ne: id } // Exclude the document we are currently editing
+                _id: { $ne: id } 
             });
             if (existingOffer) {
                 errors.push('Another offer with this name already exists.');
             }
         }
-        
-        // 2. Discount Percentage validation
         const discount = Number(discountPercentage);
         if (isNaN(discount) || discount < 1 || discount > 90) {
             errors.push('Discount must be a number between 1 and 90.');
         }
-
-        // 3. Date validation
         const start = new Date(startDate);
         const end = new Date(endDate);
         if (isNaN(start.getTime()) || !startDate) {
@@ -185,10 +166,9 @@ exports.updateOffer = async (req, res) => {
         res.redirect('/admin/offers');
     }
 };
-/**
- * @desc    Toggle offer's active status
- * @route   PATCH /admin/offers/:id/toggle
- */
+
+
+
 exports.toggleOfferStatus = async (req, res) => {
     console.log('toggle offer status funcion triggered........')
     try {
@@ -206,10 +186,8 @@ exports.toggleOfferStatus = async (req, res) => {
     }
 };
 
-/**
- * @desc    Delete an offer
- * @route   DELETE /admin/offers/:id
- */
+
+
 exports.deleteOffer = async (req, res) => {
     try {
         await Offer.findByIdAndDelete(req.params.id);

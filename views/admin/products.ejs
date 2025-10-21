@@ -252,13 +252,13 @@
     });
 
     async function handleProductAction(productId, actionType) {
-        const url = `/admin/products/${actionType}/${productId}`; // e.g., /admin/products/delete/123 or /admin/products/restore/123
+        const url = `/admin/products/${actionType}/${productId}`; 
         const confirmationMessage = actionType === 'delete'
             ? 'Are you sure you want to soft delete this product?'
             : 'Are you sure you want to restore this product?';
 
         if (!confirm(confirmationMessage)) {
-            return; // User cancelled
+            return; 
         }
 
         try {

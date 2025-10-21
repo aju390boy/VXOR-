@@ -494,13 +494,9 @@
         }
     });
 }
-            
-            // --- Handlers for closing modals ---
             else if (target === btnCloseCancel || target === cancelModal) closeModal(cancelModal);
             else if (target === btnCloseReturn || target === returnModal) closeModal(returnModal);
         });
-
-        // --- Generic Form Submission Handler ---
         const handleFormSubmit = async (form, url, body) => {
             try {
                 const response = await fetch(url, {

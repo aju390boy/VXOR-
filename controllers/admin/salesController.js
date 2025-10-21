@@ -54,7 +54,8 @@ async function getSalesData(query) {
             $group: {
                 _id: null,
                 totalSalesAmount: { $sum: '$total_amount' },
-                totalDiscount: { $sum: { $add: ['$offerDiscount', '$couponDiscount'] } },
+                total_offer_applied:{$sum:'$total_offer_applied'},
+                totalDiscount: { $sum: { $add: ['$total_offer_applied', '$coupon_discount'] } },
                 orderCount: { $sum: 1 }
             }
         }
@@ -168,10 +169,14 @@ exports.renderSalesPage = async (req, res) => {
 exports.downloadPdfReport = async (req, res) => {
   try {
     const { summary, orders } = await getSalesData(req.query);
+
     const doc = new PDFDocument({ margin: 50, size: 'A4' });
+
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', 'attachment; filename=sales-report.pdf');
     doc.pipe(res);
+
+    // Header
     doc.font('Helvetica-Bold').fontSize(22).text('Sales Report', { align: 'center' });
     doc.moveDown(1);
     const headerY = doc.y;
@@ -184,52 +189,72 @@ exports.downloadPdfReport = async (req, res) => {
     doc.text('Pincode: 682020', 50, headerY + 75);
     doc.text('Contact: 7559842946', 50, headerY + 90);
     doc.text('Mail: arunmon4444@gmail.com', 50, headerY + 105);
+
+    // Summary Box
     const rightX = 350;
     const summaryY = headerY;
     const summaryW = 190;
-    const summaryH = 90;
+    const summaryH = 110;
     doc.rect(rightX, summaryY, summaryW, summaryH).stroke();
+
     doc.font('Helvetica-Bold').fontSize(12).text('Summary', rightX + 10, summaryY + 10);
     doc.font('Helvetica').fontSize(10);
     doc.text(`Total Sales: Rs. ${(summary.totalSalesAmount || 0).toFixed(2)}`, rightX + 10, summaryY + 30);
     doc.text(`Total Orders: ${summary.orderCount || 0}`, rightX + 10, summaryY + 45);
-    doc.text(`Total Discount: Rs. ${(summary.totalDiscount || 0).toFixed(2)}`, rightX + 10, summaryY + 60);
+    doc.text(`Total Discount (Coupons): Rs. ${(summary.totalDiscount || 0).toFixed(2)}`, rightX + 10, summaryY + 60);
     doc.text(`Total Offer Applied: Rs. ${(summary.total_offer_applied || 0).toFixed(2)}`, rightX + 10, summaryY + 75);
+
+    const netRevenue =
+      (summary.totalSalesAmount || 0) -
+      (summary.totalDiscount || 0) -
+      (summary.total_offer_applied || 0);
+    doc.text(`Net Revenue: Rs. ${netRevenue.toFixed(2)}`, rightX + 10, summaryY + 90);
+
     doc.moveDown(6);
+
+    // Table columns
     const cols = {
       orderId: 50,
       date: 170,
       customer: 240,
       amount: 300,
-     couponApplied: 390,
-     offerApplied :470
+      couponApplied: 390,
+      offerApplied: 470,
     };
+
     doc.fontSize(9).font('Helvetica-Bold');
-    const tableTop = doc.y;
+    let tableTop = doc.y;
+
+    // Table Header
     doc.text('Order ID', cols.orderId, tableTop);
     doc.text('Date', cols.date, tableTop);
     doc.text('Customer', cols.customer, tableTop);
     doc.text('Amount', cols.amount, tableTop, { width: 70, align: 'right' });
-    doc.text('coupon Applied', cols.couponApplied, tableTop, { width: 70, align: 'right' });
+    doc.text('Coupon Applied', cols.couponApplied, tableTop, { width: 70, align: 'right' });
     doc.text('Offer Applied', cols.offerApplied, tableTop, { width: 70, align: 'right' });
     doc.moveTo(cols.orderId, tableTop + 15).lineTo(560, tableTop + 15).stroke();
+
     doc.font('Helvetica');
+
     let y = tableTop + 25;
+
     orders.forEach(order => {
       if (y > 850) {
         doc.addPage();
         y = 50;
+        // Re-draw table header on new page
         doc.font('Helvetica-Bold');
         doc.text('Order ID', cols.orderId, y);
         doc.text('Date', cols.date, y);
         doc.text('Customer', cols.customer, y);
         doc.text('Amount', cols.amount, y, { width: 70, align: 'right' });
-        doc.text('coupon Applied', cols.couponApplied, y, { width: 70, align: 'right' });
+        doc.text('Coupon Applied', cols.couponApplied, y, { width: 70, align: 'right' });
         doc.text('Offer Applied', cols.offerApplied, y, { width: 70, align: 'right' });
         doc.moveTo(cols.orderId, y + 15).lineTo(560, y + 15).stroke();
         doc.font('Helvetica');
         y += 25;
       }
+
       const orderId = order.order_id
         ? (order.order_id.length > 15 ? order.order_id.substring(0, 15) + '...' : order.order_id)
         : 'N/A';
@@ -240,21 +265,20 @@ exports.downloadPdfReport = async (req, res) => {
         ? `${order.user_id.firstname || ''} ${order.user_id.lastname || ''}`.trim() || 'N/A'
         : 'N/A';
       const amountText = `Rs. ${(order.total_amount || 0).toFixed(2)}`;
-       const couponAppliedText = `Rs. ${(
-        order.coupon_discount != null ? order.coupon_discount : 0
-      ).toFixed(2)}`;
-      const offerAppliedText = `Rs. ${(
-        order.total_offer_applied != null ? order.total_offer_applied : 0
-      ).toFixed(2)}`;
+      const couponAppliedText = `Rs. ${(order.coupon_discount != null ? order.coupon_discount : 0).toFixed(2)}`;
+      const offerAppliedText = `Rs. ${(order.total_offer_applied != null ? order.total_offer_applied : 0).toFixed(2)}`;
+
       doc.text(orderId, cols.orderId, y);
       doc.text(orderDate, cols.date, y);
       doc.text(customerName, cols.customer, y);
       doc.text(amountText, cols.amount, y, { width: 70, align: 'right' });
-      doc.text(offerAppliedText, cols.offerApplied, y, { width: 70, align: 'right' });
       doc.text(couponAppliedText, cols.couponApplied, y, { width: 70, align: 'right' });
+      doc.text(offerAppliedText, cols.offerApplied, y, { width: 70, align: 'right' });
       y += 25;
     });
+
     doc.end();
+
   } catch (error) {
     console.error('Error generating PDF report:', error);
     res.status(500).send('Server Error');
@@ -318,8 +342,6 @@ exports.downloadExcelReport = async (req, res) => {
 
       worksheet.addRow([orderId, orderDate, customerName, amount, couponApplied, offerApplied]);
     });
-
-    // Adjust column widths for clarity
     worksheet.columns = [
       { key: 'orderId', width: 20 },
       { key: 'date', width: 15 },
