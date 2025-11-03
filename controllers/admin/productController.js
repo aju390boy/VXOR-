@@ -41,36 +41,56 @@ exports.getAllProducts = async (req, res) => {
             .skip(skip)
             .limit(limit)
             .lean();
-        const formattedProducts = products.map(p => {
-            let minPrice = Infinity;
-            let displayImageUrl = '/images/placeholder.png';
-            if (p.colorVariants && p.colorVariants.length > 0) {
-                p.colorVariants.forEach(colorVariant => {
-                    if (displayImageUrl === '/images/placeholder.png' && colorVariant.images && colorVariant.images.length > 0) {
-                        displayImageUrl = `/uploads/products/${colorVariant.images[0]}`;
-                    }
-                    if (colorVariant.variants && colorVariant.variants.length > 0) {
-                        colorVariant.variants.forEach(sizeVariant => {
-                            if (sizeVariant.price && typeof sizeVariant.price === 'number' && sizeVariant.price < minPrice) {
-                                minPrice = sizeVariant.price;
-                            }
-                        });
-                    }
-                });
-            } else if (p.images && p.images.length > 0) {
-                displayImageUrl = `/uploads/products/${p.images[0]}`;
-            }
-            return {
-                ...p,
-                category_name: p.category_id?.name || "N/A",
-                brand_name: p.brand_id?.name || "N/A",
-                category_id: p.category_id?._id?.toString(),
-                brand_id: p.brand_id?._id?.toString(),
-                min_price: minPrice !== Infinity ? minPrice : undefined,
-                display_image_url: displayImageUrl,
-            };
-        });
+            //////////////
+       const formattedProducts = products.map(p => {
+  let minPrice = Infinity;
+  let displayImageUrl = '/images/placeholder.png';
 
+  if (p.colorVariants && p.colorVariants.length > 0) {
+    p.colorVariants.forEach(colorVariant => {
+      if (
+        displayImageUrl === '/images/placeholder.png' &&
+        colorVariant.images &&
+        colorVariant.images.length > 0
+      ) {
+        const firstImage = colorVariant.images[0];
+        // Check if it's Cloudinary or local path
+        displayImageUrl = firstImage.startsWith('http')
+          ? firstImage
+          : `/uploads/products/${firstImage}`;
+      }
+
+      if (colorVariant.variants && colorVariant.variants.length > 0) {
+        colorVariant.variants.forEach(sizeVariant => {
+          if (
+            sizeVariant.price &&
+            typeof sizeVariant.price === 'number' &&
+            sizeVariant.price < minPrice
+          ) {
+            minPrice = sizeVariant.price;
+          }
+        });
+      }
+    });
+  } else if (p.images && p.images.length > 0) {
+    const firstImage = p.images[0];
+    displayImageUrl = firstImage.startsWith('http')
+      ? firstImage
+      : `/uploads/products/${firstImage}`;
+  }
+
+  return {
+    ...p,
+    category_name: p.category_id?.name || 'N/A',
+    brand_name: p.brand_id?.name || 'N/A',
+    category_id: p.category_id?._id?.toString(),
+    brand_id: p.brand_id?._id?.toString(),
+    min_price: minPrice !== Infinity ? minPrice : undefined,
+    display_image_url: displayImageUrl,
+  };
+});
+
+////////////////////
         res.render('admin/products', {
             products: formattedProducts,
             currentPage: page,    
@@ -137,35 +157,56 @@ exports.getProductsAjax = async (req, res) => {
             .skip(skip)
             .limit(limit)
             .lean();
+            /////////////////
         const formattedProducts = products.map(p => {
-            let minPrice = Infinity;
-            let displayImageUrl = '/images/placeholder.png';
-            if (p.colorVariants && p.colorVariants.length > 0) {
-                p.colorVariants.forEach(colorVariant => {
-                    if (displayImageUrl === '/images/placeholder.png' && colorVariant.images && colorVariant.images.length > 0) {
-                        displayImageUrl = `/uploads/products/${colorVariant.images[0]}`;
-                    }
-                    if (colorVariant.variants && colorVariant.variants.length > 0) {
-                        colorVariant.variants.forEach(sizeVariant => {
-                            if (sizeVariant.price && typeof sizeVariant.price === 'number' && sizeVariant.price < minPrice) {
-                                minPrice = sizeVariant.price;
-                            }
-                        });
-                    }
-                });
-            } else if (p.images && p.images.length > 0) {
-                displayImageUrl = `/uploads/products/${p.images[0]}`;
-            }
-            return {
-                ...p,
-                category_name: p.category_id?.name || "N/A",
-                brand_name: p.brand_id?.name || "N/A",
-                category_id: p.category_id?._id?.toString(),
-                brand_id: p.brand_id?._id?.toString(),
-                min_price: minPrice !== Infinity ? minPrice : undefined,
-                display_image_url: displayImageUrl,
-            };
+  let minPrice = Infinity;
+  let displayImageUrl = '/images/placeholder.png';
+
+  if (p.colorVariants && p.colorVariants.length > 0) {
+    p.colorVariants.forEach(colorVariant => {
+      if (
+        displayImageUrl === '/images/placeholder.png' &&
+        colorVariant.images &&
+        colorVariant.images.length > 0
+      ) {
+        const firstImage = colorVariant.images[0];
+        // Check if it's Cloudinary or local path
+        displayImageUrl = firstImage.startsWith('http')
+          ? firstImage
+          : `/uploads/products/${firstImage}`;
+      }
+
+      if (colorVariant.variants && colorVariant.variants.length > 0) {
+        colorVariant.variants.forEach(sizeVariant => {
+          if (
+            sizeVariant.price &&
+            typeof sizeVariant.price === 'number' &&
+            sizeVariant.price < minPrice
+          ) {
+            minPrice = sizeVariant.price;
+          }
         });
+      }
+    });
+  } else if (p.images && p.images.length > 0) {
+    const firstImage = p.images[0];
+    displayImageUrl = firstImage.startsWith('http')
+      ? firstImage
+      : `/uploads/products/${firstImage}`;
+  }
+
+  return {
+    ...p,
+    category_name: p.category_id?.name || 'N/A',
+    brand_name: p.brand_id?.name || 'N/A',
+    category_id: p.category_id?._id?.toString(),
+    brand_id: p.brand_id?._id?.toString(),
+    min_price: minPrice !== Infinity ? minPrice : undefined,
+    display_image_url: displayImageUrl,
+  };
+});
+
+        ///////////////////
         res.json({
             products: formattedProducts,
             currentPage: page,

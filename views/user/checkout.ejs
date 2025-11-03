@@ -210,15 +210,12 @@
                     <div class="flex items-center justify-between">
                      <div class="flex items-center gap-3">
                     <%
-                        // We need a fallback image path in case something goes wrong
+                        
                         let imageUrl = '/images/placeholder.png'; 
-                        
-                        // Find the color variant for the current item
                         const colorVariant = item.productId.colorVariants.find(c => c.colorName === item.colorName);
-                        
-                        // If we found the color and it has images, build the correct path
                         if (colorVariant && colorVariant.images && colorVariant.images.length > 0) {
-                            imageUrl = `/uploads/products/${colorVariant.images[0]}`;
+                            let firstImage=colorVariant.images[0];
+                            imageUrl = firstImage.startsWith('http')?colorVariant.images[0]:`/uploads/products/${colorVariant.images[0]}`;
                         }
                     %>
                     <img src="<%= imageUrl %>" alt="<%= item.productId.title %>" class="w-16 h-22 rounded object-cover " />
@@ -525,7 +522,7 @@ const addressId = address._id;
     try {
         // For COD and Wallet, we place the order directly
         if (paymentMethod === 'COD' || paymentMethod === 'WALLET') {
-            const response = await fetch('/user/place-order', {
+            const response = await fetch('/user/placeorder/place-order', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ addressId, paymentMethod })
@@ -541,7 +538,7 @@ const addressId = address._id;
             }
 
         } else if (paymentMethod === 'razorpay') {
-            const createOrderResponse = await fetch('/user/create-payment-order', {
+            const createOrderResponse = await fetch('/user/placeorder/create-payment-order', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ addressId, paymentMethod })
@@ -559,7 +556,7 @@ const addressId = address._id;
                 description: "Order Payment",
                 order_id: razorpayOrder.id,
                 handler: async function (response) {
-                    const verifyResponse = await fetch('/user/verify-payment', {
+                    const verifyResponse = await fetch('/user/placeorder/verify-payment', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -574,7 +571,7 @@ const addressId = address._id;
                         window.location.href = verifyData.redirectUrl;
                     } else {
                         showToast('error', verifyData.message || 'Payment verification failed.');
-                         window.location.href = `/user/failure?orderId=${dbOrderId}&customId=${customId}`;
+                         window.location.href = `/user/payment/failure?orderId=${dbOrderId}&customId=${customId}`;
                     }
                 },
                 prefill: {
@@ -592,7 +589,7 @@ const addressId = address._id;
                  placeOrderBtn.disabled = false;
                 placeOrderBtn.innerText = 'Place Order';
                 try {
-        await fetch('/user/order-failed', {
+        await fetch('/user/payment/order-failed', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ dbOrderId: dbOrderId ,customId:customId}) // Pass the database order ID
@@ -602,7 +599,7 @@ const addressId = address._id;
     }
     
     // Now redirect to the failure page
-    window.location.href = `/user/failure?orderId=${dbOrderId}&customId=${customId}`;
+    window.location.href = `/user/payment/failure?orderId=${dbOrderId}&customId=${customId}`;
             });
 
             rzp1.open(); // Open the modal
@@ -633,7 +630,7 @@ const addressId = address._id;
             }
 
             try {
-                const response = await fetch('/user/apply-coupon', {
+                const response = await fetch('/user/checkout/apply-coupon', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ couponCode: couponCode })
@@ -669,7 +666,7 @@ const addressId = address._id;
     if (removeCouponBtn) {
     removeCouponBtn.addEventListener('click', async () => {
         try {
-            const response = await fetch('/user/remove-coupon', { method: 'POST' });
+            const response = await fetch('/user/checkout/remove-coupon', { method: 'POST' });
             const data = await response.json();
             if (data.success) {
                 couponDiscountRow.classList.add('hidden');

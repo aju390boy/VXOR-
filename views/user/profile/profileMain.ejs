@@ -206,7 +206,7 @@
         }
 
         try {
-            // Step 1: Create an order on your server
+          
             const response = await fetch('/user/wallet/add-money', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -217,10 +217,7 @@
             if (!data.success) {
                 throw new Error(data.message);
             }
-
             const order = data.order;
-
-            // Step 2: Open Razorpay Checkout
             const options = {
                 key: data.keyId,
                 amount: order.amount,
@@ -229,7 +226,6 @@
                 description: "Add Money to Wallet",
                 order_id: order.id,
                 handler: async function (response) {
-                    // Step 3: Verify the payment on your server
                     const verifyResponse = await fetch('/user/wallet/verify-payment', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -363,17 +359,17 @@
             }
         }
     });
-}else if (moveToCartBtn) { // --- ADD THIS ENTIRE 'ELSE IF' BLOCK ---
+}else if (moveToCartBtn) {
                 activeProductId = moveToCartBtn.dataset.productId;
                 const productTitle = moveToCartBtn.dataset.title;
 
                 try {
-                    const response = await fetch(`/user/product-variants/${activeProductId}`);
+                    const response = await fetch(`/user/product/variants/${activeProductId}`);
                     if (!response.ok) throw new Error('Could not fetch product details.');
                     const variants = await response.json();
                     
                     populateVariantModal(variants, productTitle);
-                    openModal('variantSelectorModal'); // Assuming you have a generic openModal function
+                    openModal('variantSelectorModal'); 
                 } catch (error) {
                     console.error("Could not fetch variants:", error);
                     Swal.fire({ icon: 'error', title: 'Error', text: 'Could not load product options.' });
@@ -383,7 +379,7 @@ else if (editProfileModal && e.target === editProfileModal) {
                  closeModal('editProfileModal');
             }
         });
-
+////////////////////submit////////////////////////
         profileContentArea.addEventListener('submit', async (e) => {
             e.preventDefault();
             const form = e.target;
@@ -433,7 +429,7 @@ else if (editProfileModal && e.target === editProfileModal) {
             }, 1000);
             resendBtn.addEventListener('click', () => {
                   clearInterval(timerInterval);
-                fetch('/user/resend-email-otp', {
+                fetch('/user/profile/resend-email-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ newEmail: result.newEmail })
@@ -465,7 +461,7 @@ else if (editProfileModal && e.target === editProfileModal) {
             clearInterval(timerInterval);
         },
         preConfirm: (otp) => {
-             return fetch('/user/verify-email-update', {
+             return fetch('/user/profile/verify-email-update', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ otp: otp, newEmail: result.newEmail }) 
@@ -524,7 +520,35 @@ else if (editProfileModal && e.target === editProfileModal) {
                                 if (inputElement) inputElement.classList.add('border-red-500');
                            }
                         }
-                        Swal.fire({ icon: 'error', title: 'Validation Error!', text: result.message, width:'400px', customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' } });
+                        if (result.message === 'Only image files are allowed!') {
+                           Swal.fire({
+                                icon: 'error',
+                                title: 'Invalid File',
+                                text: result.message,
+                                width: '400px',
+                                customClass: {
+                                popup: 'swal-dark-bg', 
+                                title: 'swal-dark-title', 
+                                content: 'swal-dark-content', 
+                                confirmButton: 'swal-dark-button'
+                                }
+                           });
+                      return;
+                     }
+                 Swal.fire({
+                      icon: 'error',
+                      title: 'Update Failed',
+                      text: result.message,
+                      width: '400px',
+                      customClass: {
+                      popup: 'swal-dark-bg', 
+                      title: 'swal-dark-title', 
+                      content: 'swal-dark-content', 
+                      confirmButton: 'swal-dark-button'
+                      }
+                    });
+                 return;
+                    Swal.fire({ icon: 'error', title: 'Validation Error!', text: result.message, width:'400px', customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' } });
                     } else {
                         Swal.fire({ icon: 'success', title: 'Success!', text: result.message, width:'400px', timer: 1500, showConfirmButton: false, customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content' } });
                         if(form.id.includes('address')) {
@@ -536,6 +560,7 @@ else if (editProfileModal && e.target === editProfileModal) {
                 } catch (error) { console.error(`Error submitting ${form.id}:`, error); Swal.fire({ icon: 'error', title: 'Network Error!', text: 'Could not connect to server.', width:'400px', customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' } }); }
             }
         });
+        /////////////submit end///////////////////
         profileContentArea.addEventListener('change', (e) => {
             if (e.target.id === 'profile-picture-input') {
                 const file = e.target.files[0];

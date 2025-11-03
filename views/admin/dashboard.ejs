@@ -168,27 +168,25 @@
         <% if (bestSellingType === 'products') { %>
             <% bestSelling.forEach(product => { %>
                 <li class="flex items-center space-x-4">
-                    <div class="flex-shrink-0 w-12 h-12">
-                        <% 
-                            const firstColorVariant = product.colorVariants?.[0];
-                            const productImage = firstColorVariant?.images?.[0] || 'placeholder.png';
-                        %>
-                        <img src="/uploads/products/<%= productImage %>" alt="<%= product.title %>" class="w-12 h-12 rounded-lg object-cover">
-                    </div>
+                     <div class="flex-shrink-0 w-12 h-12">
+            <img src="<%= product.displayImage %>" 
+                 alt="<%= product.categoryName %>" 
+                 class="w-full h-full object-cover rounded">
+        </div>
                     <div class="flex-grow">
-                        <p class="text-sm font-semibold text-slate-800 truncate"><%= product.title %></p>
-                        <p class="text-xs text-slate-500">Sales: <%= product.min_price || '—' %></p>
+                        <p class="text-sm font-semibold text-slate-800 truncate"><%= product.productTitle %></p>
+                        <p class="text-xs text-slate-500">Sales: <%= product.totalSalesCount || '—' %></p>
                     </div>
                 </li>
             <% }) %>
         <% } else if (bestSellingType === 'category') { %>
             <% bestSelling.forEach(cat => { %>
                 <li class="flex flex-col space-y-1">
-                    <div class="flex-shrink-0 w-12 h-12">
-                       <% const productImage = cat.productImages?.[0] || 'placeholder.png'; %>
-<img src="/uploads/products/<%= productImage %>" ...>
-
-                    </div>
+                     <div class="flex-shrink-0 w-12 h-12">
+            <img src="<%= cat.displayImage %>" 
+                 alt="<%= cat.categoryName %>" 
+                 class="w-full h-full object-cover rounded">
+        </div>
                     <span class="font-semibold text-slate-800"><%= cat.categoryName || 'Category' %></span>
                     <span class="text-xs text-slate-500">Sales: <%= cat.totalSalesCount || '—' %></span>
                     <span class="text-xs text-slate-400">Popular Products: <%= cat.products?.join(', ') || '' %></span>
@@ -197,10 +195,9 @@
         <% } else if (bestSellingType === 'brand') { %>
             <% bestSelling.forEach(brand => { %>
                 <li class="flex flex-col space-y-1">
-                    <div class="flex-shrink-0 w-12 h-12">
-                        <% const productImage = brand.productImages?.[0] || 'placeholder.png'; %>
-<img src="/uploads/products/<%= productImage %>" ...>
-                    </div>
+        <div  class="flex-shrink-0 w-12 h-12"> <img src="<%= brand.displayImage %>" 
+              alt="<%= brand.brandName %>" class="w-full h-full object-cover rounded">
+        </div>
                     <span class="font-semibold text-slate-800"><%= brand.brandName || 'Brand' %></span>
                     <span class="text-xs text-slate-500">Sales: <%= brand.totalSalesCount || '—' %></span>
                     <span class="text-xs text-slate-400">Popular Products: <%= brand.products?.join(', ') || '' %></span>

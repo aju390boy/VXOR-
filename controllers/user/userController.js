@@ -12,9 +12,9 @@ const formatProductForHomepage = (product) => {
         let minPrice = Infinity;
         product.colorVariants.forEach(colorVariant => {
             if (colorVariant.images && colorVariant.images.length > 0) {
-                if (displayImageUrl === '/uploads/products/placeholder.png') {
-                    displayImageUrl = `/uploads/products/${colorVariant.images[0]}`;
-                }
+                let firstImage = colorVariant.images[0];
+                displayImageUrl = firstImage.startsWith('http')
+                ?firstImage : `/uploads/products/${firstImage}`
             }
             if (colorVariant.variants && colorVariant.variants.length > 0) {
                 colorVariant.variants.forEach(sizeVariant => {
@@ -43,12 +43,16 @@ exports.getHome = async (req, res) => {
         const bestSellers = rawBestSellers.map(formatProductForHomepage);
         const topRated = rawTopRated.map(formatProductForHomepage);
         const whatsNew = rawWhatsNew.map(formatProductForHomepage);
-
+        const message = req.session.message;
+        delete req.session.message;
+        whatsNew.forEach((item)=>console.log(item));
         return res.render('user/home', {
             bestSellers,
             topRated,
             whatsNew,
-            title: 'User Home'
+            title: 'User Home',
+            message,
+            user:req.user
         });
 
     } catch (error) {

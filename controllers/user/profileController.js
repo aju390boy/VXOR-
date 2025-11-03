@@ -118,10 +118,8 @@ exports.getProfileSection = async (req, res) => {
   const pageWishlist = parseInt(req.query.page) || 1;
   const limitWishlist = parseInt(req.query.limit) || 5;
   const skipWishlist = (pageWishlist - 1) * limitWishlist;
-
   const cart = await Cart.findOne({ userId: user._id }).select('items.productId').lean();
   const cartProductIds = new Set(cart ? cart.items.map(item => item.productId.toString()) : []);
-
   const wishlist = await Wishlist.findOne({ user_id: user._id })
     .populate({
       path: 'products.product_id',
@@ -138,24 +136,33 @@ exports.getProfileSection = async (req, res) => {
       return !cartProductIds.has(product._id.toString());
     });
   }
-
   const totalWishlistCount = filteredProducts.length;
   const pagedProducts = filteredProducts.slice(skipWishlist, skipWishlist + limitWishlist);
-
   const processedWishlistItems = await Promise.all(
     pagedProducts.map(async (item) => {
       const product = item.product_id;
+      let displayImageUrl="/uploads/products/placeholder.png";
       if (product.isDeleted || !product.isListed) return null;
+      let totalStock = 0;
+          product.colorVariants.forEach(color => {
+          color.variants.forEach(size => {
+          totalStock += size.stock;
+       });
+     });
       const bestOffer = await findBestOffer(product._id, product.category_id?._id, product.brand_id?._id);
-      const displayImageUrl = product.colorVariants?.[0]?.images?.[0]
-        ? `/uploads/products/${product.colorVariants[0].images[0]}`
-        : '/images/placeholder.png';
+      product?.colorVariants?.forEach((colorVariant)=>{
+       if(colorVariant.images && colorVariant.images.length>0){
+        let firstImage=colorVariant.images[0];
+        displayImageUrl=firstImage.startsWith('http')?firstImage : `/uploads/products/${firstImage}`;
+      }
+      });
       let discountedPrice = null;
       if (bestOffer && product.min_price > 0) {
         discountedPrice = product.min_price * (1 - bestOffer.discountPercentage / 100);
       }
       return {
         ...product,
+        totalStock:totalStock,
         bestOffer,
         display_image_url: displayImageUrl,
         discounted_price: discountedPrice
@@ -173,48 +180,32 @@ exports.getProfileSection = async (req, res) => {
   break;
 
         case "wallet":
-  // Parse pagination parameters from query (default page=1, limit=10)
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 5;
   const skip = (page - 1) * limit;
 
-  // Fetch wallet data
   let wallet = await Wallet.findOne({ user_id: user._id }).lean();
-
-  // Default wallet if none found
   if (!wallet) {
     wallet = { balance: 0, transactions: [] };
   }
-
-  // Count total transactions to calculate total pages
   const totalTxns = wallet.transactions.length;
-
-  // Paginate transactions array in-memory (if transactions stored embedded)
-  // For large transactions list, consider storing separately and paginating at DB level
   const pagedTransactions = wallet.transactions
-    .slice()  // clone array to avoid mutations
-    .reverse() // Reverse for latest first
+    .slice() 
+    .reverse() 
     .slice(skip, skip + limit);
-
   const totalPages = Math.ceil(totalTxns / limit);
-
-  // Pass paginated transactions and pagination info to template
   data.wallet = {
     ...wallet,
     transactions: pagedTransactions,
     pagination: { totalPages, currentPage: page, limit },
   };
-
   templatePath = "user/profile/partials/_wallet";
   break;
-
       case "orders":
   const pageOrders = parseInt(req.query.page) || 1;
   const limitOrders = parseInt(req.query.limit) || 10;
   const skipOrders = (pageOrders - 1) * limitOrders;
-
   const totalOrdersCount = await Order.countDocuments({ user_id: user._id });
-
   const orders = await Order.find({ user_id: user._id })
     .select("order_id total_amount payment_status createdAt products")
     .sort({ createdAt: -1 })
@@ -228,16 +219,27 @@ exports.getProfileSection = async (req, res) => {
 
   orders.forEach(order => {
     const firstProduct = order.products?.[0]?.product_id;
-    order.display_image_url = (firstProduct && firstProduct.colorVariants?.[0]?.images?.[0]) ?
-      `/uploads/products/${firstProduct.colorVariants[0].images[0]}` :
-      '/images/placeholder.png';
+    console.log(`image :${order.display_image_url}`);
+   order.display_image_url =
+  (firstProduct && Array.isArray(firstProduct.colorVariants) 
+    && firstProduct.colorVariants.length > 0 
+    && firstProduct.colorVariants[0].images 
+    && firstProduct.colorVariants[0].images.length > 0)
+  ? (firstProduct.colorVariants[0].images[0].startsWith('http')
+      ? firstProduct.colorVariants[0].images[0]
+      : `/uploads/products/${firstProduct.colorVariants[0].images[0]}`
+    )
+  : '/images/placeholder.png';
+
+
+    console.log(`image 2 : ${order.display_image_url}`)
   });
   console.log(`count : ${ Math.ceil(totalOrdersCount / limitOrders)}`);
   console.log(`current pages : ${pageOrders}`);
   console.log(`limit :${limitOrders}`);
   data.orders = orders,
   pagination = {
-  totalPages: Math.ceil(totalOrdersCount / limitOrders), // e.g. 6 if 11/2=5.5=>6
+  totalPages: Math.ceil(totalOrdersCount / limitOrders), 
   currentPage: pageOrders,
   limit: limitOrders,
 };

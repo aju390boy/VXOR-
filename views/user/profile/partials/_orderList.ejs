@@ -60,7 +60,7 @@
                         }
                     %>
                     <a href="/user/orders/<%= order._id %>" class="flex items-center space-x-4">
-                        <img src="<%= imagePath %>" alt="<%= altText %>" class="w-16 h-22 object-cover rounded-xl shadow-md border border-gray-700">
+                        <img src="<%= order.display_image_url %>" alt="<%= altText %>" class="w-16 h-22 object-cover rounded-xl shadow-md border border-gray-700">
                     </a>
                 <% } else { %>
                     <span class="text-gray-500">No Product</span>

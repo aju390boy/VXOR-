@@ -3,7 +3,6 @@ const bcrypt = require('bcrypt');
 
 
 exports.getAdminLoginPage = (req, res) => {
-  
     res.render('admin/login', {
         title: 'Admin Login',
         isAuthPage: true,
@@ -14,18 +13,14 @@ exports.getAdminLoginPage = (req, res) => {
 };
 
 
-
 exports.postAdminLogin = async (req, res) => {
     const { email, password } = req.body;
     try {
         const adminUser = await Admin.findOne({ email });
-
         console.log('Admin User Found:', adminUser ? 'Yes' : 'No');
         if (adminUser) {
             console.log('Stored Admin Hash:', adminUser.password);
         }
-
-
         if (!adminUser) {
             return res.render('admin/login', {
                 title: 'Admin Login',
@@ -34,7 +29,6 @@ exports.postAdminLogin = async (req, res) => {
                 oldEmail: email
             });
         }
-
         const isMatch = await bcrypt.compare(password, adminUser.password);
         if (!isMatch) {
             return res.render('admin/login', {
@@ -47,7 +41,6 @@ exports.postAdminLogin = async (req, res) => {
                 req.session.adminId = adminUser._id; 
                 req.session.adminEmail = adminUser.email;
                 req.session.role = 'admin';
-
         const successMessage = encodeURIComponent('Admin logged in successfully!');
         return req.session.save((err) => {
             if (err) {
@@ -83,16 +76,13 @@ exports.logoutUser = (req, res) => {
       console.error('Logout Error:', err);
       return res.status(500).send('Logout Failed');
     }
-
     req.session.destroy(err => {
       if (err) {
         console.error('Session Destroy Error:', err);
         return res.status(500).send('Could not end session');
       }
-
       res.clearCookie('connect.sid'); 
       res.redirect('/admin/login'); 
-      
     });
   });
 };

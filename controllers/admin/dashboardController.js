@@ -57,12 +57,58 @@ exports.getDashboard = async (req, res) => {
         }
         const maxSales = Math.max(...salesDataForChart.map(d => d.sales), 1);
         let bestSelling;
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
         if (bestSellingType === 'products') {
-            bestSelling = await Product.find({ isDeleted: false })
-                .sort({ totalSalesCount: -1 })
-                .limit(5);
-        }
-      else if (bestSellingType === 'category') {
+    bestSelling = await Order.aggregate([
+        { $match: { payment_status: 'COMPLETED' } },
+        { $unwind: "$products" },
+        {
+            $lookup: {
+                from: "products",
+                let: { pid: "$products.product_id" },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $and: [
+                                    { $eq: ["$_id", "$$pid"] },
+                                    { $eq: ["$isDeleted", false] }
+                                ]
+                            }
+                        }
+                    }
+                ],
+                as: "productDetails"
+            }
+        },
+        { $unwind: "$productDetails" },
+        { $unwind: "$productDetails.colorVariants" },
+        {
+            $group: {
+                _id: "$products.product_id",
+                productTitle: { $first: "$productDetails.title" },
+                totalSalesCount: { $sum: "$products.quantity" },
+                productImages: { $addToSet: "$productDetails.colorVariants.images" }
+            }
+        },
+        {
+            $project: {
+                productTitle: 1,
+                totalSalesCount: 1,
+                productImages: {
+                    $reduce: {
+                        input: "$productImages",
+                        initialValue: [],
+                        in: { $concatArrays: ["$$value", "$$this"] }
+                    }
+                }
+            }
+        },
+        { $sort: { totalSalesCount: -1 } },
+        { $limit: 5 }
+    ]);
+}else if (bestSellingType === 'category') {
   bestSelling = await Order.aggregate([
     { $match: { payment_status: 'COMPLETED' } },
     { $unwind: "$products" },
@@ -182,17 +228,34 @@ exports.getDashboard = async (req, res) => {
     { $sort: { totalSalesCount: -1 } },
     { $limit: 5 }
   ]);
-}
-
-
-////////////brand end///////////////
-         else {
-            bestSelling = await Product.find({ isDeleted: false })
-                .sort({ totalSalesCount: -1 })
-                .limit(5);
+}else{
+          bestSelling = await Product.find({ isDeleted: false })
+            .sort({ totalSalesCount: -1 })
+            .limit(5);
         }
     console.log(JSON.stringify(bestSelling, null, 2));
 
+    ////////////new logic ////////////////
+// Format best-selling items to handle Cloudinary URLs
+// Unified formatting for all three types (same structure after aggregation)
+if (bestSellingType === 'products' || bestSellingType === 'category' || bestSellingType === 'brand') {
+    bestSelling = bestSelling.map(item => {
+        let displayImage = 'https://via.placeholder.com/96';
+        
+        if (item.productImages && item.productImages.length > 0) {
+            const firstImage = item.productImages[0];
+            displayImage = firstImage.startsWith('http') 
+                ? firstImage 
+                : `/uploads/products/${firstImage}`;
+        }
+        console.log(`images : ${item.productImages[0]}`)
+        return {
+            ...item,
+            displayImage
+        };
+    });
+}
+    ///////new logic end///////////
         res.render('admin/dashboard', {
             totalSales,
             orderCount,

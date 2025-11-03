@@ -49,7 +49,6 @@ exports.signupadd = async (req, res) => {
         message: 'User with this email already exists and is verified. Please login.',
       });
     }
-
     const hashedPassword = await bcrypt.hash(password, 10);
     const otpCode = crypto.randomInt(100000, 999999).toString();
 
@@ -71,17 +70,12 @@ exports.signupadd = async (req, res) => {
       });
       await user.save();
     }
-
-    // Create unique referral code for this user after they are saved
     const newReferralCode = await createUniqueReferralCode(user._id);
     const newReferral = new Referral({
       code: newReferralCode,
       referrer_user_id: user._id,
     });
     await newReferral.save();
-
-    // If signup form had a referralCode input (inputReferralCode),
-    // find that referral and link referred_user_id to this user
     if (inputReferralCode) {
       const existingReferral = await Referral.findOne({ code: inputReferralCode });
       if (existingReferral && !existingReferral.referred_user_id) {

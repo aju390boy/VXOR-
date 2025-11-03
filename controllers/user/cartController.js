@@ -64,7 +64,7 @@ exports.getCart = async (req, res) => {
                 path: 'items.productId',
                 select: 'title description colorVariants isListed category_id brand_id isDeleted',
                 populate: [ 
-                    { path: 'category_id', select: 'name isListed' }, // Also populate name for the helper
+                    { path: 'category_id', select: 'name isListed' }, 
                     { path: 'brand_id', select: 'name isListed' }
                 ]
             })
@@ -112,7 +112,7 @@ exports.getCart = async (req, res) => {
                 offerSubtotal += finalPrice * item.quantity;
             }
 
-            const imagePath = colorVariant?.images?.[0] ? `/uploads/products/${colorVariant.images[0]}` : '/images/placeholder.png';
+            const imagePath = colorVariant?.images[0].startsWith('http') ? colorVariant.images[0] :  `/uploads/products/${colorVariant.images[0]}`;
 
             return {
                 id: item._id.toString(),
@@ -121,12 +121,12 @@ exports.getCart = async (req, res) => {
                 image: imagePath,
                 size: item.size,
                 colorName: item.colorName,
-                originalPrice: originalPrice, // Price before offer
-                finalPrice: finalPrice,       // Price after offer
+                originalPrice: originalPrice, 
+                finalPrice: finalPrice,       
                 quantity: item.quantity,
                 stock: stock,
                 isAvailable: isAvailable,
-                bestOffer: bestOffer          // Pass offer details to EJS
+                bestOffer: bestOffer          
             };
         }));
 
@@ -139,11 +139,11 @@ exports.getCart = async (req, res) => {
 
         res.render('user/cart', {
             cartItems: validCartItems,
-            subtotal: originalSubtotal.toFixed(2), // The price before any discounts
-            totalDiscount: totalDiscount.toFixed(2), // The amount saved
-            finalTotal: offerSubtotal.toFixed(2),    // The price after offer, before tax
+            subtotal: originalSubtotal.toFixed(2),
+            totalDiscount: totalDiscount.toFixed(2), 
+            finalTotal: offerSubtotal.toFixed(2),   
             tax: tax.toFixed(2),
-            total: total.toFixed(2),                 // The final amount to pay
+            total: total.toFixed(2),               
             message: message 
         });
 
