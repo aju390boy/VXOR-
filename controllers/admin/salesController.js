@@ -135,15 +135,22 @@ exports.renderSalesPage = async (req, res) => {
                 $group: {
                     _id: null,
                     totalSalesAmount: { $sum: '$total_amount' },
-                    totalDiscount: { $sum: { $add: ['$offerDiscount', '$couponDiscount'] } },
+                    totalDiscount: { $sum: { $add: ['$total_offer_applied', '$coupon_discount'] } },
                     orderCount: { $sum: 1 }
                 }
             }
         ]);
         const summary = summaryResult[0] || { totalSalesAmount: 0, totalDiscount: 0, orderCount: 0 };
         
-       
+      
+        const page = parseInt(req.query.page) || 1;
+        const limit = 5;
+        const skip = (page - 1) * limit;
+         const totalSales = await Order.countDocuments(matchStage);
+          const totalPages = Math.ceil(totalSales / limit);
         const orders = await Order.find(matchStage)
+            .skip(skip)
+            .limit(limit)
             .populate('user_id', 'firstname lastname')
             .sort({ createdAt: -1 })
             .lean();
@@ -151,6 +158,8 @@ exports.renderSalesPage = async (req, res) => {
         res.render('admin/sales', {
             summary,
             orders,
+            currentPage: page,
+            totalPages,
             query: req.query,
             layout: false
         });

@@ -10,9 +10,12 @@ const {findBestOffer} = require('../../utils/offerHelper.js');
 const formatProductForListing = (product, bestOffer = null) => {
     let displayImageUrl = "/uploads/products/placeholder.png";
     let minPrice = product.min_price || product.computed_min_price || 0;
-    if (product.colorVariants?.[0]?.images?.[0]) {
-        displayImageUrl = `/uploads/products/${product.colorVariants[0].images[0]}`;
-    }
+    product?.colorVariants.forEach((colorvariant)=>{
+      if(colorvariant.images && colorvariant.images.length > 0){
+        let firstImage = colorvariant.images[0];
+        displayImageUrl=firstImage.startsWith('http')?firstImage : `/uploads/products/${firstImage}`;
+      }
+    })
     let discountedPrice = null;
     if (bestOffer && minPrice > 0) {
         discountedPrice = minPrice * (1 - bestOffer.discountPercentage / 100);
@@ -193,7 +196,7 @@ exports.liveSearch = async (req, res) => {
         );
         res.json(formattedResults);
     } catch (err) {
-        console.error("🔴 Live Search Error:", err.message);
+        console.error("Live Search Error:", err.message);
         res.status(500).json([]);
     }
 };

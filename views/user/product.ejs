@@ -194,7 +194,7 @@
           return;
         }
         try {
-          const res = await axios.get(`/user/product-search?q=${encodeURIComponent(query)}`);
+          const res = await axios.get(`/user/product/search?q=${encodeURIComponent(query)}`);
           const data = res.data;
           if (data.length > 0) {
             // Replace this line

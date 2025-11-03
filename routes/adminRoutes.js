@@ -8,6 +8,7 @@ const authController=require('../controllers/admin/authController.js')
 const productController = require('../controllers/admin/productController.js');
 const { isAuthenticated, isNotAuthenticated } = require('../middlewares/admin/viewsMiddleware.js');
 const {multerErrorHandler} = require('../middlewares/admin/multerErrorHandler.js');
+const {upload} = require('../middlewares/admin/upload.js');
 const brandController=require('../controllers/admin/brandController.js')
 const addProductController=require('../controllers/admin/addProductController.js');
 const orderController=require('../controllers/admin/orderController.js')
@@ -54,7 +55,7 @@ router.post('/category/delete/:id', deleteCategory);
 //Add Products\\\
 router.route('/addproducts')
 .get(isAuthenticated,addProductController.getAddProductPage)
-.post(addProductController.upload.any(), 
+.post(upload.any(), 
     multerErrorHandler,
     addProductController.addProduct
 );
@@ -62,7 +63,7 @@ router.route('/addproducts')
 router.route('/editproduct/:id')
 .get(isAuthenticated, addProductController.getEditProductPage)
 .patch( isAuthenticated,
-    addProductController.upload.any(), 
+    upload.any(), 
     multerErrorHandler,
    addProductController.updateProduct
 );

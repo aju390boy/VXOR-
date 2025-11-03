@@ -17,14 +17,17 @@
         </div>
     </div>
 </div>
-    <div class="detail-image">
-        <img id="mainImage" src="<%= product.images[0] %>" alt="<%= product.title %>" class="zoomable-image" />
-        <div class="thumbnail-wrapper" id="thumbnailWrapper">
-            <% product.images.forEach((img, index) => { %>
-                <img class="thumbnail <%= index === 0 ? 'active-thumb' : '' %>" src="<%= img %>" alt="Thumbnail <%= index %>">
-            <% }) %>
-        </div>
-    </div>
+   <div class="detail-image">
+   <img id="mainImage" src="<%= product.images[0] %>" alt="<%= product.title %>" class="zoomable-image" />
+
+   <div class="thumbnail-wrapper" id="thumbnailWrapper">
+  <% product.images.forEach((img, index) => { %>
+    <img class="thumbnail <%= index === 0 ? 'active-thumb' : '' %>" src="<%= img %>" alt="Thumbnail <%= index %>">
+  <% }) %>
+</div>
+
+</div>
+
 <!-- ////////detail info /////////// -->
     <div class="detail-info">
         <div class="flex justify-between items-center">

@@ -167,34 +167,43 @@
         min-height: 80px; /* Give description a bit more height */
         resize: vertical;
     }
-    .pagination {
-  margin-top: 30px;
-  text-align: center;
-}
+     /* Pagination */
+        .pagination {
+            margin-top: 30px;
+            text-align: center;
+            display: flex; /* Use flex for better control */
+            justify-content: center;
+            align-items: center;
+            gap: 8px; /* Gap between buttons */
+        }
 
-.pagination a {
-  display: inline-block;
-  padding: 8px 14px;
-  margin: 0 5px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  background-color: #f9f9f9;
-  color: #333;
-  text-decoration: none;
-  transition: all 0.3s ease;
-}
+        .pagination a {
+            display: inline-flex; /* Use flex for alignment of icon/text */
+            align-items: center;
+            justify-content: center;
+            padding: 10px 16px; /* Larger clickable area */
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem; /* More rounded corners */
+            background-color: #ffffff;
+            color: #4b5563;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            min-width: 40px; /* Ensure minimum width for consistent shape */
+        }
 
-.pagination a:hover {
-  background-color: #007bff;
-  color: white;
-  border-color: #007bff;
-}
+        .pagination a:hover {
+            background-color: #eff6ff; /* Light blue hover */
+            color: #4f46e5; /* Primary color text on hover */
+            border-color: #93c5fd; /* Light blue border on hover */
+        }
 
-.pagination a.active {
-  background-color: black;
-  color: white;
-  border-color: black;
-}
+        .pagination a.active {
+            background-color: #4f46e5; /* Primary background */
+            color: white;
+            border-color: #4f46e5;
+            box-shadow: 0 3px 8px rgba(79, 70, 229, 0.2);
+            font-weight: 600;
+        }
 
     /* Modal styles */
     .modal {

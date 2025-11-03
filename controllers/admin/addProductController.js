@@ -6,37 +6,7 @@ const path = require("path");
 const mongoose = require("mongoose");
 const { rmSync } = require("fs");
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "public/uploads/products");
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, "product_" + uniqueSuffix + path.extname(file.originalname));
-  },
-});
-const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png|gif|webp/;
-  const mimetype = allowedTypes.test(file.mimetype);
-  const extname = allowedTypes.test(
-    path.extname(file.originalname).toLowerCase()
-  );
 
-  if (mimetype && extname) {
-    return cb(null, true);
-  }
-  const error = new Error(
-    "Only .jpeg, .jpg, .png, .gif, .webp format allowed!"
-  );
-  error.code = "FILE_TYPE_ERROR";
-  cb(error);
-};
-
-exports.upload = multer({
-  storage: storage,
-  fileFilter: fileFilter,
-  limits: { fileSize: 20 * 1024 * 1024 },
-});
 
 ///get addproduct page\\\\
 exports.getAddProductPage = async (req, res) => {
@@ -54,6 +24,7 @@ exports.getAddProductPage = async (req, res) => {
 // POST /admin/addproducts
 exports.addProduct = async (req, res) => {
   try {
+   const imageUrl = req.files.map(file => file.path);
     const { title, description, brand_id, warranty, category_id, isListed } =
       req.body;
     const rawColorVariants = req.body.colorVariants;
@@ -179,8 +150,8 @@ exports.addProduct = async (req, res) => {
       const variantData = parsedColorVariants[i];
       const variantColorName = variantData.colorName;
       const variantImages = req.files
-        .filter((file) => file.fieldname === `colorVariants[${i}][images]`)
-        .map((file) => file.filename);
+    .filter(file => file.fieldname === `colorVariants[${i}][images]`)
+    .map(file => file.path);  // use 'path' (Cloudinary URL) instead of filename
       const sizesAndStock = [];
       const rawSizeVariants = variantData.variants;
       const parsedSizeVariants = Object.values(rawSizeVariants || {});
@@ -235,18 +206,18 @@ exports.getEditProductPage = async (req, res, next) => {
         .status(404)
         .render("admin/404", { message: "Product not found" });
     }
-
     const productObject = product.toObject();
     productObject.colorVariants = productObject.colorVariants.map((variant) => {
-      variant.images = variant.images.map((imageFilename) => {
+      variant.images = variant.images.map((imagePath) => {
+        const isFullUrl = imagePath.startsWith("http") || imagePath.startsWith("https");
+
         return {
-          url: `/uploads/products/${imageFilename}`,
-          filename: imageFilename,
+          url: isFullUrl ? imagePath : `/uploads/products/${imagePath}`,
+          filename: imagePath,
         };
       });
       return variant;
     });
-
     res.render("admin/addProducts", {
       product: productObject,
       categories,
@@ -258,6 +229,7 @@ exports.getEditProductPage = async (req, res, next) => {
     next(err);
   }
 };
+
 
 //  edit product\\
 exports.updateProduct = async (req, res) => {
@@ -292,7 +264,6 @@ if (category_id !== undefined && category_id !== '') {
     if (!categoryExists) errors.push('The selected category does not exist.');
   }
 }
-
 if (brand_id !== undefined && brand_id !== '') {
   if (!mongoose.Types.ObjectId.isValid(brand_id)) 
     errors.push('Invalid brand ID.');
@@ -301,13 +272,11 @@ if (brand_id !== undefined && brand_id !== '') {
     if (!brandExists) errors.push('The selected brand does not exist.');
   }
 }
-
 // Validate title if it's provided
 if (title !== undefined) {
   if (title.trim().length < 3 || !/[a-zA-Z]/.test(title))
     errors.push('Product title must be at least 3 characters, contain at least one letter.');
 }
-
 // Validate description if it's provided
 if (description !== undefined) {
   if (description.trim().length === 0) 
@@ -319,7 +288,6 @@ if (warranty !== undefined && warranty !== '') {
   if (isNaN(parseInt(warranty, 10)) || parseInt(warranty, 10) < 0)
     errors.push('Warranty must be a positive number.');
 }
-
 // Validate colorVariants only if provided
 if (colorVariants !== undefined) {
   if (!Array.isArray(colorVariants)) {
@@ -339,7 +307,6 @@ if (colorVariants !== undefined) {
           errors.push(`Images for color #${i + 1} should be an array.`);
         }
       }
-
       //  Only validate size variants if they are provided
       if ('variants' in variant) {
         const variantsObj = variant.variants;
@@ -358,7 +325,6 @@ if (colorVariants !== undefined) {
                 );
               }
             }
-
             // Prevent duplicate sizes
             if (sizeVariant.size) {
               const sizeKey = sizeVariant.size.trim().toLowerCase();
@@ -370,7 +336,6 @@ if (colorVariants !== undefined) {
                 sizeNames.push(sizeKey);
               }
             }
-
             // Validate price only if provided
             if ('price' in sizeVariant) {
               if (
@@ -382,7 +347,6 @@ if (colorVariants !== undefined) {
                 );
               }
             }
-
             // Validate stock only if provided
             if ('stock' in sizeVariant) {
               if (
@@ -400,12 +364,9 @@ if (colorVariants !== undefined) {
     });
   }
 }
-
-/////////////////
-
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     if (errors.length > 0)
-      return res.status(400).json({ message: 'Validation failed', errors });
+    return res.status(400).json({ message: 'Validation failed', errors });
     const product = await Product.findById(productId);
     if (!product) return res.status(404).json({ message: 'Product not found.' });
     console.log('Existing color variants in DB:', product.colorVariants.map(v => ({ id: String(v._id), colorName: v.colorName })));
@@ -424,9 +385,7 @@ if (colorVariants !== undefined) {
     if (Array.isArray(colorVariants)) {
       const existingMap = new Map();
       product.colorVariants.forEach(v => existingMap.set(String(v._id), v));
-
       const updatedVariants = [];
-
       for (const [index, variant] of colorVariants.entries()) {
         const colorId = variant.colorId;
         const existingVariant = colorId && existingMap.has(String(colorId)) ? existingMap.get(String(colorId)) : null;
@@ -434,7 +393,8 @@ if (colorVariants !== undefined) {
         const newFiles = (req.files || []).filter(f =>
           f.fieldname === `colorVariants[${index}][images]`
         );
-        const newImages = newFiles.map(f => `/${f.filename}`);
+        const newImages = newFiles.map(f => f.path); // Cloudinary URLs are in f.path
+
 
         if (existingVariant) {
           console.log('Found existing variant:', { id: String(existingVariant._id), colorName: existingVariant.colorName });
@@ -442,7 +402,7 @@ if (colorVariants !== undefined) {
 
           if (variant.colorName !== undefined) existingVariant.colorName = variant.colorName;
 ///////size variants//////////////////
-      if (variant.variants !== undefined) {
+      if (variant.variants !== undefined){
            const newSizeVariants = Object.values(variant.variants);
            const existingSizesMap = new Map();
                  existingVariant.variants.forEach(sz => {
@@ -469,29 +429,47 @@ if (colorVariants !== undefined) {
 }
 /////////////color variants/////////////
       if (variant.images !== undefined || newImages.length > 0) {
-  function normalizeImagePath(path) {
-    if (!path) return null;
-    const filename = path.split('/').pop();
-    return `/${filename}`; 
-  }
-  const clientImgs = (variant.images || []).map(img => {
-    if (typeof img === "string") return normalizeImagePath(img);
-    if (img.url) return normalizeImagePath(img.url);
-    if (img.filename) return normalizeImagePath(img.filename);
+  
+  // const clientImgs = (variant.images || []).map(img => {
+  //   if (typeof img === "string") return file.path(img);
+  //   if (img.url) return file.path(img.url);
+  //   if (img.filename) return file.path(img.filename);
+  //   return null;
+  // }).filter(Boolean);
+  // Keep existing Cloudinary URLs as-is
+const clientImgs = (variant.images || [])
+  .map(img => {
+    if (typeof img === "string") return img;
+    if (img.url) return img.url;
+    if (img.filename) return img.filename;
     return null;
-  }).filter(Boolean);
+  })
+  .filter(Boolean);
+
+
   let mergedImages = [...clientImgs];
   const maxImages = 3;
-  for (const file of newImages) {
-    const normalizedPath = file.filename ? normalizeImagePath(file.filename) :
-                           (file.startsWith("/") ? normalizeImagePath(file) : `/${file.replace(/^\//, '')}`);
+
+  // for (const file of newImages) {
+  //   const normalizedPath = file.filename ? file.path(file.filename) :
+  //                          (file.startsWith("/") ? file.path(file) : `/${file.replace(/^\//, '')}`);
+  //   const firstEmptyIndex = mergedImages.findIndex(img => !img || img.trim() === "");
+  //   if (firstEmptyIndex !== -1) {
+  //     mergedImages[firstEmptyIndex] = normalizedPath;
+  //   } else if (mergedImages.length < maxImages) {
+  //     mergedImages.push(file.path);
+  //   }
+  // }
+  for (const cloudinaryUrl of newImages) {
     const firstEmptyIndex = mergedImages.findIndex(img => !img || img.trim() === "");
     if (firstEmptyIndex !== -1) {
-      mergedImages[firstEmptyIndex] = normalizedPath;
+      mergedImages[firstEmptyIndex] = cloudinaryUrl;
     } else if (mergedImages.length < maxImages) {
-      mergedImages.push(normalizedPath);
+      mergedImages.push(cloudinaryUrl);
     }
-  }
+}
+
+
   existingVariant.images = mergedImages.slice(0, maxImages);
 }
 updatedVariants.push(existingVariant);

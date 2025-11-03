@@ -51,12 +51,11 @@
             text-align: center;
         }
         .btn-cancel {
-            background-color: #ef4444;
-            color: white;
+           font-size: 18px;
+           font-weight: bolder;
+            color: #ef4444;
         }
-        .btn-cancel:hover {
-            background-color: #dc2626;
-        }
+       
         #cancelModal, #returnModal {
             z-index: 50;
         }
@@ -77,19 +76,18 @@
             </div>
             <!-- entire order cancel or return  -->
                  <div class="flex items-center gap-4">
-                    <p>Payment Status: 
-                                        <span class="px-3 py-1 rounded-full text-xs font-semibold uppercase shadow-sm 
-                                            <%= order.payment_status === 'REFUNDED' ? 'bg-blue-600/80 text-blue-100' :  
+                    <p>Payment Status :<span class="px-3 py-1 rounded-full text-lg font-semibold uppercase shadow-sm 
+                                            <%=order.payment_status === 'REFUNDED' ? 'text-blue-600/80 text-blue-100' :  
                                                 order.payment_status === 'PENDING' ? 'bg-yellow-600/80 text-yellow-100' :  
-                                                order.payment_status === 'COMPLETED' ? 'bg-green-600/80 text-green-100' :    
+                                                order.payment_status === 'COMPLETED' ? 'text-green-500 font-extrabold text-green-100' :    
                                                 order.payment_status === 'FAILED' ? 'bg-red-600/80 text-red-100' :  
                                                  order.payment_status === 'PROCESSING' ? 'bg-gray-300/80 text-gray-100' : 
                                                 'bg-gray-600/80 text-gray-100' %>"> 
-                                            <%= order.payment_status %>
+                                            <%=order.payment_status %>
                                         </span>
                                     </p>
          <% if (order.payment_status==="FAILED") { %>
-            <button id="retry-btn" data-order-id="<%= order._id %>" class="btn bg-gray-100 text-black">
+            <button id="retry-btn" data-order-id="<%= order._id %>" class="btn text-gray-100">
                 RETRY
             </button>
         <% } %>
@@ -99,13 +97,13 @@
             </button>
         <% } %>
         <% if (order.canReturnAll) { %>
-            <button id="returnEntireOrderBtn" data-order-id="<%= order._id %>" class="btn bg-purple-600 text-white">
+            <button id="returnEntireOrderBtn" data-order-id="<%= order._id %>" class="btn text-purple-600">
                 Return Entire Order
             </button>
         <% } %>
         <a href="/user/orders/<%= order.order_id || order._id %>/invoice" 
-             class="invoice-btn text-center w-full sm:w-auto px-6 py-3 rounded-xl font-semibold text-white transition-all duration-300
-                    bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+             class="invoice-btn text-center w-full sm:w-auto px-6 py-3 text-xl rounded-xl font-semibold text-white transition-all duration-300
+                    text-gray-300 "
              data-order-id="<%= order.order_id || order._id %>">
             Download Invoice
        </a>
@@ -122,7 +120,8 @@
                             const product = productItem.product_id;
                             let imagePath = 'https://placehold.co/96x96/1f2937/d1d5db?text=IMG';
                             if (product && product.colorVariants && product.colorVariants.length > 0 && product.colorVariants[0].images && product.colorVariants[0].images.length > 0) {
-                                imagePath = `/uploads/products/${product.colorVariants[0].images[0]}`;
+                               let firstImage=product.colorVariants[0].images[0];
+                                imagePath = firstImage.startsWith('http')?product.colorVariants[0].images[0] : `/uploads/products/${product.colorVariants[0].images[0]}`;
                             }
                             // Determine button visibility based on item_status
                             const canCancel = ['PROCESSING', 'PACKED', 'SHIPPED'].includes(productItem.status);
@@ -130,7 +129,8 @@
                             const isReturnRequested = productItem.status === 'RETURN REQUESTED';
                             const canDownloadInvoice = ['COMPLETED', 'REFUNDED'].includes(order.payment_status);
                         %>
-                        <div class="flex flex-col sm:flex-row items-start sm:items-center  gap-6 p-4 rounded-xl transition-all duration-200 hover:bg-gradient-to-br from-gray-800 via-gray-700 to-gray-900">
+                        <div class="rounded-lg bg-gradient-to-br from-gray-800 via-gray-700 to-gray-900">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center  gap-6 p-4 rounded-xl transition-all duration-200 ">
                             <div class="flex-shrink-0 w-22 h-24 rounded-lg overflow-hidden border border-gray-700 shadow-md">
                                 <img src="<%= imagePath %>" onerror="this.onerror=null;this.src='https://placehold.co/96x96/1f2937/d1d5db?text=IMG';" alt="<%= product.title %>" class="w-full h-full object-cover">
                             </div>
@@ -162,8 +162,8 @@
                             <!-- Action Buttons for each item -->
                             <div class="flex flex-col sm:flex-row gap-4 w-full md:w-auto mt-4 md:mt-0">
                                 <% if (productItem.canCancel) { %>
-                                    <button class="w-full sm:w-auto px-6 py-3 rounded-xl font-semibold text-white transition-all duration-300
-                                                   bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-gray-900 cancel-item-btn"
+                                    <button class="w-full sm:w-auto px-6 py-3 rounded-xl font-semibold text-red-500 transition-all duration-300
+                                                   cancel-item-btn"
                                                    data-order-id="<%= order._id %>" data-item-id="<%= productItem._id %>">
                                         Cancel
                                     </button>
@@ -176,8 +176,7 @@
                                     </button>
                                 <% } %>
                                  <a href="/user/orders/<%= order.order_id || order._id %>/items/<%= productItem._id %>/invoice" 
-                                    class="single-item-invoice-btn text-center w-full sm:w-auto px-6 py-3 rounded-xl font-semibold text-white transition-all duration-300
-                                           bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+                                    class="single-item-invoice-btn text-center w-full sm:w-auto px-6 py-3 rounded-xl font-semibold text-white transition-all duration-300"
                                     data-order-id="<%= order.order_id || order._id %>">
                                     Download Invoice
                                  </a>
@@ -234,8 +233,8 @@
   %>
 
     <% if (!isSpecialStatus || showProductTracker) { %>
-      <div class="rounded-2xl px-4 shadow-lg mb-8 bg-gray-800">
-        <h3 class="font-semibold mb-4 text-white"><%= product.product_id?.title || 'Unknown Product' %></h3>
+      <div class="rounded-2xl px-4  mb-8 ">
+       
         <div class="relative pt-8 pb-4">
           <div class="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-1 bg-gray-700 mx-8 md:mx-16"></div>
           <div class="absolute left-0 h-1 bg-green-500 top-1/2 -translate-y-1/2 transition-all duration-1000 ease-in-out" 
@@ -293,6 +292,7 @@
       </div>
     </div>
   <% } %>
+</div>
 </div>
         <!-- order status tracker end -->
          <% }); %>             
@@ -434,13 +434,9 @@
         const btnCloseReturn = document.getElementById('btnCloseReturn');
         const cancelForm = document.getElementById('cancelForm');
         const returnForm = document.getElementById('returnForm');
-
-        // --- Main Event Listener for All Button Clicks on the Page ---
         document.body.addEventListener('click', (e) => {
-            const target = e.target.closest('button, a'); // Find the button or link that was clicked
-            if (!target) return; // Exit if the click wasn't on a button or link
-
-            // --- Handlers for opening modals ---
+            const target = e.target.closest('button, a'); 
+            if (!target) return;
             const handleModalOpen = (modal, idField, orderId, itemId = null) => {
                 const action = modal === cancelModal ? 'Cancellation' : 'Return';
                 Swal.fire({
@@ -449,7 +445,7 @@
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonText: `Yes, request ${action.toLowerCase()}!`,
-                    // Add your custom dark theme classes here
+                  
                 }).then((result) => {
                     if (result.isConfirmed) {
                         document.getElementById(idField.order).value = orderId;
@@ -460,7 +456,7 @@
             };
 
             const invoiceBtn = target.closest('.invoice-btn, .single-item-invoice-btn');
-            // Route clicks to the correct handler
+           
             if (target.matches('.cancel-item-btn')) {
                 handleModalOpen(cancelModal, { order: 'cancelOrderId', item: 'cancelItemId' }, target.dataset.orderId, target.dataset.itemId);
             } else if (target.matches('#cancelEntireOrderBtn')) {
@@ -471,15 +467,14 @@
                 handleModalOpen(returnModal, { order: 'returnOrderId', item: 'returnItemId' }, target.dataset.orderId);
             }
             
-            // --- Handler for RETRY button ---
+         
             else if (target.matches('#retry-btn')) {
-                // For a retry, you'll likely need a backend route to repopulate the cart
-                // For now, we'll redirect to checkout as requested.
+               
                 window.location.href = '/user/checkout';
             }
             else if (target.matches('.invoice-btn') || target.matches('.single-item-invoice-btn')) {
-    e.preventDefault(); // Stop the link from working immediately
-    const url = target.href; // Get the correct URL from the link that was clicked
+    e.preventDefault(); 
+    const url = target.href;
 
     Swal.fire({
         title: 'Confirm Download',
@@ -489,7 +484,7 @@
         confirmButtonText: 'Yes, download it!'
     }).then((result) => {
         if (result.isConfirmed) {
-            // If confirmed, go to the URL
+         
             window.location.href = url;
         }
     });
@@ -519,7 +514,7 @@
             }
         };
 
-        // --- Listener for the Cancellation Form ---
+     
         cancelForm?.addEventListener('submit', (e) => {
             e.preventDefault();
             const orderId = document.getElementById('cancelOrderId').value;
@@ -533,7 +528,7 @@
             handleFormSubmit(cancelForm, url, { reason });
         });
 
-        // --- Listener for the Return Form ---
+        
         returnForm?.addEventListener('submit', (e) => {
             e.preventDefault();
             const orderId = document.getElementById('returnOrderId').value;

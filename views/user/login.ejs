@@ -30,25 +30,30 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-
-
 <script>
-
   <% if (message) { %>
     Swal.fire({
-      icon: 'error',
-      title: 'Login Failed',
-      text: '<%= message %>'
+      icon: '<%= message.icon || "info" %>',
+      title: '<%= message.title || "Notice" %>',
+      text: '<%= message.text || "" %>',
+       background: '#1e1e1e', 
+       color: '#ffffff',
+       width:'450px'
     });
-  <% } %>
+  <% }else if (alerts){ %>
+  Swal.fire({
+      icon: '<%= alerts.icon || "success" %>',
+      title: '<%= alerts.title || "Success" %>',
+      text: '<%= alerts || "" %>',
+       background: '#1e1e1e', 
+       color: '#ffffff',
+       width:'450px'
+    });
+    <%}%>
 </script>
-
-
 <script>
   document.getElementById('loginForm').addEventListener('submit', function(event) {
     event.preventDefault();
-
     const email = this.email.value.trim(); 
     const password = this.password.value.trim(); 
     const errors = [];
@@ -64,7 +69,6 @@
     if (!password) {
       errors.push("Password is required.");
     }
-
     if (errors.length > 0) {
       Swal.fire({
         icon: 'error',
@@ -74,7 +78,5 @@
       return;
     }
     this.submit();
-
-    
   });
 </script>

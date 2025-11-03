@@ -24,11 +24,11 @@ exports.getOrderDetail = async (req, res) => {
            req.session.message={icon:'error',titile:'Error',text:'Order doesnot exists  '}
            return res.redirect('/user/orderDetail');
         }
-        // Is it possible to cancel ANY item in the order?
+      
         order.canCancelAll = order.products.some(p => ['CONFIRMED', 'PROCESSING', 'PACKED'].includes(p.status));
-        // Is it possible to return ANY item in the order?
+      
         order.canReturnAll = order.products.some(p => p.status === 'DELIVERED');
-        // Determine cancel/return eligibility for EACH item
+      
         order.products.forEach(item => {
             if (!item.product_id) { 
                 item.canCancel = false;
@@ -38,7 +38,7 @@ exports.getOrderDetail = async (req, res) => {
             item.canCancel = ['CONFIRMED', 'PROCESSING', 'PACKED'].includes(item.status);
             item.canReturn = item.status === 'DELIVERED';
         });
-        // This logic correctly reconstructs the totals for display
+      
         let originalSubtotal = 0;
         let totalAfterOffers = 0;
         order.products.forEach(item => {
@@ -60,25 +60,25 @@ exports.getOrderDetail = async (req, res) => {
             grandTotal: order.total_amount.toFixed(2)
         };
 
-        // New improved order status tracking logic
+     
     const progressSteps = ['CONFIRMED', 'PROCESSING', 'PACKED', 'SHIPPED', 'DELIVERED'];
     const specialStatuses = ['CANCELLED', 'RETURNED', 'CANCELLATION REQUESTED', 'RETURN REQUESTED'];
 
     const totalProducts = order.products.length;
 
-    // Count how many products in each progress step
+   
     const progressCounts = progressSteps.reduce((acc, step) => {
       acc[step] = order.products.filter(p => p.status === step).length;
       return acc;
     }, {});
 
-    // Count products for each special status
+    
     const specialCounts = specialStatuses.reduce((acc, status) => {
       acc[status] = order.products.filter(p => p.status === status).length;
       return acc;
     }, {});
 
-    // Prepare segments for progress bar
+  
     const progressSegments = progressSteps.map(step => ({
       status: step,
       count: progressCounts[step],

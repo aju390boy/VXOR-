@@ -4,8 +4,8 @@ const connect = require('./database/connect.js')
 require('./config/passport');
 require('dotenv').config();
 const adminRoutes = require('./routes/adminRoutes.js');
-const userRoutes = require('./routes/userRoutes.js');
-const authRoutes = require('./routes/authRoutes.js')
+const userRoutes = require('./routes/userRoutes/index.js');
+const authRoutes = require('./routes/authRoutes/index.js')
 const { getCartCount } = require('./middlewares/user/cartMiddleware.js');
 const  referralCodeMiddleware = require('./middlewares/user/referralMiddleware.js');
 const app = express();
@@ -23,7 +23,7 @@ app.use('/', authRoutes);
 app.use('/user', userRoutes);
 app.use('/admin', adminRoutes);
 app.use('/*splat',(req,res)=>{
-    res.render('user/error',{layout:false})
+    res.status(404).render('user/error',{layout:false})
 });
 app.listen(3000, () => {
     console.log('server is running on http://localhost:3000')
