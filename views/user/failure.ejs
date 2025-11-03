@@ -1,0 +1,47 @@
+<% title = 'VIXOR | Payment Failed'; -%>
+
+<style>
+    /* Simple animation for the icon */
+    @keyframes pulse-error {
+        0%, 100% { transform: scale(1); opacity: 0.8; }
+        50% { transform: scale(1.05); opacity: 1; }
+    }
+    .icon-pulse {
+        animation: pulse-error 2.5s infinite ease-in-out;
+    }
+</style>
+
+<div class="bg-gray-900 min-h-screen text-white font-sans flex flex-col justify-center items-center px-4 py-12">
+    <div class="w-full max-w-4xl text-center">
+
+        <div class="mx-auto mb-6 w-24 h-24 flex items-center justify-center bg-red-500/10 rounded-full border-2 border-red-500/20 icon-pulse">
+            <svg class="w-12 h-12 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+            </svg>
+        </div>
+
+        <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-white ">Payment Unsuccessful</h1>
+         <!-- Order ID Display -->
+      <div class="my-4 inline-block fade-in-up delay-anim-3 mb-6">
+         <p class="text-sm text-gray-400">
+          Your Order ID is <br class="sm:hidden">
+          <span class="mt-2 inline-block font-mono text-white bg-black/20 px-4 py-2 rounded-lg tracking-wider text-base border border-gray-700"><%= customId %></span>
+        </p>
+      </div>
+        <p class="text-lg text-gray-400 mb-10 max-w-2xl mx-auto">
+            Unfortunately, we were unable to process your payment. Don't worry, your order has been saved with a 'Failed' status. You can try paying again from your order details page.
+        </p>
+           
+        <div class="flex flex-col sm:flex-row gap-4 justify-center w-full max-w-lg mx-auto">
+            <a href="/user/checkout"
+               class="w-full bg-gradient-to-br from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-3 px-8 rounded-lg text-lg transition-all duration-300 transform hover:scale-105 shadow-lg shadow-indigo-500/30">
+                Try Another Payment
+            </a>
+            <a href="/user/orders/<%=orderId%>"
+               class="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-lg text-lg transition-all duration-300 transform hover:scale-105">
+                 Order Details
+            </a>
+        </div>
+        
+    </div>
+</div>

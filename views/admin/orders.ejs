@@ -6,6 +6,7 @@
     <title>Admin Dashboard - Orders</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
    <link rel="stylesheet" href="/styles/admin/adminnavbar.css">
   <link rel="stylesheet" href="/styles/admin/adminsidebar.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -33,77 +34,52 @@
           margin-left: 240px;
           margin-top: 50px;
         }
-        .status-PROCESSING {
-    background-color: #e2e8f0; /* Light gray */
-    color: #475569; /* Slate gray */
-    font-weight: 500;
+       
+.status-PENDING {
+  background-color: #fbbf24; /* Yellow */
+  color: #92400e;
 }
-
-.status-PACKED {
-    background-color: #fde68a; /* Light yellow */
-    color: #92400e; /* Dark orange */
-    font-weight: 500;
-}
-
-.status-SHIPPED {
-    background-color: #a5b4fc; /* Light indigo */
-    color: #4338ca; /* Dark indigo */
-    font-weight: 500;
-}
-
-.status-DELIVERED {
-    background-color: #a7f3d0; /* Light green */
-    color: #065f46; /* Dark green */
-    font-weight: 500;
-}
-
-.status-RETURNED {
-    background-color: #fca5a5; /* Light red */
-    color: #b91c1c; /* Dark red */
-    font-weight: 500;
-}
-
-.status-CANCELLED {
-    background-color: #fee2e2; /* Light red */
-    color: #b91c1c; /* Dark red */
-    font-weight: 500;
-}
-
-.status-RETURN-REQUESTED {
-    background-color: #fef08a; /* Light yellow */
-    color: #854d0e; /* Dark yellow */
-    font-weight: 500;
-}
-.status-PROCESSING{
-  background-color: #717473;
+.status-PROCESSING {
+  background-color: #717473; /* Gray */
   color: white;
-  font-weight: 500;
 }
-
-
+.status-COMPLETED {
+  background-color: #a7f3d0; /* Light Green */
+  color: #065f46;
+}
+.status-FAILED {
+  background-color: #f87171; /* Red */
+  color: #b91c1c;
+}
+.status-REFUNDED {
+  background-color: #c7d2fe; /* Light Indigo */
+  color: #3730a3;
+}
+.concern-CANCELLATION {
+        background-color: #fcd34d; /* Yellow-300 */
+        color: #92400e; /* Darker Yellow/Brown */
+    }
+    .concern-RETURN {
+        background-color: #f97316; /* Orange-600 */
+        color: white;
+    }
+    .concern-NONE {
+        background-color: #d1d5db; /* Gray-300 */
+        color: #374151; /* Dark Gray */
+    }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 min-h-screen">
-    
-    <!-- Overall Layout Container -->
     <div class="flex h-screen">
-        <!-- Sidebar - Fixed on the left -->
         <%- include('../partials/admin/adminsidebar', { current: 'orders' }) %>
-
-        <!-- Main Content Area (Navbar and Order Management) -->
         <div class="flex-1 flex flex-col overflow-hidden">
-            <!-- Navbar - Fixed on top -->
             <%- include('../partials/admin/adminnavbar') %>
-            
-            <!-- Main Content Wrapper -->
             <main class="main-content-div flex-1 w-[85%] overflow-x-hidden overflow-y-auto bg-gray-100 p-4 md:p-8">
                <div class="breadcrumb mb-4 text-gray-500">Admin > Orders</div>
                 <header class="mb-8">
                     <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-2">ORDERS MANAGEMENT</h1>
                     <p class="text-gray-700">View, manage, and track all customer orders.</p>
                 </header>
-
-                <!-- Search, Sort, and Filter Controls -->
                 <div class="bg-white rounded-xl p-4 md:p-6 shadow-lg border border-gray-200 mb-6">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                         <div class="md:col-span-2">
@@ -112,16 +88,14 @@
                                 class="mt-1 block w-full bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:ring-purple-500 focus:border-purple-500 text-sm px-4 py-2 text-gray-800">
                         </div>
                         <div>
-                            <label for="order-status-filter" class="block text-sm font-medium text-gray-700">Filter by Status</label>
-                            <select id="order-status-filter" class="mt-1 block w-full bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:ring-purple-500 focus:border-purple-500 text-sm px-4 py-2 text-gray-800">
-                                <option value="" >All Statuses</option>
+                            <label for="payment-status-filter" class="block text-sm font-medium text-gray-700">Filter by Payment Status</label>
+                            <select id="payment-status-filter" class="mt-1 block w-full bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:ring-purple-500 focus:border-purple-500 text-sm px-4 py-2 text-gray-800">
+                                <option value="" >All Payment Statuses</option>
+                                <option value="PENDING">PENDING</option>
                                 <option value="PROCESSING">PROCESSING</option>
-                                <option value="PACKED">PACKED</option>
-                                <option value="SHIPPED">SHIPPED</option>
-                                <option value="DELIVERED">DELIVERED</option>
-                                <option value="RETURN REQUESTED">RETURN REQUESTED</option>
-                                <option value="CANCELLED">CANCELLED</option>
-                                <option value="RETURNED">RETURNED</option>
+                                <option value="COMPLETED">COMPLETED</option>
+                                <option value="FAILED">FAILED</option>
+                                <option value="REFUNDED">REFUNDED</option>
                             </select>
                         </div>
                         <div>
@@ -148,15 +122,15 @@
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Order Date</th>
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">User</th>
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Amount</th>
-                                <th scope="col" class="status-row px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                                <th scope="col" class="status-row px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"> Payment Status</th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Concerns</th>
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="orders-table-body" class="divide-y divide-gray-200">
-                            <!-- Orders will be dynamically injected here by JavaScript -->
+                            <!-- Orders will be dynamically injected here  -->
                         </tbody>
                     </table>
-                    <!-- Loading and No Data states -->
                     <div id="loading-state" class="text-center py-8 text-gray-500">
                         <p>Loading orders...</p>
                     </div>
@@ -165,7 +139,7 @@
                     </div>
                 </div>
 
-                <!-- Pagination Controls -->
+                <!-- Pagination -->
                 <div id="pagination-controls" class="flex justify-between items-center mt-6">
                     <button id="prev-page-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                         Previous
@@ -179,12 +153,11 @@
         </div>
     </div>
 
-    <!-- JavaScript for dynamic functionality -->
+    
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // DOM Elements
         const searchInput = document.getElementById('order-search');
-        const statusFilter = document.getElementById('order-status-filter');
+        const paymentStatusFilter = document.getElementById('payment-status-filter');
         const sortSelect = document.getElementById('order-sort');
         const clearBtn = document.getElementById('clear-search-btn');
         const ordersTableBody = document.getElementById('orders-table-body');
@@ -193,36 +166,40 @@
         const prevPageBtn = document.getElementById('prev-page-btn');
         const nextPageBtn = document.getElementById('next-page-btn');
         const pageInfoSpan = document.getElementById('page-info');
-
-        // Application State
+        
         let currentPage = 1;
-        const pageSize = 2; // Adjusted for better testing on a small screen
+        const pageSize = 2; 
         let totalOrders = 0;
-        const statusOptions = ["PROCESSING", "PACKED", "SHIPPED", "DELIVERED", "RETURN REQUESTED", "CANCELLED", "RETURNED"];
-
-        /**
-         * Fetches and renders orders based on current state.
-         */
+        const paymentStatusOptions = ["PENDING","PROCESSING", "COMPLETED", "FAILED", "REFUNDED"];
+        const showSwal = (icon, title, text) => {
+        Swal.fire({
+            icon: icon,
+            title: title,
+            text: text,
+            confirmButtonText: 'OK',
+            customClass: {
+                popup: 'swal-dark-bg',
+                title: 'swal-dark-title',
+                content: 'swal-dark-content',
+                confirmButton: 'swal-dark-button'
+            }
+        });
+    };
         const fetchAndRenderOrders = async () => {
             loadingState.classList.remove('hidden');
             ordersTableBody.innerHTML = '';
             noDataState.classList.add('hidden');
-
             const searchQuery = searchInput.value;
-            console.log(`searchQuery:${searchQuery}`)
-            const status = statusFilter.value;
+            const paymentStatus = paymentStatusFilter.value;
             const sort = sortSelect.value;
-            
             try {
-                const response = await fetch(`/admin/api/orders?page=${currentPage}&limit=${pageSize}&search=${searchQuery}&status=${status}&sort=${sort}`);
+                const response = await fetch(`/admin/api/orders?page=${currentPage}&limit=${pageSize}&search=${searchQuery}&paymentStatus=${paymentStatus}&sort=${sort}`);
                 if (!response.ok) {
                     throw new Error("Failed to fetch orders.");
                 }
                 const data = await response.json();
-                
                 totalOrders = data.total;
                 const orders = data.orders;
-                
                 if (orders.length > 0) {
                     orders.forEach(order => {
                         const row = createOrderRow(order);
@@ -241,130 +218,71 @@
                 loadingState.classList.add('hidden');
                 updatePaginationControls();
             }
-        };
-        
-        /**
-         * Creates a valid CSS class name from a status string.
-         * @param {string} status - The status from the order data.
-         * @returns {string} The formatted CSS class name.
-         */
-        const getStatusClass = (status) => {
-            // Replaces spaces and converts to uppercase for consistency
+          };
+          const getStatusClass = (status) => {
             return status.toUpperCase().replace(/\s/g, '-');
         };
-
-        /**
-         * Creates a single table row for an order.
-         * @param {object} order - The order data object.
-         * @returns {HTMLElement} - The created table row element.
-         */
-        const createOrderRow = (order) => {
-            const row = document.createElement('tr');
-            row.classList.add('hover:bg-gray-100', 'transition-colors', 'duration-200');
-            
-            // Use the 'createdAt' timestamp from the schema for the order date
-            const formattedDate = new Date(order.createdAt).toLocaleDateString('en-IN', {
-                day: 'numeric', month: 'short', year: 'numeric'
-            });
-            
-            // Use 'total_amount' from the schema
-            const formattedTotal = new Intl.NumberFormat('en-IN', {
-                style: 'currency', currency: 'INR'
-            }).format(order.total_amount);
-            
-            // Get the dynamic status class for styling
-            const statusClass = getStatusClass(order.status);
-
-            row.innerHTML = `
-                <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${order._id}</td>
-                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">${formattedDate}</td>
-                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                    ${order.user_id.firstname} ${order.user_id.lastname}<br>
-                    <span class="text-xs text-gray-400">${order.user_id.email}</span>
-                </td>
-                <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${formattedTotal}</td>
-                
-                <td class="px-4 py-4 whitespace-nowrap">
-                    <!-- The select dropdown for changing status -->
-                    <select data-order-id="${order._id}" class="status-select bg-gray-200 text-gray-800 text-sm rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-purple-500">
-                        ${statusOptions.map(status => `
-                            <option value="${status}" ${order.status === status ? 'selected' : ''}>
-                                ${status}
-                            </option>
-                        `).join('')}
-                    </select>
-                    <!-- Display the status visually with a colored span -->
-                    <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium status-${statusClass} mt-2">
-                        ${order.status}
-                    </span>
-                </td>
-                
-                <td class="px-4 py-4 whitespace-nowrap text-sm font-medium">
-                    <button data-order-id="${order._id}" class="view-btn text-purple-600 hover:text-purple-800 transition-colors">View</button>
-                </td>
-            `;
-            
-            // Add event listener for the status change dropdown
-            const statusSelect = row.querySelector('.status-select');
-            statusSelect.addEventListener('change', (e) => {
-                const newStatus = e.target.value;
-                changeOrderStatus(order._id, newStatus);
-            });
-
-            // Add event listener for the view button
-            const viewBtn = row.querySelector('.view-btn');
-            viewBtn.addEventListener('click', () => {
-                alert(`Viewing details for Order ID: ${order._id}`);
-                // You would replace this with a redirect or a modal
-                // Example: window.location.href = `/admin/orders/${order._id}`;
-            });
-
-            return row;
-        };
-
-        /**
-         * Handles the order status change action.
-         * @param {string} orderId - The ID of the order.
-         * @param {string} newStatus - The new status to set.
-         */
-        const changeOrderStatus = async (orderId, newStatus) => {
-            const isConfirmed = confirm(`Are you sure you want to change status of Order ID ${orderId} to ${newStatus}?`);
-            if (!isConfirmed) {
-                // Revert the UI state if the user cancels
-                fetchAndRenderOrders();
-                return;
-            }
-            
-            try {
-                const response = await fetch(`/admin/api/orders/${orderId}/status`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status: newStatus })
-                });
-                
-                if (response.ok) {
-                    alert(`Status for Order ID ${orderId} successfully changed to ${newStatus}.`);
-                    // Re-fetch and re-render the page to get fresh data
-                    fetchAndRenderOrders();
-                } else {
-                    throw new Error("Failed to update status.");
-                }
-            } catch (error) {
-                console.error("Error updating status:", error);
-                alert("An error occurred while updating the status. Please try again.");
-            }
-        };
-        
-        /**
-         * Updates the pagination button states and page info.
-         */
+        //////create order row/////////
+         const createOrderRow = (order) => {
+    const row = document.createElement('tr');
+    row.classList.add('hover:bg-gray-100', 'transition-colors', 'duration-200');
+    const orderIdCell = document.createElement('td');
+    orderIdCell.className = "px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900";
+    orderIdCell.textContent = order.orderId; 
+    const dateCell = document.createElement('td');
+    dateCell.className = "px-4 py-4 whitespace-nowrap text-sm text-gray-500";
+    dateCell.textContent = new Date(order.createdAt).toLocaleDateString('en-IN', {
+        day: 'numeric', month: 'short', year: 'numeric'
+    });
+    const userCell = document.createElement('td');
+    userCell.className = "px-4 py-4 whitespace-nowrap text-sm text-gray-500";
+    userCell.innerHTML = `
+        ${order.user.name}<br>
+        <span class="text-xs text-gray-400">${order.user.email}</span>
+    `; 
+    const totalCell = document.createElement('td');
+    totalCell.className = "px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900";
+    totalCell.textContent = new Intl.NumberFormat('en-IN', {
+        style: 'currency', currency: 'INR'
+    }).format(order.total_amount);
+    const statusCell = document.createElement('td');
+    statusCell.className = "px-4 py-4 whitespace-nowrap";
+    const paymentStatus = order.payment_status || 'N/A';
+    const statusClass = `status-${paymentStatus.toUpperCase()}`;
+    statusCell.innerHTML = `
+    <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusClass}">
+        ${paymentStatus}
+    </span>
+`;
+    const concernCell = document.createElement('td');
+    concernCell.className = "px-4 py-4 whitespace-nowrap";
+    const concernValue = order.concern ? order.concern.toUpperCase() : 'NONE'; 
+    const concernClass = `concern-${concernValue}`;
+    concernCell.innerHTML = `
+        <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${concernClass}">
+            ${concernValue}
+        </span>
+    `; 
+    const actionsCell = document.createElement('td');
+    actionsCell.className = "px-4 py-4 whitespace-nowrap text-sm font-medium";
+    const viewBtn = document.createElement('button');
+    viewBtn.className = "view-btn text-gray-100 bg-gradient-to-r from-indigo-300 to-purple-600 rounded-md p-1 hover:text-purple-800 transition-colors";
+    viewBtn.textContent = 'View';
+    viewBtn.dataset.orderId = order._id;
+    actionsCell.appendChild(viewBtn);
+    row.append(orderIdCell, dateCell, userCell, totalCell, statusCell,concernCell, actionsCell);
+    viewBtn.addEventListener('click', () => {
+        window.location.href = `/admin/api/orders/${viewBtn.dataset.orderId}`;
+    });
+    return row;
+};
+/////create order row end/////////
         const updatePaginationControls = () => {
             const totalPages = Math.ceil(totalOrders / pageSize);
             pageInfoSpan.textContent = `Page ${currentPage} of ${totalPages || 1}`;
             prevPageBtn.disabled = currentPage === 1;
             nextPageBtn.disabled = currentPage >= totalPages;
         };
-
         const debounce = (func, delay) => {
         let timeoutId;
         return (...args) => {
@@ -374,13 +292,11 @@
             }, delay);
         };
     };
-
-        // Event Listeners for Controls
         searchInput.addEventListener('keyup', debounce(() => {
         currentPage = 1;
         fetchAndRenderOrders();
-    }, 500)); // 500ms delay
-        statusFilter.addEventListener('change', () => {
+    }, 500)); 
+        paymentStatusFilter.addEventListener('change', () => {
             currentPage = 1;
             fetchAndRenderOrders();
         });
@@ -390,13 +306,11 @@
         });
         clearBtn.addEventListener('click', () => {
             searchInput.value = '';
-            statusFilter.value = '';
+         paymentStatusFilter.value = '';
             sortSelect.value = 'date-desc';
             currentPage = 1;
             fetchAndRenderOrders();
         });
-
-        // Pagination button event listeners
         prevPageBtn.addEventListener('click', () => {
             if (currentPage > 1) {
                 currentPage--;
@@ -409,11 +323,8 @@
                 fetchAndRenderOrders();
             }
         });
-
-        // Initial data fetch on page load
         fetchAndRenderOrders();
     });
 </script>
-
 </body>
 </html>

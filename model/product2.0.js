@@ -1,0 +1,46 @@
+const mongoose = require('mongoose');
+
+const productSchema = new mongoose.Schema({ 
+    title: {type: String,required: true,trim: true},
+    description: {  type: String, required: true, trim: true},
+    category_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true},
+    brand_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Brand',  required: true},
+    warranty: { type: Number, min: 0  },
+    colorVariants: [{
+    colorName: { type: String, required: true },
+    images: [{ type: String, required: true }],
+    variants: [{
+      size: { type: String, required: true },
+      price: { type: Number, required: true },
+      stock: { type: Number, required: true }
+    }]
+  }], 
+    rating: { type: Number,  default: 0,min: 0, max: 5 },
+    isListed: {  type: Boolean,default: true },
+    isDeleted: {type: Boolean, default: false},
+    bestSellers: { type: Boolean,default: false},
+    min_price: { type: Number,default: 0}
+}, {
+    timestamps: true
+});
+
+productSchema.pre('save', function(next) {
+    let minPrice = Infinity;
+    if (this.colorVariants && this.colorVariants.length > 0) {
+        this.colorVariants.forEach(colorVar => {
+            if (colorVar.variants && colorVar.variants.length > 0) {
+                colorVar.variants.forEach(sizeVar => {
+                    if (sizeVar.price < minPrice) {
+                        minPrice = sizeVar.price;
+                    }
+                });
+            }
+        });
+    }
+    this.min_price = (minPrice === Infinity) ? 0 : minPrice;
+
+    next(); 
+});
+
+
+module.exports = mongoose.model('Product', productSchema);

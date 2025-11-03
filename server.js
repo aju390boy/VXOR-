@@ -1,50 +1,31 @@
 const express = require('express');
-const path = require('path');
-const app = express();
-const nocache = require('nocache')
-const session = require('express-session'); 
+const passport = require('passport');
 const connect = require('./database/connect.js')
+require('./config/passport');
+require('dotenv').config();
 const adminRoutes = require('./routes/adminRoutes.js');
 const userRoutes = require('./routes/userRoutes.js');
 const authRoutes = require('./routes/authRoutes.js')
-const passport = require('passport');
-const morgan=require('morgan')
-const expressLayouts = require('express-ejs-layouts');
-require('./config/passport');
-require('dotenv').config();
+const { getCartCount } = require('./middlewares/user/cartMiddleware.js');
+const  referralCodeMiddleware = require('./middlewares/user/referralMiddleware.js');
+const app = express();
+require('./config/middlewareConfig.js')(app);
 
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
-app.set('view cache', false);
-app.use(expressLayouts)
-
-app.use(morgan('dev'))
-app.set('layout', 'layout/userMain'); 
-
-app.use(express.static('public'));
-app.use(express.urlencoded({ extended: false }));
-app.use(express.json());
-app.use(nocache());
-
-app.use(session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-        secure: false,
-        maxAge: 1000 * 60 * 60 * 24, 
-    }
-}));
 app.use(passport.initialize());
 app.use(passport.session());
-
+app.use(getCartCount); 
+app.use(referralCodeMiddleware);
+app.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  next();
+});
 app.use('/', authRoutes);
 app.use('/user', userRoutes);
 app.use('/admin', adminRoutes);
 app.use('/*splat',(req,res)=>{
     res.render('user/error',{layout:false})
-})
+});
 app.listen(3000, () => {
-    console.log('server is running on http://localhost:3000/admin/login')
+    console.log('server is running on http://localhost:3000')
     connect();
-})
+});

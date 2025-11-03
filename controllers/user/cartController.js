@@ -1,13 +1,14 @@
 const Product=require('../../model/product.js');
 const Cart = require('../../model/cart.js')
+const {findBestOffer} = require('../../utils/offerHelper.js');
 
 exports.addToCart = async (req, res) => {
-    // Assumes 'protect' middleware adds the user object to the request
+
     const userId = req.user._id; 
     const { productId, colorName, size, quantity } = req.body;
 
     try {
-        // 1. Validate the product, color, and size variants against the Product schema
+       
         const product = await Product.findById(productId);
         if (!product) {
             return res.status(404).json({ message: 'Product not found.' });
@@ -22,19 +23,13 @@ exports.addToCart = async (req, res) => {
         if (!sizeVariant) {
             return res.status(400).json({ message: 'Invalid size selected for this product.' });
         }
-        
-        // 2. Check for sufficient stock before adding to cart
         if (sizeVariant.stock < quantity) {
             return res.status(400).json({ message: `Insufficient stock. Only ${sizeVariant.stock} available.` });
         }
-        
-        // 3. Find the user's cart or create a new one if it doesn't exist
         let cart = await Cart.findOne({ userId });
         if (!cart) {
             cart = new Cart({ userId, items: [] });
         }
-
-        // 4. Check if the item (by product, color, and size) is already in the cart
         const existingItemIndex = cart.items.findIndex(item =>
             item.productId.toString() === productId &&
             item.colorName === colorName &&
@@ -42,14 +37,12 @@ exports.addToCart = async (req, res) => {
         );
 
         if (existingItemIndex > -1) {
-            // Item exists, update its quantity
+           
             cart.items[existingItemIndex].quantity += quantity;
         } else {
-            // Item is new, add it to the cart
+            
             cart.items.push({ productId, colorName, size, quantity });
         }
-
-        // 5. Save the updated cart to the database
         await cart.save();
         res.status(200).json({ message: 'Product added to cart successfully.', cart });
 
@@ -58,18 +51,12 @@ exports.addToCart = async (req, res) => {
         res.status(500).json({ message: 'Server error.', error: error.message });
     }
 };
-
-/**
- * @desc    Get the user's cart and render the cart EJS page
- * @route   GET /api/cart
- * @access  Private
- */
 exports.getCart = async (req, res) => {
     const userId = req.user._id;
     const TAX_RATE = 0.05; 
     
     const message = req.session.message;
-    req.session.message = null;
+    delete req.session.message; // Clear message after reading
 
     try {
         const cart = await Cart.findOne({ userId })
@@ -77,75 +64,86 @@ exports.getCart = async (req, res) => {
                 path: 'items.productId',
                 select: 'title description colorVariants isListed category_id brand_id isDeleted',
                 populate: [ 
-                    { path: 'category_id', select: 'isListed' },
-                    { path: 'brand_id', select: 'isListed' }
+                    { path: 'category_id', select: 'name isListed' }, // Also populate name for the helper
+                    { path: 'brand_id', select: 'name isListed' }
                 ]
             })
             .lean();
 
-        if (!cart) {
+        if (!cart || !cart.items || cart.items.length === 0) {
             return res.render('user/cart', {
                 cartItems: [],
                 subtotal: 0,
+                totalDiscount: 0,
                 tax: 0,
                 total: 0,
                 message: message 
             });
         }
         
-        let subtotal = 0;
-        const cartItemsForEJS = cart.items.map(item => {
+        // 2. Initialize variables for original and offer-applied prices
+        let originalSubtotal = 0;
+        let offerSubtotal = 0;
+
+        // 3. Use Promise.all to handle async operations inside map
+        const cartItemsForEJS = await Promise.all(cart.items.map(async (item) => {
             const product = item.productId;
-            
-            if (!product) {
-                return null;
-            }
+            if (!product) return null;
 
             const colorVariant = product.colorVariants.find(c => c.colorName === item.colorName);
             const sizeVariant = colorVariant ? colorVariant.variants.find(s => s.size === item.size) : null;
             
-            const price = sizeVariant ? sizeVariant.price : 0;
+            const originalPrice = sizeVariant ? sizeVariant.price : 0;
             const stock = sizeVariant ? sizeVariant.stock : 0;
 
-            // CORRECTED LOGIC: Added a check for stock > 0
-            const isAvailable = !product.isDeleted && 
-                                product.isListed && 
-                                product.category_id && 
-                                product.category_id.isListed && 
-                                product.brand_id && 
-                                product.brand_id.isListed &&
-                                stock > 0; // The new condition
+            const isAvailable = !product.isDeleted && product.isListed && product.category_id?.isListed && product.brand_id?.isListed && stock > 0;
 
-            // Only add to subtotal if the product is actually available
-            if (isAvailable) {
-                const itemTotal = price * item.quantity;
-                subtotal += itemTotal;
+            // 4. Find the best offer for each item
+            const bestOffer = isAvailable ? await findBestOffer(product._id, product.category_id?._id, product.brand_id?._id) : null;
+            
+            // 5. Calculate the final price after offer
+            let finalPrice = originalPrice;
+            if (bestOffer) {
+                finalPrice = originalPrice * (1 - bestOffer.discountPercentage / 100);
             }
-            const imagePath = colorVariant && colorVariant.images && colorVariant.images.length > 0 
-                ? `/uploads/products/${colorVariant.images[0]}` 
-                : '/images/placeholder.png';
+
+            if (isAvailable) {
+                originalSubtotal += originalPrice * item.quantity;
+                offerSubtotal += finalPrice * item.quantity;
+            }
+
+            const imagePath = colorVariant?.images?.[0] ? `/uploads/products/${colorVariant.images[0]}` : '/images/placeholder.png';
 
             return {
                 id: item._id.toString(),
+                productId: product._id.toString(),
                 name: product.title,
                 image: imagePath,
                 size: item.size,
                 colorName: item.colorName,
-                price: price,
+                originalPrice: originalPrice, // Price before offer
+                finalPrice: finalPrice,       // Price after offer
                 quantity: item.quantity,
                 stock: stock,
-                isAvailable: isAvailable
+                isAvailable: isAvailable,
+                bestOffer: bestOffer          // Pass offer details to EJS
             };
-        }).filter(item => item !== null);
+        }));
 
-        const tax = subtotal * TAX_RATE;
-        const total = subtotal + tax;
+        const validCartItems = cartItemsForEJS.filter(item => item !== null);
+
+        // 6. Calculate all final totals
+        const totalDiscount = originalSubtotal - offerSubtotal;
+        const tax = offerSubtotal * TAX_RATE;
+        const total = offerSubtotal + tax;
 
         res.render('user/cart', {
-            cartItems: cartItemsForEJS,
-            subtotal: subtotal.toFixed(2),
+            cartItems: validCartItems,
+            subtotal: originalSubtotal.toFixed(2), // The price before any discounts
+            totalDiscount: totalDiscount.toFixed(2), // The amount saved
+            finalTotal: offerSubtotal.toFixed(2),    // The price after offer, before tax
             tax: tax.toFixed(2),
-            total: total.toFixed(2),
+            total: total.toFixed(2),                 // The final amount to pay
             message: message 
         });
 
@@ -154,16 +152,8 @@ exports.getCart = async (req, res) => {
         res.status(500).render('user/error', { message: 'Server error.', error: error.message });
     }
 };
-
-
-/**
- * @desc    Update the quantity of a specific item in the cart
- * @route   PATCH /api/cart/update
- * @access  Private
- */
 exports.updateCartQunty = async (req, res) => {
-    // console.log("User from authentication middleware:", req.user); 
-    // Ensure the user is authenticated before proceeding
+    
     if (!req.user || !req.user._id) {
         return res.status(401).json({ message: 'Unauthorized. Please log in.' });
     }
@@ -177,82 +167,71 @@ exports.updateCartQunty = async (req, res) => {
         if (!cart) {
             return res.status(404).json({ message: 'Cart not found for this user.' });
         }
-
         const itemToUpdate = cart.items.find(item => item._id.toString() === itemId);
         if (!itemToUpdate) {
             return res.status(404).json({ message: 'Item not found in cart.' });
         }
-        
-        // Basic quantity validation
         if (newQuantity < 1) {
             return res.status(400).json({ message: 'Quantity cannot be less than 1.' });
         }
-
-        // Fetch the product with all its variant information
         const product = await Product.findById(itemToUpdate.productId);
         if (!product) {
             return res.status(404).json({ message: 'Product not found.' });
         }
-
-        // CORRECTED LOGIC: Find the variant using colorName and size, which are stored in the cart item
         const colorVariant = product.colorVariants.find(cv => cv.colorName === itemToUpdate.colorName);
         const sizeVariant = colorVariant?.variants.find(sv => sv.size === itemToUpdate.size);
-        
-        // Check if the variant was found and if the new quantity exceeds its stock
         if (!sizeVariant) {
             return res.status(404).json({ message: 'Product variant not found.' });
         }
         if (newQuantity > sizeVariant.stock) {
             return res.status(400).json({ message: `The selected quantity exceeds available stock (${sizeVariant.stock}).` });
         }
-
-        // Update the item quantity and save
         itemToUpdate.quantity = newQuantity;
         await cart.save();
-        
         res.status(200).json({ message: 'Cart item quantity updated successfully.', cart });
-        
     } catch (error) {
         console.error('Error updating cart item quantity:', error);
         res.status(500).json({ message: 'Server error.', error: error.message });
     }
 };
 
-/**
- * @desc    Remove a specific item from the cart
- * @route   DELETE /api/cart/remove-item/:itemId
- * @access  Private
- */
 exports.removeCartItm = async (req, res) => {
     console.log("User from authentication middleware:", req.user);
-    // Ensure the user is authenticated before proceeding
     if (!req.user || !req.user._id) {
         return res.status(401).json({ message: 'Unauthorized. Please log in.' });
     } 
- 
     const userId = req.user._id;
     const { itemId } = req.params;
-
     try {
         const cart = await Cart.findOne({ userId });
         if (!cart) {
             return res.status(404).json({ message: 'Cart not found for this user.' });
         }
-
-        // Filter out the item to be removed
         const initialItemCount = cart.items.length;
         cart.items = cart.items.filter(item => item._id.toString() !== itemId);
-
-        // Check if an item was actually removed
         if (cart.items.length === initialItemCount) {
             return res.status(404).json({ message: 'Item not found in cart.' });
         }
-
         await cart.save();
         res.status(200).json({ message: 'Item removed from cart successfully.', cart });
 
     } catch (error) {
         console.error('Error removing cart item:', error);
         res.status(500).json({ message: 'Server error.', error: error.message });
+    }
+};
+
+
+exports.getCartCount = async (req, res) => {
+    console.log('getcartcount controller function is hitted');
+    try {
+        const cart = await Cart.findOne({ userId: req.user._id });
+        if (!cart) {
+            return res.json({ success: true, count: 0 });
+        }
+        const count = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+        res.json({ success: true, count: count });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server Error' });
     }
 };

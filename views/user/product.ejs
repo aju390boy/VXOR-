@@ -1,6 +1,22 @@
 <% title = 'VIXOR | Products'; -%>
 
 <div class="flex justify-between items-center px-6 py-2 bg-gray-900 mt-10 flex-wrap gap-1">
+  <!-- alert -->
+    <div id="toast-container" class="fixed top-0 right-2 -translate-x-1/2 mt-4 z-50">
+    <div id="toast-alert" class="hidden max-w-sm w-full rounded-xl shadow-lg p-2 transition-all duration-300">
+        <div class="flex items-center space-x-3">
+           <svg id="toast-icon-success" class="h-8 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+            </svg>
+           <svg id="toast-icon-error" class="hidden h-8 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+            </svg>
+            <div class="flex-1">
+                <p id="toast-message" class="text-sm font-medium"></p>
+            </div>
+        </div>
+    </div>
+</div>
   <div class="breadcrumb text-xs text-gray-400">
     <a href="/user/home" class="text-gray-400 font-bold hover:text-white">HOME</a> > <span>PRODUCTS</span>
   </div>
@@ -31,8 +47,6 @@
         <span class="text-sm toggle-arrow text-gray-400">▼</span>
       </div>
       <div id="categoryOptions" class="flex flex-col gap-1.5 mt-1.5">
-        <% // IMPORTANT: Loop through dynamic categories if available %>
-        <% // For now, use hardcoded values, but dynamically populate if possible %>
         <% const selectedCategories = Array.isArray(query.category) ? query.category : (query.category ? [query.category] : []); %>
         <label class="flex items-center text-xs"><input type="checkbox" name="category" value="MEN" class="mr-1.5 accent-gray-400" <%= selectedCategories.includes('MEN') ? 'checked' : '' %>> MEN</label>
         <label class="flex items-center text-xs"><input type="checkbox" name="category" value="WOMEN" class="mr-1.5 accent-gray-400" <%= selectedCategories.includes('WOMEN') ? 'checked' : '' %>> WOMEN</label>
@@ -95,75 +109,84 @@
       <button type="button" class="filter-btn clear px-3 py-1.5 text-xs font-bold bg-gray-700 text-white rounded hover:bg-red-700" onclick="window.location.href='/user/product'">Clear All</button>
     </div>
   </div>
+  <!-- ////////produts section/////// -->
   <div class="w-4/5 p-3 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-5" id="productList">
     <% if (products.length === 0) { %>
       <p class="text-white text-center w-full col-span-full text-sm font-bold">No products match your filters </p>
     <% } else { %>
       <% products.forEach(item => { %>
-        <a href="/user/product/<%= item._id %>" class="item-link no-underline text-inherit">
+        <div class="item-link no-underline text-inherit">
+  <a href="/user/product/<%= item._id %>" >
           <div class="item-block border border-gray-800 rounded-lg overflow-hidden hover:scale-105 transition bg-black-400">
             <div class="product">
               <img src="<%= item.display_image_url %>" alt="<%= item.title %>" class="w-full h-60 object-cover">
             </div>
             <div class="p-2 text-center">
               <p class="font-bold text-white text-xs"><%= item.title %></p>
-              <p class="text-gray-400 font-bold text-xs">₹<%= item.display_price != null ? item.display_price.toFixed(2) : 'N/A' %></p>
+             <div class="text-gray-400 font-bold text-xs">
+    <% if (item.bestOffer) { %>
+        <s class="text-gray-500">₹<%= item.display_price.toFixed(0) %></s>
+        <span class="text-red-500">₹<%= item.discounted_price %></span>
+        <span class="text-green-500 text-xs">(<%= item.bestOffer.discountPercentage %>% OFF)</span>
+    <% } else { %>
+        <span>₹<%= item.display_price != null ? item.display_price.toFixed(0) : 'N/A' %></span>
+    <% } %>
+</div>
               <p class="text-xs">Rating: <%= '⭐'.repeat(item.rating) + (item.rating < 5 ? '☆' : '') %></p>
+              
             </div>
+            </a>
+            <div class="flex justify-start items-start">
+     <button class="addToWishlistBtn" data-product-id="<%= item._id %>" title="Add to Wishlist">
+          <i class="fa-solid fa-heart text-xl <%= wishlistIds.includes(item._id.toString()) ? 'text-red-500' : 'text-gray-400 hover:text-red-500' %>"></i>
+    </button>
+</div>
           </div>
-        </a>
+        </div>
       <% }) %>
     <% } %>
   </div>
+  <!-- ///////products section end////// -->
 </div>
 
 <script>
-  // This line must be at the very top of your script block
-  // It ensures the server-side 'query' object is available as 'serverQuery' in client-side JS.
   const serverQuery = <%- JSON.stringify(query) %>;
-
   document.addEventListener("DOMContentLoaded", () => {
     const productList = document.getElementById("productList");
     const priceRange = document.getElementById("priceRange");
     const priceValue = document.getElementById("priceValue");
     const sortSelect = document.getElementById("sortSelect");
-
-    // Initialize price range display based on current value.
-    // The input's value is already set by EJS server-side (e.g., value="<%= query.price || 10000 %>")
-    // This line updates the *display text* based on the input's current value.
+    const toastAlert = document.getElementById('toast-alert');
+        const toastMessage = document.getElementById('toast-message');
+        const successIcon = document.getElementById('toast-icon-success');
+        const errorIcon = document.getElementById('toast-icon-error');
     priceValue.textContent = `Up to ₹${parseFloat(priceRange.value).toLocaleString('en-IN')}`;
-
     priceRange.addEventListener('input', () => {
       priceValue.textContent = `Up to ₹${parseFloat(priceRange.value).toLocaleString('en-IN')}`;
     });
-
     const applyFiltersAndSort = async () => {
         const params = new URLSearchParams();
         document.querySelectorAll('#filter-section input[type="checkbox"]:checked').forEach(input => {
             params.append(input.name, input.value);
         });
         params.append('price', priceRange.value);
-        params.append("sort", sortSelect.value); // Include current sort selection
+        params.append("sort", sortSelect.value); 
         try {
             const res = await axios.get(`/user/product?${params.toString()}`);
             productList.innerHTML = res.data.html;
-            // Optionally update URL without full page reload for better user experience
             history.pushState(null, '', `/user/product?${params.toString()}`);
+            setupWishlistButtons(); 
         } catch (err) {
             console.error('Filter or Sort failed:', err);
         }
     };
-
     document.querySelector(".filter-btn.apply").addEventListener("click", applyFiltersAndSort);
     sortSelect.addEventListener("change", applyFiltersAndSort);
+    const input = document.getElementById('searchInput');
+    const resultsBox = document.getElementById('searchResults');
 
-
-    const input = document.getElementById('searchInput'); // Assuming you have a search input with this ID somewhere
-    const resultsBox = document.getElementById('searchResults'); // Assuming you have a search results container
-
-    if (input && resultsBox) { // Add null checks for search elements
+    if (input && resultsBox) { 
       input.addEventListener('input', async () => {
-        // This 'query' is local to the search input, and is NOT the server-side query object.
         const query = input.value.trim();
         if (query.length === 0) {
           resultsBox.innerHTML = '';
@@ -174,21 +197,28 @@
           const res = await axios.get(`/user/product-search?q=${encodeURIComponent(query)}`);
           const data = res.data;
           if (data.length > 0) {
-            resultsBox.innerHTML = data.map(item =>
-              `<a href="/user/product/${item._id}" class="item-link no-underline text-inherit">
-                <div class="item-block border border-gray-800 rounded-lg overflow-hidden hover:scale-105 transition bg-ye-500">
-                  <div class="product">
-                    <img src="${item.display_image_url}" alt="${item.title}" class="w-full h-60 object-cover" />
-                  </div>
-                  <div class="p-2 text-center">
-                    <p class="font-bold text-white text-xs">${item.title}</p>
-                    <p class="text-gray-400 font-bold text-xs">₹${item.display_price != null ? item.display_price.toFixed(2) : 'N/A'}</p>
-                    <p class="text-xs">Rating: ${'⭐'.repeat(item.rating) + (item.rating < 5 ? '☆' : '')}</p>
-                  </div>
-                </div>
-              </a>`).join('');
+            // Replace this line
+            resultsBox.innerHTML = data.map(item => `
+                <a href="/user/product/${item._id}" class="block p-2 hover:bg-gray-700">
+                    <div class="flex items-center">
+                        <img src="${item.display_image_url}" alt="${item.title}" class="w-10 h-10 object-cover mr-2">
+                        <div>
+                            <p class="font-bold text-white text-xs">${item.title}</p>
+                            
+                            <div class="text-gray-400 font-bold text-xs">
+                                ${item.bestOffer ? `
+                                    <s class="text-gray-500">₹${item.display_price.toFixed(0)}</s>
+                                    <span class="text-red-500">₹${item.discounted_price}</span>
+                                ` : `
+                                    <span>₹${item.display_price != null ? item.display_price.toFixed(0) : 'N/A'}</span>
+                                `}
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            `).join('');
             resultsBox.style.display = 'block';
-          } else {
+        } else {
             resultsBox.innerHTML = '<p class="no-result p-1.5 text-gray-600 text-center text-xs">No products found</p>';
             resultsBox.style.display = 'block';
           }
@@ -203,22 +233,15 @@
         }
       });
     }
-
-
-    // Function to set checkbox state based on query parameters
     const setCheckboxState = () => {
-      // Loop through all filter types that use checkboxes
       ['category', 'brand', 'rating', 'color', 'size'].forEach(filterName => {
-        // Correctly use 'serverQuery' here!
         const selectedValues = Array.isArray(serverQuery[filterName]) ? serverQuery[filterName] : (serverQuery[filterName] ? [serverQuery[filterName]] : []);
-
         document.querySelectorAll(`input[name="${filterName}"]`).forEach(input => {
           if (selectedValues.includes(input.value)) {
             input.checked = true;
-            // Also ensure the parent section is expanded
             const parentSection = input.closest('.mb-4, .mb-3');
             if (parentSection) {
-                const optionsDiv = parentSection.querySelector('.flex-col, .flex-wrap'); // flex-col for category/brand/rating, flex-wrap for color/size
+                const optionsDiv = parentSection.querySelector('.flex-col, .flex-wrap');
                 const toggleArrow = parentSection.querySelector('.toggle-arrow');
                 if (optionsDiv && optionsDiv.style.display === 'none') {
                     optionsDiv.style.display = 'flex';
@@ -226,35 +249,96 @@
                 }
             }
           } else {
-            input.checked = false; // Explicitly uncheck if not in query
+            input.checked = false; 
           }
         });
       });
     };
-
-    // Initial setup on page load
     setCheckboxState();
-    initializeToggleState(serverQuery); // Pass serverQuery to initializeToggleState
-
-    // IMPORTANT: Remove or comment out this line if priceRange.value is already correctly set by EJS
-    // and you only need to update the text display. The EJS value="<%= query.price || 10000 %>"
-    // on the input itself is what initially sets the range slider's position.
-    // The line below simply ensures the text display matches the slider's initial position.
-    // priceRange.value = serverQuery.price || 10000; // THIS LINE IS LIKELY REDUNDANT IF EJS IS SETTING IT.
-                                                    // It can also cause issues if serverQuery.price is a string
-                                                    // and priceRange.value expects a number immediately.
-                                                    // Keeping it for now if it was intentionally setting a default.
-
-    // This line is correct for updating the display text based on the input's current value.
+    initializeToggleState(serverQuery); 
     priceValue.textContent = `Up to ₹${parseFloat(priceRange.value).toLocaleString('en-IN')}`;
+let timeoutId;
+  ///////////
+        function showAlert(type, message) {
+    clearTimeout(timeoutId);
 
+    // Set the message
+    toastMessage.textContent = message;
+    toastAlert.classList.remove('bg-white', 'bg-green-500', 'bg-red-500');
+    toastMessage.classList.remove('text-gray-900');
+
+    if (type === 'success') {
+        toastAlert.classList.add('bg-green-500');
+        toastMessage.classList.add('text-white');
+        successIcon.classList.remove('hidden');
+        errorIcon.classList.add('hidden');
+    } else if (type === 'error') {
+        toastAlert.classList.add('bg-red-500');
+        toastMessage.classList.add('text-white');
+        successIcon.classList.add('hidden');
+        errorIcon.classList.remove('hidden');
+    }
+
+    toastAlert.classList.remove('hidden', 'animate-fadeOut');
+    void toastAlert.offsetWidth; 
+    toastAlert.classList.add('animate-slideIn', 'animate-fadeOut');
+
+    timeoutId = setTimeout(() => {
+        toastAlert.classList.add('hidden');
+    }, 3000);
+}
+
+  /////////////
+   //////wishlist //////
+      function setupWishlistButtons() {
+  const wishlistButtons = document.querySelectorAll('.addToWishlistBtn');
+  
+  wishlistButtons.forEach(button => {
+    button.addEventListener('click', async (event) => {
+      const productId = button.dataset.productId;
+      const icon = button.querySelector('i');
+      button.disabled = true;
+      
+      try {
+        // Check if product is already in wishlist by icon class
+        const isInWishlist = icon.classList.contains('text-red-500');
+        const url = isInWishlist 
+          ? `/user/wishlist/remove/${productId}`  // call remove route
+          : `/user/wishlist/add/${productId}`;    // call add route
+        
+        const method = isInWishlist ? 'DELETE' : 'POST';
+        
+        const response = await fetch(url, { method });
+        const data = await response.json();
+        
+        if (response.ok) {
+          if (isInWishlist) {
+            // Removed from wishlist
+            icon.classList.remove('text-red-500');
+            icon.classList.add('text-gray-400', 'hover:text-red-500');
+          } else {
+            // Added to wishlist
+            icon.classList.remove('text-gray-400', 'hover:text-red-500');
+            icon.classList.add('text-red-500');
+          }
+          showAlert('success', data.message || (isInWishlist ? 'Removed from wishlist' : 'Added to wishlist'));
+        } else {
+          showAlert('error', data.message || 'Operation failed');
+          button.disabled = false;
+        }
+      } catch (error) {
+        showAlert('error', 'Network error occurred.');
+        button.disabled = false;
+      }
+    });
+  });
+}
+setupWishlistButtons();
 
   });
-
-  // Passed 'this' to get the arrow for the correct section
   function toggleSection(id, element) {
     const section = document.getElementById(id);
-    const arrow = element.querySelector('.toggle-arrow'); // Use element to find arrow
+    const arrow = element.querySelector('.toggle-arrow'); 
     if (section.style.display === 'none' || section.style.display === '') {
       section.style.display = 'flex';
       arrow.textContent = '▲';
@@ -263,15 +347,11 @@
       arrow.textContent = '▼';
     }
   }
-
-  // Initial toggle state setup.
-  // Now accepts 'query' as an argument, which will be 'serverQuery' from the DOMContentLoaded.
   const initializeToggleState = (query) => {
       document.querySelectorAll('#filter-section > div.mb-4, #filter-section > div.mb-3').forEach(sectionDiv => {
           const optionsDiv = sectionDiv.querySelector('.flex-col, .flex-wrap');
           const toggleArrow = sectionDiv.querySelector('.toggle-arrow');
           const inputsChecked = Array.from(sectionDiv.querySelectorAll('input[type="checkbox"]:checked')).length > 0;
-          // Use the 'query' parameter passed into this function
           const priceFilterActive = sectionDiv.querySelector('#priceRange') && parseFloat(query.price) < 10000;
 
           if (optionsDiv && toggleArrow) {
@@ -285,4 +365,5 @@
           }
       });
   };
+
 </script>

@@ -14,11 +14,21 @@ router.get('/',(req,res)=>{
     res.redirect('/user/home')
 })
 
-
-
-router.route('/login')
-  .get(authController.login)   
-  .post(authController.postLogin); 
+router.post('/login', (req, res, next) => {
+  passport.authenticate('local', (err, user, info) => {
+    if (err) { return next(err); }
+    if (!user) {
+      req.session.message = info.message || 'Invalid credentials.';
+      return res.redirect('/login');
+    }
+    req.logIn(user, err => {
+      if (err) return next(err);
+      req.session.message = 'Login successful! Welcome back.';
+      return res.redirect('/user/home');
+    });
+  })(req, res, next);
+});
+router.get('/login',isNotAuthenticated, authController.login);
 
 router.route('/signup')
   .get(isNotAuthenticated, signupController.signup)   

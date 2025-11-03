@@ -7,9 +7,14 @@ const customerController=require('../controllers/admin/customerController.js')
 const authController=require('../controllers/admin/authController.js')
 const productController = require('../controllers/admin/productController.js');
 const { isAuthenticated, isNotAuthenticated } = require('../middlewares/admin/viewsMiddleware.js');
+const {multerErrorHandler} = require('../middlewares/admin/multerErrorHandler.js');
 const brandController=require('../controllers/admin/brandController.js')
 const addProductController=require('../controllers/admin/addProductController.js');
 const orderController=require('../controllers/admin/orderController.js')
+const orderdetailController = require('../controllers/admin/orderdetailController.js');
+const offerController = require('../controllers/admin/offerController.js');
+const couponController = require('../controllers/admin/couponController.js');
+const salesController = require('../controllers/admin/salesController.js');
 const {
   addCategory,
   getCategories,
@@ -37,13 +42,6 @@ router.get('/customers-search', customerController.getCustomersAjax);
 
 
 
-router.get('/offers', isAuthenticated, (req, res) => {
-  res.render('admin/offers');
-});
-
-
-
-
 // category management 
 router.get('/category',isAuthenticated, getCategories);
 router.post('/category/add', addCategory);
@@ -53,24 +51,19 @@ router.post('/category/edit/:id', editCategory);
 router.post('/category/delete/:id', deleteCategory);
 
 
-
+//Add Products\\\
+router.route('/addproducts')
+.get(isAuthenticated,addProductController.getAddProductPage)
+.post(addProductController.upload.any(), 
+    multerErrorHandler,
+    addProductController.addProduct
+);
+////edit product////
 router.route('/editproduct/:id')
 .get(isAuthenticated, addProductController.getEditProductPage)
-.post( isAuthenticated,
+.patch( isAuthenticated,
     addProductController.upload.any(), 
-    (err, req, res, next) => {
-        if (err instanceof multer.MulterError) {
-            console.error("Multer error:", err.message);
-            return res.status(400).json({ message: "File upload error: " + err.message });
-        } else if (err && err.code === 'FILE_TYPE_ERROR') {
-            console.error("File type error:", err.message);
-            return res.status(400).json({ message: err.message });
-        } else if (err) {
-            console.error("Unknown file upload error:", err);
-            return res.status(500).json({ message: "An unexpected error occurred during file upload." });
-        }
-        next();
-    },
+    multerErrorHandler,
    addProductController.updateProduct
 );
 // products
@@ -88,41 +81,60 @@ router.post('/brand/edit/:id', brandController.uploadBrandImage.single('image'),
 router.post('/brand/delete/:id', brandController.deleteBrand);
 
 
-//Add Products\\\
-router.route('/addproducts')
-.get(isAuthenticated,addProductController.getAddProductPage)
-.post(addProductController.upload.any(), 
-    (err, req, res, next) => {
-        
-        if (err instanceof multer.MulterError) {
-            console.error("Multer error:", err.message);
-            
-            return res.status(400).json({ message: "File upload error: " + err.message });
-        } else if (err && err.code === 'FILE_TYPE_ERROR') {
-            console.error("File type error:", err.message);
-            return res.status(400).json({ message: err.message });
-        } else if (err) {
-           
-            console.error("Unknown file upload error:", err);
-            return res.status(500).json({ message: "An unexpected error occurred during file upload." });
-        }
-        next(); 
-    },
-   
-    addProductController.addProduct
-);
+
 
 /////orders///
 router.get('/orders', isAuthenticated, orderController.renderOrdersPage);
 router.get('/api/orders', isAuthenticated, orderController.getOrders);
+////currently not using this,we can use this in order detail page//////// 
 router.patch('/api/orders/:orderId/status', isAuthenticated, orderController.updateOrderStatus);
-router.get('/api/orders/:orderId', isAuthenticated, orderController.getSingleOrder);
 
 
+///order detail////
+router.get('/api/orders/:orderId', isAuthenticated, orderdetailController.getSingleOrder);
+//////new logic for order detail page/////////
+// Update product item status
+router.patch('/orders/:orderId/products/:productId/status',isAuthenticated, orderdetailController.updateProductStatus);
+// Update product item expected delivery date
+router.patch('/orders/:orderId/products/:productId/expected-delivery', isAuthenticated, orderdetailController.updateProductExpectedDelivery);
+// Approve or Reject cancellation/return request for product or order
+router.post('/orders/:orderId/request-action',isAuthenticated, orderdetailController.handleOrderRequestAction);
+router.post('/orders/:orderId/products/:productId/request-action',isAuthenticated, orderdetailController.handleProductRequestAction);
 
 
 ///Dashboard\\\
 router.get('/dashboard',isAuthenticated, dashboardController.getDashboard);
+
+///sales///
+router.get('/sales',isAuthenticated,salesController.renderSalesPage);
+router.get('/sales/download/pdf',isAuthenticated,salesController.downloadPdfReport);
+router.get('/sales/download/excel',isAuthenticated,salesController.downloadExcelReport)
+
+////offer////
+// GET /admin/offers - Display all offers
+router.get('/offers', offerController.getAllOffers);
+// POST /admin/offers - Create a new offer
+router.post('/offers', offerController.createOffer);
+// PUT /admin/offers/:id - Update an offer
+router.put('/offers/:id', offerController.updateOffer);
+// PATCH /admin/offers/:id/toggle - Toggle offer status
+router.patch('/offers/:id/toggle', offerController.toggleOfferStatus);
+// DELETE /admin/offers/:id - Delete an offer
+router.delete('/offers/:id', offerController.deleteOffer);
+
+
+////coupon/////
+// GET /admin/coupons - Display all coupons
+router.get('/coupons', couponController.getAllCoupons);
+// POST /admin/coupons - Create a new coupon
+router.post('/coupons', couponController.createCoupon);
+// PUT /admin/coupons/:id - Update a coupon
+router.put('/coupons/:id', couponController.updateCoupon);
+// PATCH /admin/coupons/:id/toggle - Toggle coupon status
+router.patch('/coupons/:id/toggle', couponController.toggleCouponStatus);
+// DELETE /admin/coupons/:id - Delete a coupon
+router.delete('/coupons/:id', couponController.deleteCoupon);
+
 
 ////logout\\\\
 router.post('/logout', authController.logoutUser);

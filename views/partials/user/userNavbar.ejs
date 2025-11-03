@@ -1,22 +1,128 @@
-<div class="bg-gray-800 text-white text-center py-1 text-xs fixed top-0 w-full z-10">
- Get 25% OFF on your first order. <a href="/user/order" class="text-red-600 underline hover:text-gray-400">Order now</a>
+<style>
+  
+  .referral-container {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+
+    background-color: #1f2937; /* Tailwind gray-800 */
+    z-index: 9999 !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
+    text-align: center !important;
+    will-change: transform; /* Optimize for animation */
+  }
+
+  #scrollingText {
+    display: inline-block;
+    white-space: nowrap;
+    min-width: 100vw; /* full viewport width */
+    color: silver; /* Neon Green */
+    font-weight: bold;
+    
+  }
+
+  .fluorescent-amount {
+    color: #ff073a; /* Fluorescent red */
+   
+    font-weight: bolder;
+  }
+  .fluorescent-amount1 {
+    color: #ff073a; /* Fluorescent red */
+   
+    font-weight: bolder;
+  }
+  .referral-code {
+  color: #19e54a; /* Bright green */
+  font-weight: bold;
+  letter-spacing: 0.02em;
+  text-shadow: 0 0 8px #33ff77;
+}
+.scrolling-item {
+  position: absolute; /* So they don't push each other */
+  white-space: nowrap;
+  top: 0;
+  left: 0;
+  font-weight: bold;
+ margin-right: 40px; 
+  display: inline-block;
+}
+
+  
+</style>
+
+
+<div class="referral-container">
+  <div id="scrollingText" class="vibrant-text text-xs inline-block " ></div>
 </div>
 
-<nav class="flex justify-between items-center bg-black border-gray-400 py-3 px-6 fixed top-5 w-full z-[9]">
+
+
+<nav class="flex justify-between items-center bg-black border-gray-400 py-3 px-6  fixed top-6 w-full z-[9]">
     <div class="nav-left">
         <a class="text-xl font-bold"><span class="text-white">V</span><span class="text-white">X</span><span class="text-red-600">O</span>R</a>
     </div>
     <div class="nav-center flex justify-center flex-grow gap-3">
         <a href="/user/home" class="text-gray-400 font-semibold hover:text-white transition text-sm">HOME</a>
-        <a href="/user/category" class="text-gray-400 font-semibold hover:text-white transition text-sm">CATEGORY</a>
-        <a href="/user/brand" class="text-gray-400 font-semibold hover:text-white transition text-sm">BRAND</a>
+        <a href="/user/product" class="text-gray-400 font-semibold hover:text-white transition text-sm">CATEGORY</a>
+        <a href="/user/product" class="text-gray-400 font-semibold hover:text-white transition text-sm">BRAND</a>
         <a href="/user/about" class="text-gray-400 font-semibold hover:text-white transition text-sm">ABOUT</a>
         <a href="/user/contact" class="text-gray-400 font-semibold hover:text-white transition text-sm">CONTACT</a>
     </div>
     <div class="nav-right flex items-center gap-3">
        
-        <a href="/login" class="text-lg"><i class="fa-solid fa-heart"></i></a>
-        <a href="/user/cart" class="text-lg"><i class="fa-solid fa-cart-shopping"></i></a>
+        <a href="/user/profile?section=wishlist" class="text-lg"><i class="fa-solid fa-heart"></i></a>
+      <a href="/user/cart" class="relative text-gray-300 hover:text-white">
+    <i class="fas fa-shopping-cart fa-lg"></i>
+
+    <% if (locals.cartCount && cartCount > 0) { %>
+        <span id="cart-count-badge" 
+              class="absolute -top-2 -right-3 bg-red-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+            <%= cartCount %>
+        </span>
+    <% } else { %>
+        <span id="cart-count-badge" 
+              class="hidden absolute -top-2 -right-3 bg-red-600 text-white text-xs font-bold rounded-full h-5 w-5 items-center justify-center">
+            0
+        </span>
+    <% } %>
+</a>
         <a href="/user/profile" class="text-lg"><i class="fa-solid fa-user"></i></a>
     </div>
 </nav>
+<script>
+ document.addEventListener('DOMContentLoaded', () => {
+  const container = document.querySelector('.referral-container');
+  const scrollingText = document.getElementById('scrollingText');
+  const referralCode = "<%= referralCode %>";
+  const fluorescentAmountForReferrar = "$100";
+  const fluorescentAmountForReferrered = "$50";
+  const combinedText = [
+    "Welcome to VXOR — not just protection, it’s a flex",
+    `Friends bring rewards! Use referral code ${referralCode} and collect ${fluorescentAmountForReferrar} for each successful invite.`,
+    `Join the VXOR fam with a referral code and grab ${fluorescentAmountForReferrered} on your first successful order.` , 
+    "Respect for riding with VXOR — catch you on the next lap"
+  ].join('    ');
+  scrollingText.innerHTML = combinedText
+    .replace(referralCode, `<span class="referral-code">${referralCode}</span>`)
+    .replace(fluorescentAmountForReferrar, `<span class="fluorescent-amount">${fluorescentAmountForReferrar}</span>`)
+    .replace(fluorescentAmountForReferrered, `<span class="fluorescent-amount1">${fluorescentAmountForReferrered}</span>`);
+  const speed = 0.8;
+  const textWidth = scrollingText.offsetWidth;
+  const containerWidth = container.offsetWidth;
+  let position = containerWidth;
+  function animate() {
+    position -= speed;
+    if (-position >= textWidth) {
+      position = containerWidth; 
+    }
+    scrollingText.style.transform = `translateX(${position}px)`;
+    requestAnimationFrame(animate);
+  }
+  animate();
+});
+</script>

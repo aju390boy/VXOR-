@@ -1,9 +1,5 @@
-<!-- This is your updated productDetail.ejs file -->
+
 <% title = product.title || 'Product Details'; -%>
-
-<!-- Don't forget to link your custom animation stylesheet here -->
-
-
 <div class="detail-container">
    <!-- alert -->
     <div id="toast-container" class="fixed top-0 right-2 -translate-x-1/2 mt-4 z-50">
@@ -29,9 +25,17 @@
             <% }) %>
         </div>
     </div>
-
+<!-- ////////detail info /////////// -->
     <div class="detail-info">
-        <p class="product-breadcrumb">Product / <%= product.category_id ? product.category_id.name : 'Category' %> / <%= product.title %></p>
+        <div class="flex justify-between items-center">
+    <p class="text-sm text-gray-500">
+        Product / <%= product.category_id ? product.category_id.name : 'Category' %> / <%= product.title %>
+    </p>
+   <button id="addToWishlistBtn" data-product-id="<%= product._id %>" title="Add to Wishlist" >
+      <i class="fa-solid fa-heart text-5xl <%= wishlistIds.includes(product._id.toString()) ? 'text-red-500' : 'text-gray-400 hover:text-red-500' %>"></i>
+   </button>
+
+</div>
         <div class="product-rating">
             <% if (product.rating > 0) { %>
                 <%= '⭐'.repeat(product.rating) %> (<%= product.rating %> Reviews)
@@ -40,26 +44,29 @@
             <% } %>
         </div>
         <h2><%= product.title %></h2>
-        <p class="stock-status" id="stockStatus">IN STOCK</p> <div class="price-tag">
-            <span id="displayPrice">₹<%= product.display_price.toFixed(2) %></span>
-            <% if (product.regular_price && product.regular_price > product.display_price) { %>
-                <span class="original-price" id="originalPrice" style="text-decoration: line-through; color: #777; font-size: 1rem; margin-left: 10px;">
-                    ₹<%= product.regular_price.toFixed(2) %>
-                </span>
-                <span class="discount-percent" id="discountPercent">
-                    (<%= ((1 - (product.display_price / product.regular_price)) * 100).toFixed(0) %>% Off)
-                </span>
-            <% } else { %>
-                <span class="original-price" id="originalPrice" style="display:none;"></span>
-                <span class="discount-percent" id="discountPercent" style="display:none;"></span>
-            <% } %>
-        </div>
-        <% if (product.regular_price && product.regular_price > product.display_price) { %>
-            <p class="save-amount" id="saveAmount">You save ₹<%= (product.regular_price - product.display_price).toFixed(2) %></p>
-        <% } else { %>
-            <p class="save-amount" id="saveAmount" style="display:none;"></p>
-        <% } %>
+        <p class="stock-status" id="stockStatus">IN STOCK</p> 
+        <!-- //////////first updation/////// -->
+       <span id="offerPercentage" data-value="<%= bestOffer ? bestOffer.discountPercentage : 0 %>" class="hidden"></span>
 
+<div class="price-tag">
+    <% if (bestOffer) { %>
+        <% const discountedPrice = product.display_price * (1 - bestOffer.discountPercentage / 100); %>
+        <span id="displayPrice" class="text-3xl font-bold text-red-600">₹<%= discountedPrice.toFixed(0) %></span>
+        <span id="originalPrice" class="text-xl text-gray-500 line-through ml-2">₹<%= product.display_price.toFixed(0) %></span>
+        <span id="discountPercent" class="text-lg text-green-600 font-semibold ml-4">(<%= bestOffer.discountPercentage %>% OFF)</span>
+    <% } else { %>
+        <span id="displayPrice" class="text-3xl font-bold text-gray-900">₹<%= product.display_price.toFixed(0) %></span>
+        <span id="originalPrice" class="hidden"></span>
+        <span id="discountPercent" class="hidden"></span>
+    <% } %>
+</div>
+
+<% if (bestOffer) { %>
+    <p class="save-amount text-sm" id="saveAmount">Special Offer: <%= bestOffer.name %></p>
+<% } else { %>
+    <p class="save-amount hidden" id="saveAmount"></p>
+<% } %>
+<!-- ///////first updation end//////////// -->
         <% if (product.product_type && product.product_type.length) { %>
             <div class="available-types">
                 <h3>AVAILABLE TYPES</h3>
@@ -139,6 +146,7 @@
         </button>
         <p class="shipping-info">+ FREE SHIPPING ON ORDERS ₹50+</p>
     </div>
+    <!-- ///////////detail info end/////////// -->
 </div>
 
 
@@ -157,13 +165,48 @@
     <% } %>
 </div>
 <div id="reviews-content" class="tab-content" style="display: none;">
-    <p>Customer reviews will be displayed here.</p>
+    <p>No reviews yet.</p>
 </div>
 
-<!-- This is the updated script block that integrates the animation logic with the fetch call -->
+
+<!-- similar products  -->
+<h1 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-green-600 text-center uppercase tracking-widest pb-5 shadow-lg shadow-green-500/30 mt-4 mb-12">Similar products</h1>
+<div class="similar-products-grid">
+    <% similarProducts.slice(0, 4).forEach(similarProduct => { %>
+        <a href="/user/product/<%= similarProduct._id %>" class="product-card">
+            
+            <% if (similarProduct.colorVariants && similarProduct.colorVariants.length > 0 && similarProduct.colorVariants[0].images && similarProduct.colorVariants[0].images.length > 0) { %>
+                <img class="product-card-image" 
+                     src="/uploads/products/<%= similarProduct.colorVariants[0].images[0] %>" 
+                     alt="<%= similarProduct.title %>">
+            <% } else { %>
+                <img class="product-card-image" 
+                     src="/images/placeholder.png" 
+                     alt="<%= similarProduct.title %>">
+            <% } %>
+
+            <div class="product-card-info">
+                <h3 class="product-card-title"><%= similarProduct.title %></h3>
+                <!-- //////////////second updation///////// -->
+              <% if (similarProduct.bestOffer) { %>
+    <% const discountedPrice = similarProduct.min_price * (1 - similarProduct.bestOffer.discountPercentage / 100); %>
+    <div class="product-card-price">
+        <s class="text-gray-500">₹<%= similarProduct.min_price.toFixed(0) %></s> 
+        <strong class="text-red-600">₹<%= discountedPrice.toFixed(0) %></strong>
+        <span class="text-xs text-green-600 font-semibold"><%= similarProduct.bestOffer.discountPercentage %>% OFF</span>
+    </div>
+<% } else { %>
+    <p class="product-card-price">From ₹<%= (similarProduct.min_price || 0).toFixed(0) %></p>
+<% } %>
+                <!-- ///////second updation end////////// -->
+            </div>
+        </a>
+    <% }) %>
+</div>
 <script>
     document.addEventListener("DOMContentLoaded", () => {
         const productData = <%- JSON.stringify(product) %>;
+         const offerPercentage = parseFloat(document.getElementById('offerPercentage').dataset.value) || 0;
         const mainImage = document.getElementById('mainImage');
         const thumbnailWrapper = document.getElementById('thumbnailWrapper');
         const quantityValueSpan = document.getElementById('quantityValue');
@@ -185,7 +228,7 @@
         const successIcon = document.getElementById('toast-icon-success');
         const errorIcon = document.getElementById('toast-icon-error');
 
-        let currentSelectedColorIndex = 0; // Default to the first color variant
+        let currentSelectedColorIndex = 0; 
         let currentSelectedSize = null;
         let currentQuantity = 1;
         let timeoutId;
@@ -197,43 +240,31 @@
 
     // Set the message
     toastMessage.textContent = message;
-
-    // Reset all color classes before adding new ones
     toastAlert.classList.remove('bg-white', 'bg-green-500', 'bg-red-500');
     toastMessage.classList.remove('text-gray-900');
 
     if (type === 'success') {
-        // Change background to green and text to white
         toastAlert.classList.add('bg-green-500');
         toastMessage.classList.add('text-white');
-        
-        // Show success icon, hide error icon
         successIcon.classList.remove('hidden');
         errorIcon.classList.add('hidden');
     } else if (type === 'error') {
-        // Change background to red and text to white
         toastAlert.classList.add('bg-red-500');
         toastMessage.classList.add('text-white');
-
-        // Show error icon, hide success icon
         successIcon.classList.add('hidden');
         errorIcon.classList.remove('hidden');
     }
 
-    // Show the alert and restart the animation
     toastAlert.classList.remove('hidden', 'animate-fadeOut');
-    void toastAlert.offsetWidth; // Trigger a reflow
+    void toastAlert.offsetWidth; 
     toastAlert.classList.add('animate-slideIn', 'animate-fadeOut');
 
-    // Hide the alert after the animation finishes
     timeoutId = setTimeout(() => {
         toastAlert.classList.add('hidden');
     }, 3000);
 }
-        
-        // --- Helper Functions ---
         function updateThumbnails(images) {
-            thumbnailWrapper.innerHTML = ''; // Clear existing thumbnails
+            thumbnailWrapper.innerHTML = '';
             if (images && images.length > 0) {
                 images.forEach((imgSrc, index) => {
                     const thumb = document.createElement('img');
@@ -241,15 +272,14 @@
                     if (index === 0) {
                         thumb.classList.add('active-thumb');
                     }
-                    // The EJS template provides the full path, so use it directly.
                     thumb.src = `/uploads/products/${imgSrc}`;
                     thumb.alt = `Thumbnail ${index}`;
                     thumbnailWrapper.appendChild(thumb);
                 });
-                mainImage.src = `/uploads/products/${images[0]}`; // Set main image to the first of the new set
-                attachThumbnailListeners(); // Re-attach listeners after new elements
+                mainImage.src = `/uploads/products/${images[0]}`; 
+                attachThumbnailListeners();
             } else {
-                mainImage.src = '/images/placeholder.png'; // Fallback
+                mainImage.src = '/images/placeholder.png'; 
             }
         }
 
@@ -267,7 +297,7 @@
         }
 
         function updateSizeButtons(sizes) {
-            sizeButtonsWrapper.innerHTML = ''; // Clear existing size buttons
+            sizeButtonsWrapper.innerHTML = ''; 
             if (sizes && sizes.length > 0) {
                 sizes.forEach(size => {
                     const button = document.createElement('button');
@@ -276,7 +306,7 @@
                     button.dataset.size = size;
                     sizeButtonsWrapper.appendChild(button);
                 });
-                attachSizeButtonListeners(); // Re-attach listeners
+                attachSizeButtonListeners(); 
             }
         }
 
@@ -291,68 +321,73 @@
             document.querySelectorAll('.size-button').forEach(btn => btn.classList.remove('active-size'));
             this.classList.add('active-size');
             currentSelectedSize = this.dataset.size;
-            updatePriceAndStock(); // Update price and stock based on selected size
+            updatePriceAndStock(); 
         }
 
+        /////////third updation///////
         function updatePriceAndStock() {
-            const selectedColorVariant = productData.colorVariants[currentSelectedColorIndex];
-            let priceFound = false;
-            let stockFound = false;
+        const selectedColorVariant = productData.colorVariants[currentSelectedColorIndex];
+        let priceFound = false;
+        let stockFound = false;
 
-            if (selectedColorVariant && selectedColorVariant.variants && currentSelectedSize) {
-                const selectedVariant = selectedColorVariant.variants.find(v => v.size === currentSelectedSize);
-                if (selectedVariant) {
-                    displayPriceSpan.textContent = `₹${selectedVariant.price.toFixed(2)}`;
-                    priceFound = true;
-                    const initialProductRegularPrice = productData.regular_price;
-
-                    if (initialProductRegularPrice && initialProductRegularPrice > selectedVariant.price) {
-                        originalPriceSpan.textContent = `₹${initialProductRegularPrice.toFixed(2)}`;
-                        originalPriceSpan.style.display = 'inline';
-                        const discount = ((1 - (selectedVariant.price / initialProductRegularPrice)) * 100).toFixed(0);
-                        discountPercentSpan.textContent = `(${discount}% Off)`;
-                        discountPercentSpan.style.display = 'inline';
-                        saveAmountSpan.textContent = `You save ₹${(initialProductRegularPrice - selectedVariant.price).toFixed(2)}`;
-                        saveAmountSpan.style.display = 'block';
-                    } else {
-                        originalPriceSpan.style.display = 'none';
-                        discountPercentSpan.style.display = 'none';
-                        saveAmountSpan.style.display = 'none';
-                    }
-
-                    if (selectedVariant.stock > 0) {
-                        stockStatusSpan.textContent = `IN STOCK (${selectedVariant.stock} available)`;
-                        stockStatusSpan.style.color = 'green';
-                        quantityValueSpan.dataset.maxStock = selectedVariant.stock;
-                    } else {
-                        stockStatusSpan.textContent = 'OUT OF STOCK';
-                        stockStatusSpan.style.color = 'red';
-                        quantityValueSpan.dataset.maxStock = 0;
-                    }
-                    stockFound = true;
+        if (selectedColorVariant && selectedColorVariant.variants && currentSelectedSize) {
+            const selectedVariant = selectedColorVariant.variants.find(v => v.size === currentSelectedSize);
+            
+            if (selectedVariant) {
+                const originalPrice = selectedVariant.price;
+                priceFound = true;
+                
+                if (offerPercentage > 0) {
+                    // Offer exists, calculate and display discounted price
+                    const discountedPrice = originalPrice * (1 - offerPercentage / 100);
+                    displayPriceSpan.textContent = `₹${discountedPrice.toFixed(0)}`;
+                    originalPriceSpan.textContent = `₹${originalPrice.toFixed(0)}`;
+                    discountPercentSpan.textContent = `(${offerPercentage}% OFF)`;
+                    originalPriceSpan.style.display = 'inline';
+                    discountPercentSpan.style.display = 'inline';
+                } else {
+                    // No offer, display regular price
+                    displayPriceSpan.textContent = `₹${originalPrice.toFixed(0)}`;
+                    originalPriceSpan.style.display = 'none';
+                    discountPercentSpan.style.display = 'none';
                 }
+                
+                // Stock logic (remains the same)
+                if (selectedVariant.stock > 0) {
+                    stockStatusSpan.textContent = `IN STOCK (${selectedVariant.stock} available)`;
+                    stockStatusSpan.style.color = 'green';
+                    quantityValueSpan.dataset.maxStock = selectedVariant.stock;
+                } else {
+                    stockStatusSpan.textContent = 'OUT OF STOCK';
+                    stockStatusSpan.style.color = 'red';
+                    quantityValueSpan.dataset.maxStock = 0;
+                }
+                stockFound = true;
             }
-            if (!priceFound) {
-                displayPriceSpan.textContent = `₹0.00`;
-                originalPriceSpan.style.display = 'none';
-                discountPercentSpan.style.display = 'none';
-                saveAmountSpan.style.display = 'none';
-            }
-            if (!stockFound) {
-                stockStatusSpan.textContent = 'Unavailable';
-                stockStatusSpan.style.color = 'orange';
-                quantityValueSpan.dataset.maxStock = 0;
-            }
-
-            if (currentQuantity > parseInt(quantityValueSpan.dataset.maxStock)) {
-                currentQuantity = Math.max(1, parseInt(quantityValueSpan.dataset.maxStock));
-                quantityValueSpan.textContent = currentQuantity;
-            }
-            updateQuantityButtons();
         }
 
-        // --- Event Listeners ---
-        // Initial setup for the first color variant
+        if (!priceFound) {
+            displayPriceSpan.textContent = `₹0.00`;
+            originalPriceSpan.style.display = 'none';
+            discountPercentSpan.style.display = 'none';
+        }
+        if (!stockFound) {
+            stockStatusSpan.textContent = 'Unavailable';
+            stockStatusSpan.style.color = 'orange';
+            quantityValueSpan.dataset.maxStock = 0;
+        }
+
+        // Quantity adjustment logic (remains the same)
+        let currentQuantity = parseInt(quantityValueSpan.textContent);
+        if (currentQuantity > parseInt(quantityValueSpan.dataset.maxStock)) {
+            currentQuantity = Math.max(1, parseInt(quantityValueSpan.dataset.maxStock));
+            quantityValueSpan.textContent = currentQuantity;
+        }
+        updateQuantityButtons();
+    }
+        ////////third updation end///////
+
+       
         if (productData && productData.colorVariants && productData.colorVariants.length > 0) {
             const initialImages = productData.colorVariants[0].images;
             updateThumbnails(initialImages);
@@ -372,8 +407,6 @@
             dot.addEventListener('click', () => {
                 colorDots.forEach(d => d.classList.remove('active-color'));
                 dot.classList.add('active-color');
-                
-                // --- FIX: Use camelCase for dataset properties ---
                 currentSelectedColorIndex = parseInt(dot.dataset.colorIndex);
                 selectedColorNameSpan.textContent = dot.dataset.colorName;
 
@@ -447,8 +480,6 @@
                 document.getElementById(button.dataset.tab + '-content').style.display = 'block';
             });
         });
-
-        // --- Image Zoom Feature ---
         let zoomLevel = 1;
         const maxZoom = 3;
         const zoomStep = 0.5;
@@ -492,8 +523,7 @@
                 mainImage.style.transform = `scale(${zoomLevel})`;
             }
         }, { passive: false });
-
-        // --- ADD TO CART FUNCTIONALITY with new animation and modal ---
+        ////////////addtocart button ////////////////////////
         if (addToCartBtn) {
             addToCartBtn.addEventListener("click", async () => {
                 const quantity = parseInt(quantityValueSpan.textContent, 10);
@@ -531,6 +561,8 @@
                     const data = await response.json();
 
                     if (response.ok) {
+                        updateCartCount(); 
+                        console.log('after updateCartCount functon called')
                         if (!addToCartBtn.classList.contains("added")) {
                             addToCartBtn.classList.add("added");
                             addToCartBtn.style.pointerEvents = "none";
@@ -552,31 +584,67 @@
                 }
             });
         }
+
+        //////wishlist //////
+        const wishlistBtn = document.getElementById('addToWishlistBtn');
+wishlistBtn.addEventListener('click', async () => {
+  const productId = wishlistBtn.dataset.productId;
+  const icon = wishlistBtn.querySelector('i');
+
+  // Decide which route to call based on current icon state or wishlist state
+  const isInWishlist = icon.classList.contains('text-red-500');
+  try {
+    const url = isInWishlist
+      ? `/user/wishlist/remove/${productId}`
+      : `/user/wishlist/add/${productId}`;
+
+    const method = isInWishlist ? 'DELETE' : 'POST';
+
+    const response = await fetch(url, { method: method });
+    const data = await response.json();
+
+    if (response.ok) {
+      if (isInWishlist) {
+        icon.classList.remove('text-red-500');
+        icon.classList.add('text-gray-400', 'hover:text-red-500');
+      } else {
+        icon.classList.remove('text-gray-400', 'hover:text-red-500');
+        icon.classList.add('text-red-500');
+      }
+      showAlert('success', data.message);
+    } else {
+      showAlert('error', data.message || 'An error occurred');
+    }
+  } catch (error) {
+    showAlert('error', 'A network error occurred.');
+  }
+});
     });
+
 </script>
 <style>
     
-/* Add this to your CSS file, or directly in a <style> tag in productDetail.ejs */
+
 .zoomable-image {
     width: 100%;
-    height: 100%; /* Or a fixed height like 400px */
-    object-fit: contain; /* Use 'contain' so the whole image is visible initially */
-    cursor: zoom-in; /* Indicate zoomability */
-    transform: scale(1); /* Initial scale */
-    transition: transform 0.1s ease-out; /* Smooth zoom transition */
+    height: 100%; 
+    object-fit: contain;
+    cursor: zoom-in;
+    transform: scale(1);
+    transition: transform 0.1s ease-out;
 }
 
-/* Hover effect for zoom */
+
 .zoomable-image:hover {
     cursor: zoom-in;
 }
 
-/* When zoomed, change cursor */
-.zoomable-image.zoomed { /* You can add/remove this class with JS */
+
+.zoomable-image.zoomed { 
     cursor: zoom-out;
 }
 
-/* Styles for color dots - if you don't have them in a global CSS */
+
 .color-selector-wrapper {
     display: flex;
     gap: 8px;
@@ -588,7 +656,7 @@
     height: 25px;
     border-radius: 50%;
     cursor: pointer;
-    border: 2px solid transparent; /* Default border */
+    border: 2px solid transparent;
     transition: border 0.2s ease, transform 0.1s ease;
     box-shadow: 0 0 5px rgba(0,0,0,0.2);
 }
@@ -598,8 +666,8 @@
 }
 
 .color-dot.active-color {
-    border-color: #007bff; /* Highlight color */
-    box-shadow: 0 0 8px rgba(0, 123, 255, 0.6); /* Glow effect */
+    border-color: #007bff; 
+    box-shadow: 0 0 8px rgba(0, 123, 255, 0.6);
 }
 
 .size-buttons-wrapper {
@@ -634,10 +702,10 @@
     opacity: 0.5;
 }
 
-/* Ensure the detail-image container has overflow hidden for zoom */
+
 .detail-image {
     position: relative;
-    overflow: hidden; /* Crucial for containing the zoomed image */
+    overflow: hidden; 
 }
 @keyframes slideIn {
         from { transform: translateY(-100%); }
