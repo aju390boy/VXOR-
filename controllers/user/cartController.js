@@ -3,7 +3,6 @@ const Cart = require('../../model/cart.js')
 const {findBestOffer} = require('../../utils/offerHelper.js');
 
 exports.addToCart = async (req, res) => {
-
     const userId = req.user._id; 
     const { productId, colorName, size, quantity } = req.body;
 
@@ -12,6 +11,12 @@ exports.addToCart = async (req, res) => {
         const product = await Product.findById(productId);
         if (!product) {
             return res.status(404).json({ message: 'Product not found.' });
+        }
+        if (!product.isListed) {
+            return res.status(404).json({ message: 'Product is not Listed.' });
+        }
+         if (product.isDeleted) {
+            return res.status(404).json({ message: 'Product is tempererly deleted.' });
         }
         
         const colorVariant = product.colorVariants.find(c => c.colorName === colorName);
@@ -54,10 +59,8 @@ exports.addToCart = async (req, res) => {
 exports.getCart = async (req, res) => {
     const userId = req.user._id;
     const TAX_RATE = 0.05; 
-    
     const message = req.session.message;
-    delete req.session.message; // Clear message after reading
-
+    delete req.session.message; 
     try {
         const cart = await Cart.findOne({ userId })
             .populate({
@@ -80,12 +83,8 @@ exports.getCart = async (req, res) => {
                 message: message 
             });
         }
-        
-        // 2. Initialize variables for original and offer-applied prices
         let originalSubtotal = 0;
         let offerSubtotal = 0;
-
-        // 3. Use Promise.all to handle async operations inside map
         const cartItemsForEJS = await Promise.all(cart.items.map(async (item) => {
             const product = item.productId;
             if (!product) return null;
@@ -98,22 +97,17 @@ exports.getCart = async (req, res) => {
 
             const isAvailable = !product.isDeleted && product.isListed && product.category_id?.isListed && product.brand_id?.isListed && stock > 0;
 
-            // 4. Find the best offer for each item
             const bestOffer = isAvailable ? await findBestOffer(product._id, product.category_id?._id, product.brand_id?._id) : null;
             
-            // 5. Calculate the final price after offer
             let finalPrice = originalPrice;
             if (bestOffer) {
                 finalPrice = originalPrice * (1 - bestOffer.discountPercentage / 100);
             }
-
             if (isAvailable) {
                 originalSubtotal += originalPrice * item.quantity;
                 offerSubtotal += finalPrice * item.quantity;
             }
-
             const imagePath = colorVariant?.images[0].startsWith('http') ? colorVariant.images[0] :  `/uploads/products/${colorVariant.images[0]}`;
-
             return {
                 id: item._id.toString(),
                 productId: product._id.toString(),
@@ -129,10 +123,7 @@ exports.getCart = async (req, res) => {
                 bestOffer: bestOffer          
             };
         }));
-
         const validCartItems = cartItemsForEJS.filter(item => item !== null);
-
-        // 6. Calculate all final totals
         const totalDiscount = originalSubtotal - offerSubtotal;
         const tax = offerSubtotal * TAX_RATE;
         const total = offerSubtotal + tax;
@@ -153,50 +144,111 @@ exports.getCart = async (req, res) => {
     }
 };
 exports.updateCartQunty = async (req, res) => {
-    
-    if (!req.user || !req.user._id) {
-        return res.status(401).json({ message: 'Unauthorized. Please log in.' });
+  if (!req.user || !req.user._id) {
+    return res.status(401).json({ message: 'Unauthorized. Please log in.' });
+  }
+  const userId = req.user._id;
+  const { itemId } = req.params;
+  const { quantity: newQuantity } = req.body;
+  const TAX_RATE = 0.05;
+
+  try {
+    const cart = await Cart.findOne({ userId }).populate({
+      path: 'items.productId',
+      select: 'title description colorVariants isListed category_id brand_id isDeleted',
+      populate: [
+        { path: 'category_id', select: 'name isListed' },
+        { path: 'brand_id', select: 'name isListed' }
+      ]
+    });
+
+    if (!cart) {
+      return res.status(404).json({ message: 'Cart not found for this user.' });
     }
 
-    const userId = req.user._id;
-    const { itemId } = req.params;
-    const { quantity: newQuantity } = req.body;
-
-    try {
-        const cart = await Cart.findOne({ userId });
-        if (!cart) {
-            return res.status(404).json({ message: 'Cart not found for this user.' });
-        }
-        const itemToUpdate = cart.items.find(item => item._id.toString() === itemId);
-        if (!itemToUpdate) {
-            return res.status(404).json({ message: 'Item not found in cart.' });
-        }
-        if (newQuantity < 1) {
-            return res.status(400).json({ message: 'Quantity cannot be less than 1.' });
-        }
-        const product = await Product.findById(itemToUpdate.productId);
-        if (!product) {
-            return res.status(404).json({ message: 'Product not found.' });
-        }
-        const colorVariant = product.colorVariants.find(cv => cv.colorName === itemToUpdate.colorName);
-        const sizeVariant = colorVariant?.variants.find(sv => sv.size === itemToUpdate.size);
-        if (!sizeVariant) {
-            return res.status(404).json({ message: 'Product variant not found.' });
-        }
-        if (newQuantity > sizeVariant.stock) {
-            return res.status(400).json({ message: `The selected quantity exceeds available stock (${sizeVariant.stock}).` });
-        }
-        itemToUpdate.quantity = newQuantity;
-        await cart.save();
-        res.status(200).json({ message: 'Cart item quantity updated successfully.', cart });
-    } catch (error) {
-        console.error('Error updating cart item quantity:', error);
-        res.status(500).json({ message: 'Server error.', error: error.message });
+    const itemToUpdate = cart.items.find(item => item._id.toString() === itemId);
+    if (!itemToUpdate) {
+      return res.status(404).json({ message: 'Item not found in cart.' });
     }
+
+    if (newQuantity < 1) {
+      return res.status(400).json({ message: 'Quantity cannot be less than 1.' });
+    }
+
+    const product = itemToUpdate.productId;
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found.' });
+    }
+
+    const colorVariant = product.colorVariants.find(cv => cv.colorName === itemToUpdate.colorName);
+    const sizeVariant = colorVariant?.variants.find(sv => sv.size === itemToUpdate.size);
+    if (!sizeVariant) {
+      return res.status(404).json({ message: 'Product variant not found.' });
+    }
+
+    if (newQuantity > sizeVariant.stock) {
+      return res.status(400).json({ message: `Selected quantity exceeds available stock (${sizeVariant.stock}).` });
+    }
+
+    itemToUpdate.quantity = newQuantity;
+    await cart.save();
+
+    let originalSubtotal = 0;
+    let offerSubtotal = 0;
+
+    for (const item of cart.items) {
+      if (!item.productId) continue;
+      const prod = item.productId;
+      const cVariant = prod.colorVariants.find(cv => cv.colorName === item.colorName);
+      const sVariant = cVariant?.variants.find(sv => sv.size === item.size);
+
+      if (!sVariant) continue;
+      const originalPrice = sVariant.price;
+      const stock = sVariant.stock;
+      const isAvailable = !prod.isDeleted && prod.isListed && prod.category_id?.isListed && prod.brand_id?.isListed && stock > 0;
+      let finalPrice = originalPrice;
+      const bestOffer = isAvailable ? await findBestOffer(product._id, product.category_id?._id, product.brand_id?._id) : null;
+      
+      if (bestOffer) {
+        finalPrice = originalPrice * (1 - bestOffer.discountPercentage / 100);
+      }
+      if (isAvailable) {
+        originalSubtotal += originalPrice * item.quantity;
+        offerSubtotal += finalPrice * item.quantity;
+      }
+    }
+
+    const totalDiscount = originalSubtotal - offerSubtotal;
+    const tax = offerSubtotal * TAX_RATE;
+    const total = offerSubtotal + tax;
+
+    const updatedItem = {
+      _id: itemToUpdate._id,
+      quantity: itemToUpdate.quantity,
+      price: sizeVariant.price,
+
+    };
+
+    res.status(200).json({
+      success: true,
+      message: 'Cart item quantity updated successfully.',
+      updatedItem,
+      cartSummary: {
+        subtotal: originalSubtotal.toFixed(2),
+        totalDiscount: totalDiscount.toFixed(2),
+        tax: tax.toFixed(2),
+        total: total.toFixed(2),
+        itemsCount: cart.items.length,
+      },
+    });
+  } catch (error) {
+    console.error('Error updating cart item quantity:', error);
+    res.status(500).json({ message: 'Server error.', error: error.message });
+  }
 };
 
+
 exports.removeCartItm = async (req, res) => {
-    console.log("User from authentication middleware:", req.user);
     if (!req.user || !req.user._id) {
         return res.status(401).json({ message: 'Unauthorized. Please log in.' });
     } 
@@ -223,7 +275,6 @@ exports.removeCartItm = async (req, res) => {
 
 
 exports.getCartCount = async (req, res) => {
-    console.log('getcartcount controller function is hitted');
     try {
         const cart = await Cart.findOne({ userId: req.user._id });
         if (!cart) {

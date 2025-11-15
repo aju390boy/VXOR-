@@ -300,6 +300,7 @@
               </div>
 
              <!-- Action Buttons and Reasons -->
+              <% if (item?.return_reason?.reason ||  item?.cancellation_reason?.reason) { %>
 <% if (item.status === 'RETURN REQUESTED' || item.status === 'CANCELLATION REQUESTED' && item?.return_reason?.reason ||  item?.cancellation_reason?.reason) { %>
   <div class="mt-4 p-4 rounded-xl border 
        <%= item.status === 'RETURN REQUESTED' ? 'border-yellow-400 bg-yellow-50' : 'border-red-400 bg-red-50' %> shadow-sm">
@@ -325,6 +326,7 @@
       </button>
     </div>
   </div>
+<% } %>
 <% } %>
             </div>
           </div>

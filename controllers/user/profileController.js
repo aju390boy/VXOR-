@@ -675,6 +675,8 @@ exports.addAddress = async (req, res) => {
         errors: validationErrors,
       });
     }
+    const existingAddresses = await Address.countDocuments({ user_id: req.user._id });
+    const isDefault = existingAddresses === 0;
     const newAddress = new Address({
       user_id: req.user._id,
       name,
@@ -685,6 +687,7 @@ exports.addAddress = async (req, res) => {
       state,
       pincode,
       country,
+      isDefault
     });
     await newAddress.save();
     const user = await User.findById(req.user._id);

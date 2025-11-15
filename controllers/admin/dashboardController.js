@@ -233,8 +233,7 @@ exports.getDashboard = async (req, res) => {
             .sort({ totalSalesCount: -1 })
             .limit(5);
         }
-    console.log(JSON.stringify(bestSelling, null, 2));
-
+   
     ////////////new logic ////////////////
 // Format best-selling items to handle Cloudinary URLs
 // Unified formatting for all three types (same structure after aggregation)
@@ -248,7 +247,7 @@ if (bestSellingType === 'products' || bestSellingType === 'category' || bestSell
                 ? firstImage 
                 : `/uploads/products/${firstImage}`;
         }
-        console.log(`images : ${item.productImages[0]}`)
+       
         return {
             ...item,
             displayImage

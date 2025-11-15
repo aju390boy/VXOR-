@@ -19,7 +19,7 @@
         <%- include('../partials/admin/adminsidebar', { current: 'products' }) %>
         <div class="admin-main" style="margin-left: 250px; margin-top: 85px;">
             <div class="breadcrumb">Admin > <%= typeof product === 'undefined' ? 'Add Product' : 'Edit Product' %></div>
-            <form id="productForm" class="add-product-form" method="POST" action="/admin/<%= typeof product === 'undefined' ? 'addproducts' : 'editproduct/' + product._id %>" enctype="multipart/form-data" >
+            <form id="productForm" class="add-product-form" method="POST" action="/admin/products/<%= typeof product === 'undefined' ? 'add' : 'edit/' + product._id %>" enctype="multipart/form-data" >
                 <% if (typeof product !== 'undefined') { %>
               <input type="hidden" name="_method" value="PATCH" />
                 <% } %>

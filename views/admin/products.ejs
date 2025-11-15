@@ -7,8 +7,10 @@
     <link rel="stylesheet" href="/styles/admin/adminnavbar.css">
     <link rel="stylesheet" href="/styles/admin/adminsidebar.css">
     <link rel="stylesheet" href="/styles/admin/products.css">
+    <link rel="stylesheet" href="/styles/category.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
 
@@ -25,7 +27,7 @@
 
                 <div class="right-actions">
                     <input type="text" placeholder="🔍 Search products" id="searchInput" class="product-search" />
-                    <a href="/admin/addproducts">
+                    <a href="/admin/products/add">
                         <button class="add-btn">
                             <i class="fas fa-plus-circle"></i> Add Product
                         </button>
@@ -66,7 +68,7 @@
                                 <td><%= product.brand_name || 'N/A' %></td>
                                 <td><%= new Date(product.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) %></td>
                                 <td>
-                                  <a href="/admin/editproduct/<%= product._id %>" class="small-action-button edit-btn" title="Edit Product">
+                                  <a href="/admin/products/edit/<%= product._id %>" class="small-action-button edit-btn" title="Edit Product">
                                    <i class="fas fa-pen"></i>
                                        </a>
                                     <div class="action-buttons-container">
@@ -80,6 +82,12 @@
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </form>
+                                       <form action="">
+                                    <label class="switch">
+                                          <input type="checkbox" class="toggle-list-product" data-product-id="<%= product._id %>" <%= product.isListed ? 'checked' : '' %>>
+                                        <span class="slider round"></span>
+                                    </label>
+                                       </form>
                                     </div>
                                 </td>
                             </tr>
@@ -125,7 +133,7 @@
         currentSearchPage = page; // Update the current page for search
 
         try {
-            const res = await axios.get(`/admin/products-search?search=${query}&page=${page}`);
+            const res = await axios.get(`/admin/products/search?search=${query}&page=${page}`);
             const products = res.data.products;
             const totalPages = res.data.totalPages;
             const currentPage = res.data.currentPage;
@@ -151,7 +159,7 @@
                             <td>${product.brand_name || 'N/A'}</td>
                             <td>${new Date(product.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</td>
                             <td>
-                                <a href="/admin/addproducts/${product._id}" class="small-action-button edit-btn" title="Edit Product">
+                                <a href="/admin/products/edit/${product._id}" class="small-action-button edit-btn" title="Edit Product">
                                     <i class="fas fa-pen"></i>
                                 </a>
                                 <div class="action-buttons-container">
@@ -192,11 +200,56 @@
                 renderPagination(currentPage, totalPages);
             }
         } catch (err) {
-            console.error('🔥 Search failed:', err);
+            console.error(' Search failed:', err);
             tableBody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:red; padding: 20px;">Error loading products. Please try again.</td></tr>`;
             if (paginationDiv) paginationDiv.style.display = 'none';
         }
     }
+    //////////////new///////////////
+    // Event delegation to handle toggle for dynamically rendered checkboxes
+tableBody.addEventListener('change', async (e) => {
+  const checkbox = e.target;
+  if (checkbox.classList.contains('toggle-list-product')) {
+    const productId = checkbox.dataset.productId;
+    const newStatus = checkbox.checked; // true = listed, false = unlisted
+
+    // Optionally, show a loading spinner or disable input
+    checkbox.disabled = true;
+
+     // Confirmation before updating
+    const confirmed = await Swal.fire({
+      title: 'Are you sure?',
+      text: `You are about to ${newStatus ? 'list' : 'unlist'} this product.`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, proceed',
+      cancelButtonText: 'Cancel'
+    });
+    if (!confirmed.isConfirmed) {
+      // Revert checkbox if not confirmed
+      checkbox.checked = !newStatus;
+      return;
+    }
+
+    try {
+      const response = await axios.patch(`/admin/products/${productId}/toggle-list`, { isListed: newStatus });
+      if (response.data.success) {
+        Swal.fire('Success', response.data.message, 'success');
+      } else {
+        Swal.fire('Error', response.data.message || 'Action failed', 'error');
+        // Undo toggle if failed
+        checkbox.checked = !newStatus;
+      }
+    } catch (err) {
+      Swal.fire('Error', 'Server error, try again.', 'error');
+      checkbox.checked = !newStatus; // revert on error
+    }finally {
+      // Re-enable the checkbox
+      checkbox.disabled = false;
+    }
+  }
+});
+////////////////////////////////////////////////////////////////////////////////////
 
     // Function to render pagination links based on current search results
     function renderPagination(currentPage, totalPages) {
@@ -252,40 +305,51 @@
     });
 
     async function handleProductAction(productId, actionType) {
-        const url = `/admin/products/${actionType}/${productId}`; 
-        const confirmationMessage = actionType === 'delete'
-            ? 'Are you sure you want to soft delete this product?'
-            : 'Are you sure you want to restore this product?';
+  const url = `/admin/products/${actionType}/${productId}`;
+  const confirmationMessage = actionType === 'delete'
+    ? 'Are you sure you want to soft delete this product?'
+    : 'Are you sure you want to restore this product?';
 
-        if (!confirm(confirmationMessage)) {
-            return; 
+  // Use SweetAlert2 for confirmation instead of native confirm()
+  const result = await Swal.fire({
+    title: 'Confirm',
+    text: confirmationMessage,
+    icon: actionType === 'delete' ? 'warning' : 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Yes',
+    cancelButtonText: 'Cancel',
+  });
+
+  if (!result.isConfirmed) {
+    return;
+  }
+
+  try {
+    const response = await axios.post(url);
+    if (response.data.success) {
+      const productRow = document.getElementById(`product-row-${productId}`);
+      if (productRow) {
+        const deleteForm = productRow.querySelector('.delete-form');
+        const restoreForm = productRow.querySelector('.restore-form');
+
+        if (actionType === 'delete') {
+          deleteForm.style.display = 'none';
+          restoreForm.style.display = 'inline-block';
+        } else { // restore
+          deleteForm.style.display = 'inline-block';
+          restoreForm.style.display = 'none';
         }
-
-        try {
-            const response = await axios.post(url);
-            if (response.data.success) {
-                const productRow = document.getElementById(`product-row-${productId}`);
-                if (productRow) {
-                    const deleteForm = productRow.querySelector('.delete-form');
-                    const restoreForm = productRow.querySelector('.restore-form');
-
-                    if (actionType === 'delete') {
-                        deleteForm.style.display = 'none';
-                        restoreForm.style.display = 'inline-block';
-                    } else { // actionType === 'restore'
-                        deleteForm.style.display = 'inline-block';
-                        restoreForm.style.display = 'none';
-                    }
-                    alert(response.data.message); // Show success message
-                }
-            } else {
-                alert(response.data.message || 'Action failed!');
-            }
-        } catch (error) {
-            console.error(`Error ${actionType}ing product:`, error);
-            alert(`Failed to ${actionType} product. Please try again.`);
-        }
+      }
+      await Swal.fire('Success', response.data.message, 'success'); // Show success popup
+    } else {
+      Swal.fire('Error', response.data.message || 'Action failed!', 'error');
     }
+  } catch (error) {
+    console.error(`Error ${actionType}ing product:`, error);
+    Swal.fire('Error', `Failed to ${actionType} product. Please try again.`, 'error');
+  }
+}
+
 
     // Attach event listeners using delegation to handle dynamically added rows (from search)
     tableBody.addEventListener('submit', (e) => {

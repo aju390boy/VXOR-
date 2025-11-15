@@ -114,20 +114,27 @@ exports.updateProductExpectedDelivery = async (req, res) => {
 
 // Handle approval/rejection of entire order cancellation/return
 exports.handleOrderRequestAction = async (req, res) => {
+  console.log('starting..................');
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
     const { orderId } = req.params;
     const { action } = req.body;
+    console.log(`order id : ${orderId}`);
+    console.log(`action : ${action}`);
     const order = await Order.findById(orderId)
       .populate("user_id")
       .session(session);
+
     if (!order) {
+      console.log('no order')
       await session.abortTransaction();
       session.endSession();
       return res.status(404).json({ message: "Order not found" });
     }
+
     const userId = order.user_id._id;
+
     async function refundToWallet(userId, amount, orderId, description) {
       let wallet = await Wallet.findOne({ user_id: userId }).session(session);
       if (!wallet)
@@ -141,26 +148,20 @@ exports.handleOrderRequestAction = async (req, res) => {
       });
       await wallet.save({ session });
     }
-    //////approve /////////
+
     if (action === "approve") {
+      console.log('cheruthayit und.................')
       if (
-        order.order_cancellation_reason &&
-        order.order_cancellation_reason.reason &&
-        (!order.order_return_reason || !order.order_return_reason.reason)
+        order.order_cancellation_reason?.reason &&
+        !order.order_return_reason?.reason
       ) {
+        console.log('uns.........................')
         // Cancellation logic
         const allDelivered = order.products.every(
           (p) => p.status === "DELIVERED"
         );
-        const refundAmountForCancellation = order.products.reduce((acc, p) => {
-          if (p.status === "CANCELLATION REQUESTED") {
-            const offers = p.total_offer_applied || 0;
-            const coupon = p.coupon_discount || 0;
-            const tax = order.tax;
-            return acc + ((p.price || 0) + tax - offers - coupon);
-          }
-          return acc;
-        }, 0);
+        const refundAmountForCancellation = order.total_amount;
+        console.log(`total amount :${order.total_amount}`);
 
         if (order.payment_method === "COD") {
           for (const p of order.products) {
@@ -174,6 +175,7 @@ exports.handleOrderRequestAction = async (req, res) => {
               );
             }
           }
+          order.markModified("products");
           if (allDelivered && order.payment_status === "COMPLETED") {
             await refundToWallet(
               userId,
@@ -205,27 +207,20 @@ exports.handleOrderRequestAction = async (req, res) => {
               );
             }
           }
+          order.markModified("products");
           order.order_cancellation_reason = null;
         }
       } else if (
-        order.order_return_reason &&
-        order.order_return_reason.reason &&
-        (!order.order_cancellation_reason ||
-          !order.order_cancellation_reason.reason)
+        order.order_return_reason?.reason &&
+        !order.order_cancellation_reason?.reason
       ) {
+        console.log('sherikkum und')
         // Return logic
         const allDelivered = order.products.every(
           (p) => p.status === "DELIVERED"
         );
-        const refundAmountForReturn = order.products.reduce((acc, p) => {
-          if (p.status === "RETURN REQUESTED") {
-            const offers = p.offer_applied || 0;
-            const coupon = p.coupon_discount || 0;
-            const tax = order.tax;
-            return acc + ((p.price || 0) + tax - offers - coupon);
-          }
-          return acc;
-        }, 0);
+        const refundAmountForReturn = order.total_amount;
+        console.log(`total amount :${order.total_amount}`);
         if (order.payment_method === "COD") {
           for (const p of order.products) {
             if (p.status === "RETURN REQUESTED") {
@@ -238,6 +233,7 @@ exports.handleOrderRequestAction = async (req, res) => {
               );
             }
           }
+          order.markModified("products");
           if (allDelivered && order.payment_status === "COMPLETED") {
             await refundToWallet(
               userId,
@@ -269,6 +265,7 @@ exports.handleOrderRequestAction = async (req, res) => {
               );
             }
           }
+          order.markModified("products");
           order.order_return_reason = null;
         }
       } else {
@@ -278,9 +275,7 @@ exports.handleOrderRequestAction = async (req, res) => {
           .status(400)
           .json({ message: "No valid cancellation or return request found" });
       }
-    } 
-    //////end of approve//////+
-    else if (action === "reject") {
+    } else if (action === "reject") {
       order.order_cancellation_reason = null;
       order.order_return_reason = null;
       for (const p of order.products) {
@@ -372,6 +367,16 @@ exports.handleProductRequestAction = async (req, res) => {
         //   order.payment_status='REFUNDED';
         // }
         }
+        if(item.status==='COMPLETED'){
+           if (refundAmount > 0) {
+            await refundToWallet(
+              userId,
+              refundAmount,
+              orderId,
+              "Refund for cancelled product"
+            );
+          }
+        }
       } else if (item.status === "RETURN REQUESTED") {
         await incrementProductQuantity(
           item.product_id,
@@ -392,6 +397,16 @@ exports.handleProductRequestAction = async (req, res) => {
          }
         if (["WALLET", "ONLINE", "COD"].includes(order.payment_method)) {
           if (refundAmount > 0) {
+            await refundToWallet(
+              userId,
+              refundAmount,
+              orderId,
+              "Refund for returned product"
+            );
+          }
+        }
+        if(item.status==='COMPLETED'){
+           if (refundAmount > 0) {
             await refundToWallet(
               userId,
               refundAmount,

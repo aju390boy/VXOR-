@@ -204,6 +204,7 @@ exports.editBrand = async (req, res) => {
 };
 
 exports.deleteBrand = async (req, res) => {
+    console.log('hello.......................')
     try {
         const brandId = req.params.id;
         const deletedBrand = await Brand.findByIdAndDelete(brandId);

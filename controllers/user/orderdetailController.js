@@ -4,102 +4,126 @@ const mongoose = require('mongoose');
 
 
 exports.getOrderDetail = async (req, res) => {
-    try {
-        const { orderId } = req.params; 
-        const userId = req.user._id;
-        const TAX_RATE = 0.05;
-        const message=req.session.message;
-        delete req.session.message;
-
-        const order = await Order.findOne({ _id: orderId, user_id: userId })
-            .populate({
-                path: 'products.product_id',
-                select: 'title colorVariants'
-            })
-            .populate('address_id')
-            .populate('coupon_id')
-            .lean();
-
-        if (!order) {
-           req.session.message={icon:'error',titile:'Error',text:'Order doesnot exists  '}
-           return res.redirect('/user/orderDetail');
-        }
-      
-        order.canCancelAll = order.products.some(p => ['CONFIRMED', 'PROCESSING', 'PACKED'].includes(p.status));
-      
-        order.canReturnAll = order.products.some(p => p.status === 'DELIVERED');
-      
-        order.products.forEach(item => {
-            if (!item.product_id) { 
-                item.canCancel = false;
-                item.canReturn = false;
-                return;
-            }
-            item.canCancel = ['CONFIRMED', 'PROCESSING', 'PACKED'].includes(item.status);
-            item.canReturn = item.status === 'DELIVERED';
-        });
-      
-        let originalSubtotal = 0;
-        let totalAfterOffers = 0;
-        order.products.forEach(item => {
-            if (!item.product_id) return;
-            const sizeVariant = item.product_id.colorVariants.find(c => c.colorName === item.colorName)?.variants.find(s => s.size === item.size);
-            const pricePaid = item.price;
-            const originalPrice = sizeVariant ? sizeVariant.price : pricePaid;
-            originalSubtotal += originalPrice * item.quantity;
-            totalAfterOffers += pricePaid * item.quantity;
-        });
-        const offerDiscount = originalSubtotal - totalAfterOffers;
-        const totalBeforeTax = order.total_amount / (1 + TAX_RATE);
-        const couponDiscount = totalAfterOffers - totalBeforeTax;
-        const totals = {
-            originalSubtotal: originalSubtotal.toFixed(2),
-            offerDiscount: offerDiscount.toFixed(2),
-            couponDiscount: couponDiscount > 0 ? couponDiscount.toFixed(2) : '0.00',
-            tax: (order.total_amount - totalBeforeTax).toFixed(2),
-            grandTotal: order.total_amount.toFixed(2)
-        };
-
-     
-    const progressSteps = ['CONFIRMED', 'PROCESSING', 'PACKED', 'SHIPPED', 'DELIVERED'];
-    const specialStatuses = ['CANCELLED', 'RETURNED', 'CANCELLATION REQUESTED', 'RETURN REQUESTED'];
-
-    const totalProducts = order.products.length;
-
-   
-    const progressCounts = progressSteps.reduce((acc, step) => {
-      acc[step] = order.products.filter(p => p.status === step).length;
-      return acc;
-    }, {});
-
-    
-    const specialCounts = specialStatuses.reduce((acc, status) => {
-      acc[status] = order.products.filter(p => p.status === status).length;
-      return acc;
-    }, {});
-
-  
-    const progressSegments = progressSteps.map(step => ({
-      status: step,
-      count: progressCounts[step],
-      percent: totalProducts ? (progressCounts[step] / totalProducts) * 100 : 0
-    }));
-
-    const specialSegments = specialStatuses.map(status => ({
-      status,
-      count: specialCounts[status],
-      percent: totalProducts ? (specialCounts[status] / totalProducts) * 100 : 0
-    }));
-        res.render('user/orderDetail', { order, totals,message ,progressSteps,progressSegments,specialSegments});
-    } catch (error) {
-        console.error('Error fetching order details:', error);
-        req.session.message={icon:'error',title:'Error!',text:'Error fetching order details'}
-        res.status(500).redirect('/user/orderDetail');
+  try {
+    const { orderId, itemId } = req.params; 
+    const userId = req.user._id;
+    const TAX_RATE = 0.05;
+    const message = req.session.message;
+    delete req.session.message;
+    const order = await Order.findOne({ _id: orderId, user_id: userId })
+      .populate({
+        path: 'products.product_id',
+        select: 'title colorVariants'
+      })
+      .populate('address_id')
+      .populate('coupon_id')
+      .lean();
+    if (!order) {
+      req.session.message = { icon: 'error', title: 'Error', text: 'Order does not exist' };
+      return res.redirect('/user/orders');
     }
+    order.canCancelAll = order.products.some(p => ['CONFIRMED', 'PROCESSING', 'PACKED'].includes(p.status));
+    order.canReturnAll = order.products.every(p => p.status === 'DELIVERED');
+    order.products.forEach(item => {
+      if (!item.product_id) { 
+        item.canCancel = false;
+        item.canReturn = false;
+      } else {
+        item.canCancel = ['CONFIRMED', 'PROCESSING', 'PACKED'].includes(item.status);
+        item.canReturn = item.status === 'DELIVERED';
+      }
+    });
+    let originalSubtotal = 0;
+    let totalAfterOffers = 0;
+    order.products.forEach(item => {
+      if (!item.product_id) return;
+      const sizeVariant = item.product_id.colorVariants
+        .find(c => c.colorName === item.colorName)?.variants.find(s => s.size === item.size);
+      const originalPrice = sizeVariant ? sizeVariant.price : item.price;
+      originalSubtotal += originalPrice * item.quantity;
+      totalAfterOffers += item.price * item.quantity;
+    });
+    const offerDiscount = originalSubtotal - totalAfterOffers;
+    const totalBeforeTax = order.total_amount / (1 + TAX_RATE);
+    const couponDiscount = totalAfterOffers - totalBeforeTax;
+    const totals = {
+      originalSubtotal: originalSubtotal.toFixed(2),
+      offerDiscount: offerDiscount.toFixed(2),
+      couponDiscount: couponDiscount > 0 ? couponDiscount.toFixed(2) : '0.00',
+      tax: (order.total_amount - totalBeforeTax).toFixed(2),
+      grandTotal: order.total_amount.toFixed(2)
+    };
+    const progressSteps = ['CONFIRMED', 'PROCESSING', 'PACKED', 'SHIPPED', 'DELIVERED'];
+    const specialStatusPriority = ['CANCELLED', 'CANCELLATION REQUESTED', 'RETURNED', 'RETURN REQUESTED'];
+    const allSpecialStatuses = [...new Set(order.products
+      .map(p => p.status)
+      .filter(status => specialStatusPriority.includes(status)))];
+    let specialStatusToShow = null;
+    for (const status of specialStatusPriority) {
+      if (allSpecialStatuses.includes(status)) {
+        specialStatusToShow = status;
+        break;
+      }
+    }
+    let itemDetail = null;
+    let itemStatus = null;
+    let itemUpdatedAt = null;
+    if (itemId) {
+      itemDetail = order.products.find(item => item._id.toString() === itemId);
+      if (!itemDetail) {
+        req.session.message = { icon: 'error', title: 'Error', text: 'Order item not found' };
+        return res.redirect(`/user/orders/${orderId}`);
+      }
+      itemStatus = itemDetail.status;
+      itemUpdatedAt = itemDetail.updatedAt || order.updatedAt;
+    }
+    let progressSegments = [];
+    let specialSegments = [];
+    if (!itemDetail) {
+      const totalProducts = order.products.length;
+      const progressCounts = progressSteps.reduce((acc, step) => {
+        acc[step] = order.products.filter(p => p.status === step).length;
+        return acc;
+      }, {});
+      const specialCounts = specialStatusPriority.reduce((acc, status) => {
+        acc[status] = order.products.filter(p => p.status === status).length;
+        return acc;
+      }, {});
+      progressSegments = progressSteps.map(step => ({
+        status: step,
+        count: progressCounts[step],
+        percent: totalProducts ? (progressCounts[step] / totalProducts) * 100 : 0
+      }));
+      specialSegments = specialStatusPriority.map(status => ({
+        status,
+        count: specialCounts[status],
+        percent: totalProducts ? (specialCounts[status] / totalProducts) * 100 : 0
+      }));
+    }
+    res.render('user/orderDetail', {
+      order,
+      totals,
+      message,
+      progressSteps,
+      progressSegments,
+      specialSegments,
+      itemDetail,
+      itemStatus,
+      itemUpdatedAt,
+      specialStatusToShow
+    });
+  } catch (error) {
+    console.error('Error fetching order details:', error);
+    req.session.message = { icon: 'error', title: 'Error!', text: 'Error fetching order details' };
+    res.status(500).redirect('/user/orders');
+  }
 };
+
 
 ////Download invoice///////
 exports.downloadSingleInvoice = async (req, res) => {
+
+  console.log('invoice hitted........................................')
   try {
     const { orderId, itemId } = req.params;
     const userId = req.user._id;
@@ -110,12 +134,12 @@ exports.downloadSingleInvoice = async (req, res) => {
       .lean();
     if (!order) {
       req.session.message = { type: 'error', text: 'Invoice not found.' };
-      return res.redirect(`/user/orders/${orderId}`);
+      return res.redirect(`/user/profile?section=orders`);
     }
     const item = order.products.find(p => p._id.toString() === itemId);
     if (!item || !item.product_id) {
       req.session.message = { type: 'error', text: 'Item not found in this order.' };
-      return res.redirect(`/user/orders/${orderId}`);
+      return res.redirect(`/user/profile?section=orders`);
     }
     const doc = new PDFDocument({ size: 'A4', margin: 50 });
     res.setHeader('Content-Type', 'application/pdf');
@@ -385,6 +409,7 @@ exports.downloadInvoice = async (req, res) => {
 ///////Cancel///////////
 // To request cancellation for a SINGLE item
 exports.requestItemCancellation = async (req, res) => {
+  console.log('hello........................................')
   try {
     const { orderId, itemId } = req.params;
     const { reason } = req.body;

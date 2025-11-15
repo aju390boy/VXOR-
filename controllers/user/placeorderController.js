@@ -39,6 +39,12 @@ exports.placeOrder = async (req, res) => {
             if (!product) {
                 return res.status(400).json({ message: "One or more products in your cart are not available." });
             }
+            if(product.isDeleted){
+                 return res.status(400).json({ message: "One or more products tempererly deleted" });
+            }
+            if(!product.isListed){
+                 return res.status(400).json({ message: "One or more products Not Listed" });
+            }
             const colorVariant = product.colorVariants.find((cv) => cv.colorName === item.colorName);
             if (!colorVariant) {
                 return res.status(400).json({ message: `Color variant for ${product.title} not found.` });
@@ -68,6 +74,7 @@ exports.placeOrder = async (req, res) => {
             });
         }
         let couponDiscount = req.session.coupon?.discount || 0;
+        console.log(`couupon : ${couponDiscount}`);
         let finalAmount = totalAfterOffers - couponDiscount;
         const tax = finalAmount > 0 ? finalAmount * TAX_RATE : 0;
         finalAmount += tax;

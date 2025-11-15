@@ -155,9 +155,10 @@
 
   searchInput.addEventListener('input', async () => {
     const query = searchInput.value.trim();
+    console.log(`search log : ${query}`); 
 
     try {
-      const res = await axios.get(`/admin/customers-search?search=${query}`);
+      const res = await axios.get(`/admin/customers/search?search=${query}`);
       const customers = res.data.customers;
 
       tableBody.innerHTML = '';

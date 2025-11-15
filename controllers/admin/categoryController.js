@@ -1,5 +1,5 @@
 const { resolveContent } = require('nodemailer/lib/shared');
-const Category = require('../../model/category');
+const Category = require('../../model/category.js');
 const Product = require('../../model/offer.js');
 
 exports.getCategories = async (req, res) => {

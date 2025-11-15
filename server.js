@@ -3,7 +3,7 @@ const passport = require('passport');
 const connect = require('./database/connect.js')
 require('./config/passport');
 require('dotenv').config();
-const adminRoutes = require('./routes/adminRoutes.js');
+const adminRoutes = require('./routes/adminRoutes/index.js');
 const userRoutes = require('./routes/userRoutes/index.js');
 const authRoutes = require('./routes/authRoutes/index.js')
 const { getCartCount } = require('./middlewares/user/cartMiddleware.js');

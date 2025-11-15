@@ -33,9 +33,9 @@ exports.getAllProducts = async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const limit = 5;
         const skip = (page - 1) * limit;
-        const totalProducts = await Product.countDocuments({ isDeleted: false });
+        const totalProducts = await Product.countDocuments({});
         const totalPages = Math.ceil(totalProducts / limit);
-        const products = await Product.find({ isDeleted: false })
+        const products = await Product.find()
             .populate('category_id')
             .populate('brand_id')
             .skip(skip)
@@ -216,4 +216,23 @@ exports.getProductsAjax = async (req, res) => {
         console.error("Error in searchProducts:", error);
         res.status(500).json({ message: "Error during product search." });
     }
+};
+
+
+exports.toggleProductListing = async (req, res) => {
+  const { id } = req.params;
+  const { isListed } = req.body;
+
+  try {
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({ success: false, message: "Product not found." });
+    }
+    product.isListed = !!isListed; // cast to boolean
+    await product.save();
+    return res.json({ success: true, message: `Product has been ${isListed ? 'listed' : 'unlisted'} successfully.` });
+  } catch (err) {
+    console.error('Error toggling product list status:', err);
+    res.status(500).json({ success: false, message: "Server error. Please try again." });
+  }
 };

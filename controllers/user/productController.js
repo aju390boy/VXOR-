@@ -32,6 +32,8 @@ const formatProductForListing = (product, bestOffer = null) => {
 exports.getAllProducts = async (req, res) => {
   try {
     const { category, brand, price, rating, color, size, sort } = req.query;
+    const message = req.session.message;
+    delete req.session.message;
     const wishlist = await Wishlist.findOne({ user_id: req.user._id }).lean();
     const wishlistProductIds = wishlist ? wishlist.products.map(p => p.product_id.toString()) : [];
     let queryObj = { isDeleted: false, isListed: true };
@@ -163,6 +165,7 @@ exports.getAllProducts = async (req, res) => {
         sortOptions: displaySortOptions,
         title: "VIXOR | Products",
         query: req.query,
+        message,
         wishlistIds: wishlistProductIds,
       });
     }

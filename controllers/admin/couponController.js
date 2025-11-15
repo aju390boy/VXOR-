@@ -3,8 +3,6 @@ const Coupon = require('../../model/coupon.js')
 
 exports.getAllCoupons = async (req, res) => {
     try {
-
-        console.log('get all coupon hitted...............')
         const query = {}; 
                const page = parseInt(req.query.page) || 1;
                const limit = 2;
@@ -82,7 +80,7 @@ exports.createCoupon = async (req, res) => {
       req.session.message = { type: "error", text: errors.join(" ") };
       return res.redirect("/admin/coupons");
     }
-    const uppercaseCode = code.toUpperCase();
+    const uppercaseCode = code.trim().toUpperCase();
     const existingCoupon = await Coupon.findOne({ code: uppercaseCode });
     if (existingCoupon) {
       req.session.message = { type: "error", text: "This coupon code already exists." };

@@ -117,7 +117,7 @@
       <% products.forEach(item => { %>
         <div class="item-link no-underline text-inherit">
   <a href="/user/product/<%= item._id %>" >
-          <div class="item-block border border-gray-800 rounded-lg overflow-hidden hover:scale-105 transition bg-black-400">
+          <div class="item-block border-none bg-black">
             <div class="product">
               <img src="<%= item.display_image_url %>" alt="<%= item.title %>" class="w-full h-60 object-cover">
             </div>
@@ -147,9 +147,11 @@
     <% } %>
   </div>
   <!-- ///////products section end////// -->
-</div>
+
 
 <script>
+  const serverMessage = <%-JSON.stringify(message)%>
+  Swal.fire(serverMessage);
   const serverQuery = <%- JSON.stringify(query) %>;
   document.addEventListener("DOMContentLoaded", () => {
     const productList = document.getElementById("productList");

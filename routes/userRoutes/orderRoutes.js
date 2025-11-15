@@ -7,13 +7,15 @@ const orderdetailController = require('../../controllers/user/orderdetailControl
 
 router.get('/search',isAuthenticated,orderController.searchUserOrders)
 
-router.get('/:orderId', isAuthenticated, orderdetailController.getOrderDetail);
+// Route example:
+router.get('/:orderId/items/:itemId', isAuthenticated, orderdetailController.getOrderDetail);
 router.get('/:orderId/invoice', isAuthenticated,orderdetailController.downloadInvoice);
 router.get('/:orderId/items/:itemId/invoice', isAuthenticated, orderdetailController.downloadSingleInvoice);
 router.patch('/:orderId/items/:itemId/request-cancellation', isAuthenticated, orderdetailController.requestItemCancellation);
 router.patch('/:orderId/request-cancellation', isAuthenticated, orderdetailController.requestEntireOrderCancellation);
 router.patch('/:orderId/items/:itemId/request-return', isAuthenticated, orderdetailController.requestItemReturn);
 router.patch('/:orderId/request-return', isAuthenticated,orderdetailController.requestEntireOrderReturn);
+// router.patch('/:orderId,retry-payment', isAuthenticated, orderController.retrPayment);
 
 
 module.exports = router;

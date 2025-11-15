@@ -2,7 +2,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- Toast Notification HTML -->
-    <div id="toast-container" class="fixed top-0 left-1/2 -translate-x-1/2 mt-4 z-50">
+    <div id="toast-container" class="fixed top-0 right-0 -translate-x-1/2 mt-5 z-50 p-2">
         <div id="toast-alert" class="hidden max-w-sm w-full rounded-xl shadow-lg p-2 transition-all duration-300">
             <div class="flex items-center space-x-3">
                 <!-- Success Icon -->
@@ -53,11 +53,11 @@
                             <h3 class="text-lg font-semibold text-white"><%= item.name %></h3>
                             <p class="text-sm text-gray-400 mt-1">Size: <%= item.size %> / Color: <%= item.colorName %></p>
                             <% if (!item.isAvailable) { %>
-                                <p class="text-red-500 font-semibold mt-2">Currently Unavailable</p>
+                                <p class="text-red-500 font-semibold mt-2">CURRENTLY UNAVAILABLE</p>
                             <% } %>
                         </div>
 
-                        <div class="flex flex-col items-end gap-4">
+                        <div class="flex flex-row items-end gap-4">
                             <div class="text-right mr-12 w-32">
                               <% if (item.bestOffer) { %>
                                  <span class="text-3xl font-bold text-red-500">₹<%= item.finalPrice.toLocaleString() %><span class="text-green-500 text-xs">(<%=  item.bestOffer.discountPercentage %>%OFF)</span></span>
@@ -83,10 +83,11 @@
                                     data-quantity="<%= item.quantity %>"
                                     <%= item.isAvailable ? '' : 'disabled' %>>+</button>
                                 
+                                
+                            </div>
                                 <button class="remove-from-cart-btn w-8 h-8 rounded-full flex items-center justify-center bg-gray-700 text-gray-300 hover:bg-red-500 hover:text-white transition-colors ml-4" data-item-id="<%= item.id %>">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                 </button>
-                            </div>
                         </div>
                     </div>
                 <% }) %>
@@ -184,30 +185,60 @@
             toastAlert.classList.add('hidden');
         }, 3000);
     }
-    async function updateCartQuantity(itemId, newQuantity) {
-        try {
-            const response = await fetch(`/user/cart/update-quantity/${itemId}`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ quantity: newQuantity }),
-            });
-            if (!response.ok) {
-                console.error('Server response was not ok:', response.status, response.statusText);
-                const errorData = await response.text();
-                console.error('Server error response:', errorData);
-                showAlert('error', 'Failed to update cart. Please try again.');
-                return;
-            }
-            const data = await response.json();
-            window.location.reload();
-        } catch (error) {
-            console.error('Network or parsing error:', error);
-            showAlert('error', 'An unexpected error occurred. Please try again.');
-        }
+    /////////////////////////////////////////////
+  async function updateCartQuantity(itemId, newQuantity) {
+  try {
+    const response = await fetch(`/user/cart/update-quantity/${itemId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ quantity: newQuantity }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error('Server response was not ok:', response.status, response.statusText);
+      console.error('Server error response:', errorData);
+      showAlert('error', 'Failed to update cart. Please try again.');
+      return;
     }
 
+    const data = await response.json();
+
+    if (data.success) {
+      const quantitySpan = document.getElementById(`quantity-${itemId}`);
+      if (quantitySpan) {
+        quantitySpan.textContent = data.updatedItem.quantity;
+      }
+      if (data.cartSummary) {
+        const { subtotal, tax, total, totalDiscount } = data.cartSummary;
+        const subtotalElem = document.getElementById('subtotal-value');
+        if (subtotalElem) subtotalElem.textContent = `₹${subtotal}`;
+        const taxElem = document.getElementById('tax-value');
+        if (taxElem) taxElem.textContent = `₹${tax}`;
+        const totalElem = document.getElementById('total-value');
+        if (totalElem) totalElem.textContent = `₹${total}`;
+        const discountSpan = document.querySelector('.text-green-400 span:last-child');
+        if (discountSpan) {
+          if (totalDiscount > 0) {
+            discountSpan.textContent = `- ₹${totalDiscount}`;
+            discountSpan.parentElement.style.display = '';
+          } else {
+            discountSpan.textContent = '';
+            discountSpan.parentElement.style.display = 'none'; 
+          }
+        }
+      }
+    } else {
+      showAlert('error', data.message || 'Failed to update cart. Please try again.');
+    }
+  } catch (error) {
+    console.error('Network or parsing error:', error);
+    showAlert('error', 'An unexpected error occurred. Please try again.');
+  }
+}
+
+
+//////////////////////////////////////////////////////////////
     async function removeCartItem(itemId) {
         try {
             const response = await fetch(`/user/cart/remove-item/${itemId}`, {
@@ -240,7 +271,7 @@
         const decreaseQuantityBtns = document.querySelectorAll('.decrease-quantity-btn');
         const removeCartItemBtns = document.querySelectorAll('.remove-from-cart-btn');
         const checkoutBtn = document.getElementById('checkout-btn');
-        const MAX_QUANTITY = 5;
+        const MAX_QUANTITY = 6;
         function checkCartForUnavailableItems() {
             return cartItems.some(item => !item.isAvailable);
         }
@@ -262,10 +293,12 @@
                 const maxStock = parseInt(button.dataset.stock, 10);
                 const newQuantity = currentQuantity + 1;
 
-                if (newQuantity <= maxStock && newQuantity <= MAX_QUANTITY) {
+                if (newQuantity >= maxStock ) {
+                   showAlert('error',`selected quantity exceeds available stock of ${maxStock}`)
+                } else if (newQuantity >= MAX_QUANTITY) {
+                    showAlert('error', `Sorry,  Quantity maximum limit of 5.`);
+                }else{
                     updateCartQuantity(itemId, newQuantity);
-                } else {
-                    showAlert('error', `Sorry, the selected quantity exceeds available stock or the maximum limit of ${MAX_QUANTITY}.`);
                 }
             });
         });
@@ -275,10 +308,14 @@
                 const quantitySpan = document.getElementById(`quantity-${itemId}`);
                 const currentQuantity = parseInt(quantitySpan.textContent, 10);
                 const newQuantity = currentQuantity - 1;
-                if (newQuantity >= 1) {
-                    updateCartQuantity(itemId, newQuantity);
-                } else {
+                const maxStock = parseInt(button.dataset.stock, 10);
+                if (newQuantity < 1) {
                     showAlert('error', 'Quantity cannot be less than 1.');
+                } else if(newQuantity > maxStock){
+                    showAlert('error','Cant decrement , Because stock already less');
+                }
+                else {
+                     updateCartQuantity(itemId, newQuantity);
                 }
             });
         });

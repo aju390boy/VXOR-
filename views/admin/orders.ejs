@@ -193,7 +193,7 @@
             const paymentStatus = paymentStatusFilter.value;
             const sort = sortSelect.value;
             try {
-                const response = await fetch(`/admin/api/orders?page=${currentPage}&limit=${pageSize}&search=${searchQuery}&paymentStatus=${paymentStatus}&sort=${sort}`);
+                const response = await fetch(`/admin/orders/api?page=${currentPage}&limit=${pageSize}&search=${searchQuery}&paymentStatus=${paymentStatus}&sort=${sort}`);
                 if (!response.ok) {
                     throw new Error("Failed to fetch orders.");
                 }
@@ -272,7 +272,7 @@
     actionsCell.appendChild(viewBtn);
     row.append(orderIdCell, dateCell, userCell, totalCell, statusCell,concernCell, actionsCell);
     viewBtn.addEventListener('click', () => {
-        window.location.href = `/admin/api/orders/${viewBtn.dataset.orderId}`;
+        window.location.href = `/admin/orders/api/${viewBtn.dataset.orderId}`;
     });
     return row;
 };

@@ -181,9 +181,9 @@ body {
   display: block;
 }
 
-.dropdown a:hover {
+/* .dropdown a:hover {
   background-color: silver;
-}
+} */
 
 .hero-btn::before {
   content: '';
@@ -197,16 +197,16 @@ body {
   z-index: 1;
 }
 
-.hero-btn:hover::before {
+/* .hero-btn:hover::before {
   animation: shine 1s ease-in-out forwards;
-}
+} */
 
-.hero-btn:hover {
+/* .hero-btn:hover {
   background:silver;
   color: black;
   box-shadow: 0 0 25px 5px grey;
   transform: scale(1.05);
-}
+} */
 
 .hero-btn:active {
   transform: scale(0.96);
@@ -242,15 +242,14 @@ body {
 }
 
 /* Optional: Add hover effects to make clickable items obvious */
-.fam-item-link .item-block {
+/* .fam-item-link .item-block {
     transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-}
+} */
 
-.fam-item-link .item-block:hover {
+/* .fam-item-link .item-block:hover {
     transform: translateY(-5px); /* Lift effect */
-    box-shadow: 0 8px 16px rgba(0,0,0,0.2); /* Add shadow */
-    cursor: pointer; /* Change cursor to pointer */
-}
+    /*box-shadow: 0 8px 16px rgba(0,0,0,0.2); /* Add shadow */
+    /*cursor: pointer; } */
 
 /* Section Containers */
 .best-sellers-container,
@@ -310,12 +309,12 @@ body {
   top: 0;          
   left: 0;  
 }      
-.product:hover,
+/* .product:hover,
 .fam-item:hover {
   transform: scale(1.05);
   box-shadow: 0 5px 10px rgb(64, 64, 64);
   cursor: pointer;
-}
+} */
 
 
 
@@ -394,9 +393,9 @@ product img,
   box-shadow: 0 4px 10px rgba(222, 222, 220, 0.2);
   transition: background 0.3s ease;
 }
-.review:hover {
+/* .review:hover {
   background: black;
-}
+} */
 
 /* Info Bar */
 .info-bar {

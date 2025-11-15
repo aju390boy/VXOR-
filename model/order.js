@@ -17,6 +17,12 @@ const productInOrderSchema = new mongoose.Schema({
       'RETURN REQUESTED',
       'RETURNED'
     ],default: 'PENDING', index: true},
+  status_history: [{ status: {type: String,
+      enum: [
+      'PENDING', 'CONFIRMED', 'PROCESSING', 'PACKED', 'SHIPPED', 'DELIVERED',
+      'CANCELLATION REQUESTED', 'CANCELLED', 'RETURN REQUESTED', 'RETURNED'],
+  required: true},
+  timestamp: {type: Date,default: Date.now,required: true}}],
   colorName: { type: String },
   size: { type: String },
   offer_applied: { type: Number, min: 0, default: 0 },

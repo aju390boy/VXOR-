@@ -44,21 +44,23 @@ exports.getSingleProduct = async (req, res) => {
     const productId = req.params.id;
     const wishlist = await Wishlist.findOne({ user_id: req.user._id }).lean();
     const wishlistProductIds = wishlist ? wishlist.products.map(p => p.product_id.toString()) : [];
-
-    // Fetch product and related data
     const product = await Product.findById(productId)
       .populate("category_id")
       .populate("brand_id")
       .lean();
-
-    if (!product || product.isDeleted) {
-      return res.status(404).send("Product not found or is deleted.");
+    if (!product) {
+      req.session.message={icon:'error',title:'Error',text:'product is not found',background: '#1e1e1e', color: '#ffffff',width:'450px'};
+      return res.redirect("/user/Product");
     }
-
-    // Compute best offer for main product
+     if (product.isDeleted) {
+      req.session.message={icon:'error',title:'Error',text:'product is tempererly deleted',background: '#1e1e1e', color: '#ffffff',width:'450px'};
+      return res.redirect("/user/Product");
+    }
+     if (!product.isListed) {
+      req.session.message={icon:'error',title:'Error',text:'product is not Listed',background: '#1e1e1e', color: '#ffffff',width:'450px'};
+      return res.redirect("/user/Product");
+    }
     const bestOffer = await findBestOffer(product._id, product.category_id?._id, product.brand_id?._id);
-
-    // Fetch and attach best offers to other products
     const allOtherProducts = await Product.find({
       _id: { $ne: productId },
       isListed: true,
@@ -74,11 +76,8 @@ exports.getSingleProduct = async (req, res) => {
         return { ...p, bestOffer: offer }; 
       })
     );
-
-    // Find similar products
     const similarProducts = findSimilarProducts(product, allOtherProductsWithOffers);
 
-    // Gather all Cloudinary images from all color variants
     let initialImages = [];
 if (product.colorVariants && product.colorVariants.length > 0) {
   product.colorVariants.forEach(variant => {
@@ -86,9 +85,8 @@ if (product.colorVariants && product.colorVariants.length > 0) {
       variant.images.forEach(img => {
         if (typeof img === 'string') {
           if (img.startsWith('http')) {
-            initialImages.push(img); // Cloudinary URL: push as is
+            initialImages.push(img); 
           } else {
-            // Only add prefix if it's a filename (legacy)
             initialImages.push(`/uploads/products/${img}`);
           }
         }
@@ -97,8 +95,6 @@ if (product.colorVariants && product.colorVariants.length > 0) {
   });
 }
 if (initialImages.length === 0) initialImages.push("/images/placeholder.png");
-
-
 
     console.log(`initial images : ${initialImages}`);
 

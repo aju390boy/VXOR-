@@ -37,15 +37,14 @@ const formatProductForHomepage = (product) => {
 
 exports.getHome = async (req, res) => {
     try {
-        const rawBestSellers = await Product.find({ bestSellers: true }).limit(5).lean();
-        const rawTopRated = await Product.find({ rating: { $gte: 4 } }).limit(5).lean();
-        const rawWhatsNew = await Product.find({}).sort({ createdAt: -1 }).limit(5).lean();
+        const rawBestSellers = await Product.find({ $and:[{bestSellers: true} ,{isDeleted:false},{isListed:true}]}).limit(5).lean();
+        const rawTopRated = await Product.find({ $and:[{rating: { $gte: 3 } },{isDeleted:false},{isListed:true}]}).limit(5).lean();
+        const rawWhatsNew = await Product.find({$and:[{isDeleted:false},{isListed:true}]}).sort({ createdAt: -1 }).limit(5).lean();
         const bestSellers = rawBestSellers.map(formatProductForHomepage);
         const topRated = rawTopRated.map(formatProductForHomepage);
         const whatsNew = rawWhatsNew.map(formatProductForHomepage);
         const message = req.session.message;
         delete req.session.message;
-        whatsNew.forEach((item)=>console.log(item));
         return res.render('user/home', {
             bestSellers,
             topRated,
@@ -54,7 +53,6 @@ exports.getHome = async (req, res) => {
             message,
             user:req.user
         });
-
     } catch (error) {
         console.error("Error fetching home page data:", error);
         res.status(500).send("Error loading home page.");

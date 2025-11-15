@@ -24,7 +24,7 @@ exports.getAddProductPage = async (req, res) => {
 // POST /admin/addproducts
 exports.addProduct = async (req, res) => {
   try {
-   const imageUrl = req.files.map(file => file.path);
+  //  const imageUrl = req.files.map(file => file.path);
     const { title, description, brand_id, warranty, category_id, isListed } =
       req.body;
     const rawColorVariants = req.body.colorVariants;
@@ -151,7 +151,7 @@ exports.addProduct = async (req, res) => {
       const variantColorName = variantData.colorName;
       const variantImages = req.files
     .filter(file => file.fieldname === `colorVariants[${i}][images]`)
-    .map(file => file.path);  // use 'path' (Cloudinary URL) instead of filename
+    .map(file => file.path);  
       const sizesAndStock = [];
       const rawSizeVariants = variantData.variants;
       const parsedSizeVariants = Object.values(rawSizeVariants || {});
@@ -176,7 +176,7 @@ exports.addProduct = async (req, res) => {
       brand_id,
       warranty: warranty ? parseInt(warranty, 10) : undefined,
       category_id,
-      isListed: isListed === "true",
+      
       colorVariants,
     });
     await product.save();

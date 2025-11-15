@@ -49,6 +49,7 @@ exports.unblockCustomer = async (req, res) => {
 };
 
 exports.getCustomersAjax = async (req, res) => {
+    console.log('hitted.....................................')
     try {
         const search = req.query.search || '';
         const page = parseInt(req.query.page) || 1;
