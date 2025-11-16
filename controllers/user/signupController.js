@@ -70,20 +70,45 @@ exports.signupadd = async (req, res) => {
       });
       await user.save();
     }
-    const newReferralCode = await createUniqueReferralCode(user._id);
-    const newReferral = new Referral({
-      code: newReferralCode,
-      referrer_user_id: user._id,
-    });
-    await newReferral.save();
-    if (inputReferralCode) {
-      const existingReferral = await Referral.findOne({ code: inputReferralCode });
-      if (existingReferral && !existingReferral.referred_user_id) {
-        existingReferral.referred_user_id = user._id;
-        await existingReferral.save();
-      }
-    }
+  ////////Referral offer /////////
+let newReferral = await Referral.findOne({ referrer_user_id: user._id });
+if (!newReferral) {
+  const newReferralCode = await createUniqueReferralCode(user._id);
+  newReferral = new Referral({
+    code: newReferralCode,
+    referrer_user_id: user._id,
+    referred_users: [],  
+    reward_given: false,
+    reward_amount: 0,
+    status: 'PENDING'
+  });
+  await newReferral.save();
+}
 
+if (inputReferralCode) {
+  const existingReferral = await Referral.findOne({ code: inputReferralCode.trim() });
+  if (!existingReferral) {
+    console.warn(`Invalid referral code attempted: ${inputReferralCode.trim()}`);
+  } else {
+    const alreadyReferred = existingReferral.referred_users.some(
+      u => u.user_id.toString() === user._id.toString()
+    );
+    if (!alreadyReferred) {
+      existingReferral.referred_users.push({
+        user_id: user._id,
+        reward_given: false,
+        reward_amount: 0,
+        status: 'PENDING',
+        usedAt: null
+      });
+      await existingReferral.save();
+    } else {
+      console.warn(`User ${user._id} already referred by code ${inputReferralCode.trim()}`);
+    }
+  }
+}
+
+////////////////Referral offer end/////////////////////
     await Otp.deleteMany({ email: email });
     const newOtpRecord = new Otp({
       email: email,

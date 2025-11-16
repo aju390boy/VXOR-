@@ -4,6 +4,7 @@ const transactionSchema = new mongoose.Schema({
     amount: {type: Number,required: true},
     type: {type: String,enum: ['credit', 'debit'], required: true},
     description: {type: String,required: true },
+    fullName: { type: String },
     orderId: { type: String }},
      {timestamps: true});
 const walletSchema = new mongoose.Schema({

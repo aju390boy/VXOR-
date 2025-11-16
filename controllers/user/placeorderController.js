@@ -113,7 +113,7 @@ exports.placeOrder = async (req, res) => {
             tax:tax
         });
         await newOrder.save();
-        await rewardReferralUsers(userId);
+       await rewardReferralUsers(userId, newOrder._id);
         if (paymentMethod === 'WALLET') {
             const wallet = await Wallet.findOne({ user_id: userId });
             const latestTransaction = wallet.transactions[wallet.transactions.length - 1];
@@ -160,6 +160,15 @@ exports.createPaymentOrder = async (req, res) => {
         const productsToOrder = [];
         for (const item of cart.items) {
            const product = item.productId;
+            if (!product) {
+                return res.status(400).json({ message: "One or more products in your cart are not available." });
+            }
+            if(product.isDeleted){
+                 return res.status(400).json({ message: "One or more products tempererly deleted" });
+            }
+            if(!product.isListed){
+                 return res.status(400).json({ message: "One or more products Not Listed" });
+            }
            const sizeVariant = product.colorVariants.find(c => c.colorName === item.colorName)?.variants.find(s => s.size === item.size);
            if (!sizeVariant || sizeVariant.stock < item.quantity) throw new Error('An item in your cart is unavailable.');
            const originalPrice = sizeVariant.price;
@@ -278,7 +287,7 @@ exports.varifyPayment = async (req, res) => {
             { _id: dbOrderId }, 
             { $set: { payment_status: 'COMPLETED' },'products.$[].status':'CONFIRMED'}
         );
-        await rewardReferralUsers(userId);
+       await rewardReferralUsers(userId, dbOrderId);
         if (req.session.coupon) {
             await Coupon.updateOne({ code: req.session.coupon.code }, { $push: { usedBy: userId } });
         }

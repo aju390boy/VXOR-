@@ -84,7 +84,7 @@
     <% } else { %>
         <div class="text-center py-8">
              <p class="text-gray-400 mb-4">No default address found. Please add one.</p>
-             <a href="/user/profile" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-lg transition-colors">Add New Address</a>
+             <a href="/user/profile?section=address" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-lg transition-colors">Add New Address</a>
         </div>
     <% } %>
 
@@ -427,7 +427,7 @@ function openModal(modalId) {
     //////////////////////////////////////////////////////////////////////////////
 
 
-    const toastData = <%- JSON.stringify(typeof toastMessage !== 'undefined' ? toastMessage : {}) %>;
+const toastData = <%- JSON.stringify(typeof toastMessage !== 'undefined' ? toastMessage : {}) %>;
 document.addEventListener('DOMContentLoaded', () => {
    
     const toastContainer = document.getElementById('toast-container');
@@ -452,14 +452,11 @@ document.addEventListener('DOMContentLoaded', () => {
 closeCouponModalBtn.addEventListener('click', () => {
     couponModal.classList.add('hidden');
 });
-
-// Add event listener for all "Apply" buttons inside the modal
 document.querySelectorAll('.apply-coupon-from-modal-btn').forEach(button => {
     button.addEventListener('click', () => {
         const code = button.dataset.code;
-        couponCodeInput.value = code; // Put the code in the input box
-        couponModal.classList.add('hidden'); // Close the modal
-        // You can optionally trigger the main "Apply" button's click event here
+        couponCodeInput.value = code; 
+        couponModal.classList.add('hidden');
         document.getElementById('applyCouponBtn').click(); 
     });
 });
@@ -520,7 +517,7 @@ const addressId = address._id;
 
     // --- LOGIC FOR DIFFERENT PAYMENT METHODS ---
     try {
-        // For COD and Wallet, we place the order directly
+        //  COD and Wallet //
         if (paymentMethod === 'COD' || paymentMethod === 'WALLET') {
             const response = await fetch('/user/placeorder/place-order', {
                 method: 'POST',
@@ -544,7 +541,12 @@ const addressId = address._id;
                 body: JSON.stringify({ addressId, paymentMethod })
             });
             const data = await createOrderResponse.json();
-            if (!createOrderResponse.ok) throw new Error(data.message);
+            if (!createOrderResponse.ok) {
+                 showToast('error', data.message || 'Could not create payment order.');
+                 placeOrderBtn.disabled = false;
+                 placeOrderBtn.innerText = 'Place Order';
+             return;  
+            }
             const razorpayOrder = data.order;
             const dbOrderId = data.dbOrderId; 
             const customId = data.customId;
@@ -592,29 +594,25 @@ const addressId = address._id;
         await fetch('/user/payment/order-failed', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ dbOrderId: dbOrderId ,customId:customId}) // Pass the database order ID
+            body: JSON.stringify({ dbOrderId: dbOrderId ,customId:customId}) 
         });
     } catch (error) {
         console.error('Could not notify server of payment failure:', error);
     }
-    
-    // Now redirect to the failure page
     window.location.href = `/user/payment/failure?orderId=${dbOrderId}&customId=${customId}`;
             });
-
-            rzp1.open(); // Open the modal
+            rzp1.open(); 
         }
-
     } catch (error) {
         console.error('An error occurred during place order:', error);
         showToast('error', 'An unexpected error occurred. Please try again.');
     } finally {
-        // Re-enable the button if something goes wrong with Razorpay modal opening
-        if (!placeOrderBtn.disabled) { // Check if it wasn't already re-enabled
+        if (!placeOrderBtn.disabled) { 
             placeOrderBtn.disabled = false;
             placeOrderBtn.innerText = 'Place Order';
         }
     }
+    ////////////payment end both wallet , cod , online/////////////////
 }
     if (placeOrderBtn) {
     placeOrderBtn.addEventListener('click', handlePlaceOrder);
@@ -654,7 +652,7 @@ const addressId = address._id;
                 } else {
                     couponDiscountRow.classList.add('hidden');
                     couponDiscountValue.innerText = '';
-                    grandTotalValue.innerText = `₹${data.newGrandTotal}`; // Revert to the total without coupon
+                    grandTotalValue.innerText = `₹${data.newGrandTotal}`;
                     showToast('error', data.message);
                 }
             } catch (error) {
@@ -671,7 +669,7 @@ const addressId = address._id;
             if (data.success) {
                 couponDiscountRow.classList.add('hidden');
                 couponDiscountValue.innerText = '';
-                couponCodeInput.value = ''; // Clear the input
+                couponCodeInput.value = '';
                 grandTotalValue.innerText = `₹${data.newGrandTotal}`;
                 showToast('success', data.message);
             } else {

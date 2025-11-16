@@ -4,11 +4,7 @@ async function referralCodeMiddleware(req, res, next) {
   try {
     if (req.user && req.user._id) {
       const referral = await Referral.findOne({ referrer_user_id: req.user._id });
-      if (referral) {
-        res.locals.referralCode = referral.code;
-      } else {
-        res.locals.referralCode = null;
-      }
+      res.locals.referralCode = referral && referral.code ? referral.code : null;
     } else {
       res.locals.referralCode = null;
     }
