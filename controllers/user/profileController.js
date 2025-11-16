@@ -703,7 +703,6 @@ exports.addAddress = async (req, res) => {
       .json({ message: "Failed to add address. Please try again." });
   }
 };
-
 ///edit address///
 exports.editAddress = async (req, res) => {
   try {

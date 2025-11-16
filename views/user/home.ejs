@@ -142,7 +142,7 @@
 
  
 
-<script>
+
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
@@ -151,10 +151,14 @@
       icon: '<%= message.icon || "info" %>',
       title: '<%= message.title || "Notice" %>',
       text: '<%= message.text || "" %>'
-    });
+    }); 
   <% } %>
 </script>
+<script>
+  history.pushState(null, null, location.href);
+  window.onpopstate = function () {
+    location.replace("/user/home");
+  };
 </script>
-  
 
 

@@ -46,6 +46,14 @@ exports.googleLoginSuccess = (req, res) => {
       _id: user._id,
       email: user.email,
     };
+    req.session.message = {
+        icon: 'success',
+        title: 'Login Successful',
+        text: 'Welcome back!',
+        background: '#1e1e1e',
+        color: '#ffffff',
+        width: '450px'
+      };
      res.redirect('/user/home');
 };
 
