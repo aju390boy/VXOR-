@@ -6,20 +6,21 @@ const Category = require('../../model/category.js')
 
 const formatProductForHomepage = (product) => {
     let displayPrice = null;
-    let displayImageUrl = '/uploads/products/placeholder.png'; 
-
+    let displayImageUrl = '/uploads/products/placeholder.png';
     if (product.colorVariants && product.colorVariants.length > 0) {
+        const firstVariant = product.colorVariants[0];
+        if (firstVariant.images && firstVariant.images.length > 0) {
+            const firstImage = firstVariant.images[0];
+            displayImageUrl = firstImage.startsWith('http')
+                ? firstImage
+                : `/uploads/products/${firstImage}`;
+        }
         let minPrice = Infinity;
         product.colorVariants.forEach(colorVariant => {
-            if (colorVariant.images && colorVariant.images.length > 0) {
-                let firstImage = colorVariant.images[0];
-                displayImageUrl = firstImage.startsWith('http')
-                ?firstImage : `/uploads/products/${firstImage}`
-            }
             if (colorVariant.variants && colorVariant.variants.length > 0) {
                 colorVariant.variants.forEach(sizeVariant => {
-                    if (sizeVariant.price !== undefined && typeof sizeVariant.price === 'number' && sizeVariant.price < minPrice) {
-                        minPrice = sizeVariant.price;
+                    if (typeof sizeVariant.price === 'number') {
+                        minPrice = Math.min(minPrice, sizeVariant.price);
                     }
                 });
             }

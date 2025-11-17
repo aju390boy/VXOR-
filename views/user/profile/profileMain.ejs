@@ -499,6 +499,10 @@ else if (editProfileModal && e.target === editProfileModal) {
             const form = e.target;
             
             if (form.id === 'profile-update-form') {
+                 clearErrorMessages(form);
+    if (!validateProfileForm(form)) {
+        return; // Stop submission and show client-side errors
+    }
                 const formData = new FormData(form);
                 try {
                     const response = await fetch('/user/profile/update', { method: 'POST', body: formData });
@@ -609,9 +613,12 @@ else if (editProfileModal && e.target === editProfileModal) {
                         setTimeout(() => loadSection('profile'), 1500);
                     }
                 } catch (error) { console.error('Error submitting profile update:', error); Swal.fire({ icon: 'error', title: 'Network Error!', text: 'Could not connect to the server.', width:'400px', customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' } }); }
-            
+            //////////////////////////////addresss logic////////////////////////
             } else if (form.id === 'change-password-form' || form.id === 'add-address-form' || form.id === 'edit-address-form') {
                 clearErrorMessages(form);
+                if (!validateAddressForm(form)) {
+                      return; // Stop submission and show client-side errors
+                     }
                 const isEditAddress = form.id === 'edit-address-form';
                 const addressId = isEditAddress ? form.querySelector('#editAddressId').value : null;
                 const urlMap = {
@@ -836,6 +843,96 @@ function changePage(page, section) {
     .catch(err => console.error(`Error loading ${section} page:`, err));
 }
     });
+
+
+    ///////////////Profile validation//////////////////
+    function validateProfileForm(form) {
+    let isValid = true;
+    const firstname = form.querySelector('[name="firstname"]');
+    const lastname = form.querySelector('[name="lastname"]');
+    const email = form.querySelector('[name="email"]');
+    const mobile = form.querySelector('[name="mobile"]');
+    function showError(input, message) {
+        if (!input) return;
+        input.classList.add('border-red-500');
+        let errorMsg = form.querySelector(`#${input.name}Error`);
+        if (!errorMsg) {
+            errorMsg = document.createElement('div');
+            errorMsg.className = 'error-message text-red-500 text-xs mt-1';
+            errorMsg.id = `${input.name}Error`;
+            input.parentNode.appendChild(errorMsg);
+        }
+        errorMsg.textContent = message;
+        isValid = false;
+    }
+    clearErrorMessages(form);
+    if (firstname && (!firstname.value.trim() || !/^[A-Za-z\s\-\.]+$/.test(firstname.value.trim()))) {
+        showError(firstname, "First name must contain only alphabets, spaces, hyphens");
+    }
+    if (lastname && (!lastname.value.trim() || !/^[A-Za-z\s\-\.]+$/.test(lastname.value.trim()))) {
+        showError(lastname, "Last name must contain only alphabets, spaces, hyphens");
+    }
+    if (email && (!email.value.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim()))) {
+        showError(email, "Please enter a valid email address.");
+    }
+    if (mobile && !/^[6-9]\d{9}$/.test(mobile.value)) {
+        showError(mobile, "Enter a valid 10-digit mobile number");
+    }
+    return isValid;
+}
+    /////////////Address validation//////////////
+    function validateAddressForm(form) {
+    let isValid = true;
+    const name = form.querySelector('[name="name"]');
+    const mobile = form.querySelector('[name="mobile"]');
+    const address1 = form.querySelector('[name="address1"]');
+    const address2 = form.querySelector('[name="address2"]');
+    const city = form.querySelector('[name="city"]');
+    const state = form.querySelector('[name="state"]');
+    const pincode = form.querySelector('[name="pincode"]');
+    const country = form.querySelector('[name="country"]');
+    function showError(input, message) {
+        input.classList.add('border-red-500');
+        let errorMsg = form.querySelector(`#${input.name}Error`);
+        if (!errorMsg) {
+            errorMsg = document.createElement('div');
+            errorMsg.className = 'error-message text-red-500 text-xs mt-1';
+            errorMsg.id = `${input.name}Error`;
+            input.parentNode.appendChild(errorMsg);
+        }
+        errorMsg.textContent = message;
+        isValid = false;
+    }
+    clearErrorMessages(form);
+    const alphaRegex = /^[A-Za-z\s\-\.]+$/;
+    if (!name.value.trim() || !alphaRegex.test(name.value.trim())) {
+        showError(name, "Name must contain only alphabets");
+    }
+    if (!address1.value.trim() || !address1.value.trim()) {
+        showError(address1, "Address line 1 is Empty");
+    }
+    if (address2 && address2.value && !address2.value.trim()) {
+        showError(address2, "Address line 2 is Empty");
+    }
+    if (!city.value.trim() || !alphaRegex.test(city.value.trim())) {
+        showError(city, "City must contain only alphabets, spaces, hyphens");
+    }
+    if (!state.value.trim() || !alphaRegex.test(state.value.trim())) {
+        showError(state, "State must contain only alphabets, spaces, hyphens");
+    }
+    if (!country.value.trim() || !alphaRegex.test(country.value.trim())) {
+        showError(country, "Country must contain only alphabets, spaces, hyphens");
+    }
+    const mobileRegex = /^[6-9]\d{9}$/;
+    if (!mobile.value.match(mobileRegex)) {
+        showError(mobile, "Enter a valid 10-digit mobile number.");
+    }
+    const pincodeRegex = /^[1-9]{1}[0-9]{2}\s{0,1}[0-9]{3}$/;
+    if (!pincode.value.match(pincodeRegex)) {
+        showError(pincode, "Enter a valid 6-digit Indian pincode (e.g., 110001 or 110 001).");
+    }
+    return isValid;
+}
 </script>
 
 <style>

@@ -9,13 +9,16 @@ const {findBestOffer} = require('../../utils/offerHelper.js');
 
 const formatProductForListing = (product, bestOffer = null) => {
     let displayImageUrl = "/uploads/products/placeholder.png";
+    if (product.colorVariants && product.colorVariants.length > 0) {
+        const firstVariant = product.colorVariants[0];
+        if (firstVariant.images && firstVariant.images.length > 0) {
+            const firstImage = firstVariant.images[0];
+            displayImageUrl = firstImage.startsWith('http') 
+                ? firstImage 
+                : `/uploads/products/${firstImage}`;
+        }
+    }
     let minPrice = product.min_price || product.computed_min_price || 0;
-    product?.colorVariants.forEach((colorvariant)=>{
-      if(colorvariant.images && colorvariant.images.length > 0){
-        let firstImage = colorvariant.images[0];
-        displayImageUrl=firstImage.startsWith('http')?firstImage : `/uploads/products/${firstImage}`;
-      }
-    })
     let discountedPrice = null;
     if (bestOffer && minPrice > 0) {
         discountedPrice = minPrice * (1 - bestOffer.discountPercentage / 100);
@@ -28,6 +31,7 @@ const formatProductForListing = (product, bestOffer = null) => {
         bestOffer: bestOffer
     };
 };
+
 
 exports.getAllProducts = async (req, res) => {
   try {

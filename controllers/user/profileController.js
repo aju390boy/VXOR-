@@ -649,7 +649,6 @@ exports.addAddress = async (req, res) => {
     const city = req.body.city ? req.body.city.trim() : "";
     const state = req.body.state ? req.body.state.trim() : "";
     const pincode = req.body.pincode ? req.body.pincode.trim() : "";
-    const country = req.body.country ? req.body.country.trim() : "India";
     const validationErrors = [];
     if (!name) {
       validationErrors.push("Name is required.");
@@ -686,7 +685,6 @@ exports.addAddress = async (req, res) => {
       city,
       state,
       pincode,
-      country,
       isDefault
     });
     await newAddress.save();

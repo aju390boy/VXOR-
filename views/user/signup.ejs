@@ -1,16 +1,16 @@
-<main  >
-    <section class="signup-container ">
+<main>
+    <section class="signup-container">
         <h2>SIGN UP</h2>
         <p>Please fill in the information below.</p>
 
         <form id="signupForm" action="/signup" method="POST">
-            <input type="text" name="firstname" placeholder="First name" required>
-            <input type="text" name="lastname" placeholder="Last name" required>
-            <input type="text" name="mobile" placeholder="Mobile" required>
-            <input type="email" name="email" placeholder="E-mail" required>
-            <input type="password" name="password" placeholder="Password" required>
-            <input type="password" name="confirmPassword" placeholder="Confirm Password" required>
-             <input type="text" name="referralCode" placeholder="Referral Code (optional)">
+            <input type="text" name="firstname" placeholder="First name" required autocomplete="given-name">
+            <input type="text" name="lastname" placeholder="Last name" required autocomplete="family-name">
+            <input type="text" name="mobile" placeholder="Mobile" required autocomplete="tel">
+            <input type="email" name="email" placeholder="E-mail" required autocomplete="username">
+            <input type="password" name="password" placeholder="Password" required autocomplete="new-password">
+            <input type="password" name="confirmPassword" placeholder="Confirm Password" required autocomplete="new-password">
+            <input type="text" name="referralCode" placeholder="Referral Code (optional)">
             <button type="submit">CREATE ACCOUNT</button>
         </form>
 
@@ -18,11 +18,13 @@
     </section>
 </main>
 
+
+
 <script type="module">
-    import throttle from '/js/throttle.js'
+    import throttle from '/js/throttle.js';
 
     const signupForm = document.getElementById('signupForm');
-   const handleSignupSubmit = async (event) => {
+    const handleSignupSubmit = async (event) => {
         event.preventDefault();
         const formData = new FormData(signupForm);
         const data = Object.fromEntries(formData.entries());
@@ -63,7 +65,7 @@
                 body: JSON.stringify(data)
             });
             const result = await response.json();
-             if (result.success) {
+            if (result.success) {
                 Swal.fire({
                     icon: 'success',
                     title: 'Success!',
@@ -79,7 +81,6 @@
                     if (result.redirectTo) {
                         window.location.href = result.redirectTo;
                     } else {
-                        
                         window.location.href = '/login';
                     }
                 });
@@ -110,9 +111,55 @@
         }
     };
 
-     const throttledSignupHandler = throttle(handleSignupSubmit, 5000);
-     signupForm.addEventListener('submit', throttledSignupHandler);
+    const throttledSignupHandler = throttle(handleSignupSubmit, 5000);
+    signupForm.addEventListener('submit', throttledSignupHandler);
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const fields = {
+            firstname: { element: document.querySelector('input[name="firstname"]'), regex: /^[A-Za-z\s\-\.]+$/ },
+            lastname: { element: document.querySelector('input[name="lastname"]'), regex: /^[A-Za-z\s\-\.]+$/ },
+            mobile: { element: document.querySelector('input[name="mobile"]'), regex: /^\d{10}$/ },
+            email: { element: document.querySelector('input[name="email"]'), regex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ },
+            password: { element: document.querySelector('input[name="password"]'), regex: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+}{"':;?/>.<,])(.{8,})$/ },
+            confirmPassword: { element: document.querySelector('input[name="confirmPassword"]') }
+        };
+
+        function validateField(field, value) {
+            if (field.regex) {
+                return field.regex.test(value);
+            }
+            return true;
+        }
+
+        function updateFieldState(field, isValid) {
+            field.element.classList.remove('valid', 'invalid');
+            if (isValid) {
+                field.element.classList.add('valid');
+            } else {
+                field.element.classList.add('invalid');
+            }
+        }
+
+        Object.values(fields).forEach(field => {
+            if (field.element) {
+                field.element.addEventListener('input', () => {
+                    const value = field.element.value.trim();
+                    let isValid = validateField(field, value);
+
+                    if (field.element.name === 'confirmPassword') {
+                        const password = fields.password.element.value;
+                        if (value !== password) {
+                            isValid = false;
+                        }
+                    }
+
+                    updateFieldState(field, isValid);
+                });
+            }
+        });
+    });
 </script>
+
 <style>
    
     .swal-custom-popup {
@@ -154,5 +201,14 @@
     .swal2-container.swal2-backdrop-show {
         background: rgba(0,0,0,0.7) !important;
     }
+ input.valid {
+    border: 2px solid #22c55e;
+    color: white;
+}
+
+input.invalid {
+    border: 2px solid #ef4444;
+    color: white;
+}
 
 </style>

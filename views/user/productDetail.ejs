@@ -17,6 +17,7 @@
         </div>
     </div>
 </div>
+<!-- zoom -->
    <div class="detail-image">
    <img id="mainImage" src="<%= product.images[0] %>" alt="<%= product.title %>" class="zoomable-image" />
 
@@ -27,6 +28,7 @@
 </div>
 
 </div>
+zoom e
 
 <!-- ////////detail info /////////// -->
     <div class="detail-info">
@@ -178,16 +180,17 @@
     <% similarProducts.slice(0, 4).forEach(similarProduct => { %>
         <a href="/user/product/<%= similarProduct._id %>" class="product-card">
             
-            <% if (similarProduct.colorVariants && similarProduct.colorVariants.length > 0 && similarProduct.colorVariants[0].images && similarProduct.colorVariants[0].images.length > 0) { %>
-                <img class="product-card-image" 
-                     src="/uploads/products/<%= similarProduct.colorVariants[0].images[0] %>" 
-                     alt="<%= similarProduct.title %>">
-            <% } else { %>
-                <img class="product-card-image" 
-                     src="/images/placeholder.png" 
-                     alt="<%= similarProduct.title %>">
-            <% } %>
-
+           <% if (similarProduct.colorVariants && similarProduct.colorVariants.length > 0 && similarProduct.colorVariants[0].images && similarProduct.colorVariants[0].images.length > 0) { 
+       const firstImage = similarProduct.colorVariants[0].images[0];
+%>
+    <img class="product-card-image" 
+         src="<%= firstImage.startsWith('http') ? firstImage : '/uploads/products/' + firstImage %>" 
+         alt="<%= similarProduct.title %>">
+<% } else { %>
+    <img class="product-card-image" 
+         src="/images/placeholder.png" 
+         alt="<%= similarProduct.title %>">
+<% } %>
             <div class="product-card-info">
                 <h3 class="product-card-title"><%= similarProduct.title %></h3>
                 <!-- //////////////second updation///////// -->
@@ -275,11 +278,11 @@
                     if (index === 0) {
                         thumb.classList.add('active-thumb');
                     }
-                    thumb.src = `/uploads/products/${imgSrc}`;
+                   thumb.src = imgSrc;
                     thumb.alt = `Thumbnail ${index}`;
                     thumbnailWrapper.appendChild(thumb);
                 });
-                mainImage.src = `/uploads/products/${images[0]}`; 
+                mainImage.src = images[0];
                 attachThumbnailListeners();
             } else {
                 mainImage.src = '/images/placeholder.png'; 
