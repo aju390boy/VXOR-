@@ -1,4 +1,4 @@
-const Cart = require('../../model/cart.js')
+const Cart = require('../../model/cart.js');
 
 const getCartCount = async (req, res, next) => {
     res.locals.cartCount = 0;
@@ -12,5 +12,4 @@ const getCartCount = async (req, res, next) => {
     }
     next();
 };
-
 module.exports = { getCartCount };

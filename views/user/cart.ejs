@@ -203,8 +203,11 @@
     }
 
     const data = await response.json();
+    console.log(`data : ${data}`)
 
     if (data.success) {
+        
+        console.log('its successfull...........');
       const quantitySpan = document.getElementById(`quantity-${itemId}`);
       if (quantitySpan) {
         quantitySpan.textContent = data.updatedItem.quantity;

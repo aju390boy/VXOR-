@@ -226,7 +226,7 @@
                                 <% recentOrders.forEach(order => { %>
                                     <tr class="hover:bg-slate-50 transition-colors border-b border-slate-200">
                                         <td class="px-4 py-3 text-sm font-medium text-purple-600"><%= order.order_id %></td>
-                                        <td class="px-4 py-3 text-sm text-slate-600"><%= order.user_id.firstname %> <%= order.user_id.lastname %></td>
+                                        <td class="px-4 py-3 text-sm text-slate-600"><%= order.user_id?.firstname || 'Unknown' %>  <%= order.user_id?.lastname || '' %></td>
                                         <td class="px-4 py-3 text-sm font-medium text-slate-800">₹<%= order.total_amount.toFixed(2) %></td>
                                         <td class="px-4 py-3 text-sm">
                                             <% const status = order.products[0]?.status || 'UNKNOWN'; %>
