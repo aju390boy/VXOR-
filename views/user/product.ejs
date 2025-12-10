@@ -110,7 +110,7 @@
     </div>
   </div>
   <!-- ////////produts section/////// -->
-  <div class="w-4/5 p-3 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-5" id="productList">
+  <div class="w-4/5 p-3 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-5 " id="productList">
     <% if (products.length === 0) { %>
       <p class="text-white text-center w-full col-span-full text-sm font-bold">No products match your filters </p>
     <% } else { %>
@@ -148,10 +148,13 @@
   </div>
   <!-- ///////products section end////// -->
 
-
 <script>
-  const serverMessage = <%-JSON.stringify(message)%>
+  const serverMessage = <%- JSON.stringify(message)%>;
   Swal.fire(serverMessage);
+
+</script>
+<script>
+  
   const serverQuery = <%- JSON.stringify(query) %>;
   document.addEventListener("DOMContentLoaded", () => {
     const productList = document.getElementById("productList");
@@ -292,49 +295,57 @@ let timeoutId;
 
   /////////////
    //////wishlist //////
-      function setupWishlistButtons() {
+     function setupWishlistButtons() {
   const wishlistButtons = document.querySelectorAll('.addToWishlistBtn');
-  
+
   wishlistButtons.forEach(button => {
-    button.addEventListener('click', async (event) => {
+    button.addEventListener('click', async () => {
       const productId = button.dataset.productId;
       const icon = button.querySelector('i');
-      button.disabled = true;
-      
+
+      // 🔒 Anti-spam lock
+      if (button.dataset.loading === "true") return;
+      button.dataset.loading = "true";
+
+      const isInWishlist = icon.classList.contains('text-red-500');
+
+      const url = isInWishlist
+        ? `/user/wishlist/remove/${productId}`
+        : `/user/wishlist/add/${productId}`;
+
+      const method = isInWishlist ? 'DELETE' : 'POST';
+
       try {
-        // Check if product is already in wishlist by icon class
-        const isInWishlist = icon.classList.contains('text-red-500');
-        const url = isInWishlist 
-          ? `/user/wishlist/remove/${productId}`  // call remove route
-          : `/user/wishlist/add/${productId}`;    // call add route
-        
-        const method = isInWishlist ? 'DELETE' : 'POST';
-        
         const response = await fetch(url, { method });
         const data = await response.json();
-        
+
         if (response.ok) {
           if (isInWishlist) {
-            // Removed from wishlist
+            // remove
             icon.classList.remove('text-red-500');
             icon.classList.add('text-gray-400', 'hover:text-red-500');
           } else {
-            // Added to wishlist
+            // add
             icon.classList.remove('text-gray-400', 'hover:text-red-500');
             icon.classList.add('text-red-500');
           }
-          showAlert('success', data.message || (isInWishlist ? 'Removed from wishlist' : 'Added to wishlist'));
+
+          showAlert('success', data.message);
         } else {
-          showAlert('error', data.message || 'Operation failed');
-          button.disabled = false;
+          showAlert('error', data.message || "Failed");
         }
-      } catch (error) {
-        showAlert('error', 'Network error occurred.');
-        button.disabled = false;
+
+      } catch (err) {
+        showAlert('error', 'Network error');
+      } finally {
+        // 🔓 Unlock after request is done
+        button.dataset.loading = "false";
       }
     });
   });
 }
+
+///////////wishlist end//////////////
 setupWishlistButtons();
 
   });

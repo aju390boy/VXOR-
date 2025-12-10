@@ -9,6 +9,7 @@
    <link rel="stylesheet" href="/styles/admin/adminnavbar.css">
   <link rel="stylesheet" href="/styles/admin/adminsidebar.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body {
@@ -345,41 +346,100 @@
     <script>
 document.addEventListener('DOMContentLoaded', () => {
   // Handle status dropdown change
-  document.querySelectorAll('.status-select').forEach(select => {
-    select.addEventListener('change', async (e) => {
-      const productId = e.target.dataset.productId;
-      const orderId = e.target.dataset.orderId;
-      const newStatus = e.target.value;
 
-      try {
-        const res = await fetch(`/admin/orders/${orderId}/products/${productId}/status`, {
-          method: 'PATCH',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({status: newStatus}),
+
+  ///////////////////status /////////////////
+ document.querySelectorAll('.status-select').forEach(select => {
+    const initialStatus = select.value; 
+    const finalStates = ['CANCELLED', 'RETURNED','CANCELLATION REQUESTED','RETURN REQUESTED'];
+        if (finalStates.includes(initialStatus)) {
+        select.disabled = true;
+        select.classList.add('status-final');
+        return; 
+    }
+        select.addEventListener('change', async (e) => {
+        const selectElement = e.target;
+        const productId = selectElement.dataset.productId;
+        const orderId = selectElement.dataset.orderId;
+        const newStatus = selectElement.value;
+        const result = await Swal.fire({
+            title: 'Are you sure?',
+            text: `You are about to change the status to "${newStatus}".`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, update it!'
         });
-        const data = await res.json();
-        if(!res.ok) throw new Error(data.message || 'Status update failed');
-        Swal.fire({
-          icon: 'success',
-          title: 'Success',
-          text: 'Status updated successfully',
-          timer: 1500,
-          showConfirmButton: false
-        });
-        // Optionally: reload or dynamically update UI here
-      } catch (err) {
-        Swal.fire('Error', err.message, 'error');
-      }
+        if (result.isConfirmed) {
+            try {
+                const res = await fetch(`/admin/orders/${orderId}/products/${productId}/status`, {
+                    method: 'PATCH',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({status: newStatus}),
+                });
+                const data = await res.json();
+                if(!res.ok) throw new Error(data.message || 'Status update failed');
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: 'Status updated successfully',
+                    timer: 1500,
+                    showConfirmButton: false,
+                toast: true,           
+                position: 'top-end',   
+                timer: 3000,           
+                showConfirmButton: false,
+                timerProgressBar: true 
+                });
+                if (finalStates.includes(newStatus)) {
+                    selectElement.disabled = true;
+                    selectElement.classList.add('status-final');
+                }
+            } catch (err) {
+                Swal.fire('Error', err.message, 'error');
+                selectElement.value = initialStatus;
+            }
+        } else {
+            selectElement.value = initialStatus;
+            Swal.fire({
+                icon: 'info',
+                title: 'Cancelled',
+                text: 'The status update was cancelled.',
+                timer: 1000,
+                showConfirmButton: false ,
+                toast: true,           
+                position: 'top-end',   
+                timer: 3000,           
+                showConfirmButton: false,
+                timerProgressBar: true 
+            });
+        }
     });
-  });
-
+});
+/////////////status end//////////////////
   // Handle expected delivery date change
   document.querySelectorAll('.expected-delivery').forEach(input => {
+    let initialDate = input.value;
+
     input.addEventListener('change', async (e) => {
+      const inputElement = e.target;
       const productId = e.target.dataset.productId;
       const orderId = e.target.dataset.orderId;
       const newDate = e.target.value;
 
+
+      const result = await Swal.fire({
+            title: 'Confirm Date Change?',
+            text: `You are about to set the expected delivery date to: ${newDate}.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, update date!'
+        });
+
+        if(result.isConfirmed){
       try {
         const res = await fetch(`/admin/orders/${orderId}/products/${productId}/expected-delivery`, {
           method: 'PATCH',
@@ -388,16 +448,38 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         const data = await res.json();
         if(!res.ok) throw new Error(data.message || 'Update failed');
+        initialDate = newDate;
         Swal.fire({
           icon: 'success',
           title: 'Success',
           text: 'Expected delivery updated',
           timer: 1500,
-          showConfirmButton: false
+          showConfirmButton: false,
+          toast: true,           
+  position: 'top-end', 
+  timer: 3000,           
+  showConfirmButton: false,
+  timerProgressBar: true 
         });
       } catch (err) {
         Swal.fire('Error', err.message, 'error');
+        inputElement.value = initialDate;
       }
+    }else{
+      inputElement.value = initialDate;
+      Swal.fire({
+                icon: 'info',
+                title: 'Cancelled',
+                text: 'The date update was cancelled.',
+                timer: 1000,
+                showConfirmButton: false,
+                toast: true,           
+                position: 'top-end',   
+                timer: 3000,           
+                showConfirmButton: false,
+                timerProgressBar: true 
+            });
+    }
     });
   });
 
@@ -450,7 +532,13 @@ document.addEventListener('DOMContentLoaded', () => {
           title: 'Success',
           text: data.message,
           timer: 1500,
-          showConfirmButton: false
+          showConfirmButton: false,
+                toast: true,           
+                position: 'top-end',   
+                timer: 3000,           
+                showConfirmButton: false,
+                timerProgressBar: true 
+          
         });
         // Reload page or update UI dynamically here
         window.location.reload();

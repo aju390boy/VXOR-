@@ -35,7 +35,10 @@ exports.placeOrder = async (req, res) => {
         let totalAfterOffers = 0;
         const productsToOrder = [];
         for (const item of cart.items) {
-            const product = item.productId;
+           const product = await Product.findById(item.productId)
+           .populate('category_id')
+           .populate('brand_id')
+           .lean();
             if (!product) {
                 return res.status(400).json({ message: "One or more products in your cart are not available." });
             }
@@ -44,6 +47,12 @@ exports.placeOrder = async (req, res) => {
             }
             if(!product.isListed){
                  return res.status(400).json({ message: "One or more products Not Listed" });
+            }
+            if(!product.category_id || !product.category_id.isListed){
+                return res.status(400).json({message: 'Products Category is Didnt exists Or Not Listed.' });
+            }
+            if(!product?.brand_id || !product?.brand_id?.isListed){
+            res.status(400).json({message: 'Products Brand is Didnt exists Or Not Listed.' });
             }
             const colorVariant = product.colorVariants.find((cv) => cv.colorName === item.colorName);
             if (!colorVariant) {
@@ -64,6 +73,7 @@ exports.placeOrder = async (req, res) => {
             }
             originalSubtotal += originalPrice * item.quantity;
             totalAfterOffers += finalPrice * item.quantity;
+            console.log(`total after offer : ${totalAfterOffers}`)
             productsToOrder.push({
                 product_id: product._id,
                 quantity: item.quantity,
@@ -74,10 +84,13 @@ exports.placeOrder = async (req, res) => {
             });
         }
         let couponDiscount = req.session.coupon?.discount || 0;
-        console.log(`couupon : ${couponDiscount}`);
         let finalAmount = totalAfterOffers - couponDiscount;
         const tax = finalAmount > 0 ? finalAmount * TAX_RATE : 0;
         finalAmount += tax;
+       if(finalAmount>50000){
+            return res.status(400).json({message:'cannot place order above 5O Thousonds'});
+        }
+        console.log(`final amount ${finalAmount}`)
         let paymentStatus;
         let productStatus;
         if (paymentMethod === 'COD') {
@@ -159,7 +172,10 @@ exports.createPaymentOrder = async (req, res) => {
          let originalSubtotal = 0;
         const productsToOrder = [];
         for (const item of cart.items) {
-           const product = item.productId;
+           const product = await Product.findById(item.productId)
+           .populate('category_id')
+           .populate('brand_id')
+           .lean();
             if (!product) {
                 return res.status(400).json({ message: "One or more products in your cart are not available." });
             }
@@ -168,6 +184,12 @@ exports.createPaymentOrder = async (req, res) => {
             }
             if(!product.isListed){
                  return res.status(400).json({ message: "One or more products Not Listed" });
+            }
+            if(!product.category_id || !product.category_id.isListed){
+                return res.status(400).json({message: 'Products Category is Didnt exists Or Not Listed.' });
+            }
+            if(!product?.brand_id || !product?.brand_id?.isListed){
+            res.status(400).json({message: 'Products Brand is Didnt exists Or Not Listed.' });
             }
            const sizeVariant = product.colorVariants.find(c => c.colorName === item.colorName)?.variants.find(s => s.size === item.size);
            if (!sizeVariant || sizeVariant.stock < item.quantity) throw new Error('An item in your cart is unavailable.');
@@ -192,7 +214,9 @@ exports.createPaymentOrder = async (req, res) => {
         let finalAmount = totalAfterOffers - couponDiscount;
         const tax = finalAmount > 0 ? finalAmount * 0.05 : 0;
         finalAmount += tax;
-
+        if(finalAmount>50000){
+            return res.status(400).json({message:'cannot place order above 5O Thousonds'});
+        }
 
         let orderDoc;
          if (existingOrder) {

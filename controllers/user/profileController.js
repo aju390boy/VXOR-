@@ -12,9 +12,14 @@ const mongoose = require("mongoose");
 const Order = require("../../model/order.js");
 const { log } = require("console");
 const Otp = require("../../model/otp.js");
+const Referral = require('../../model/referral.js');
 const { sendMail } = require("../../utils/otpMailer1.js");
 const crypto = require("crypto");
 const {findBestOffer} = require('../../utils/offerHelper.js');
+const {createUniqueReferralCode} = require('../../utils/referalHelper.js');
+
+
+
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -75,7 +80,6 @@ exports.getProfilePage = async (req, res) => {
 exports.getProfileSection = async (req, res) => {
   const { sectionName } = req.params;
   const user = req.user;
-  console.log(`user details : ${user}`)
   try {
     let data = { user: null };
     let templatePath = "";
@@ -124,37 +128,58 @@ exports.getProfileSection = async (req, res) => {
     .populate({
       path: 'products.product_id',
       model: 'Product',
-      populate: [{ path: 'category_id', select: 'name' }, { path: 'brand_id', select: 'name' }]
+      populate: [
+        { path: 'category_id', select: 'name isListed' },
+        { path: 'brand_id', select: 'name isListed' }
+      ]
     })
     .lean();
-
-  let filteredProducts = [];
+  const validProducts = [];
+  const productsToRemove = [];
   if (wishlist && wishlist.products.length > 0) {
-    filteredProducts = wishlist.products.filter(wishlistItem => {
-      const product = wishlistItem.product_id;
-      if (!product) return false;
-      return !cartProductIds.has(product._id.toString());
-    });
+    for (const item of wishlist.products) {
+      const product = item.product_id;
+      if (!product || product.isDeleted || !product.isListed) {
+        productsToRemove.push(item.product_id._id);
+        continue;
+      }
+      if (!product.category_id || !product.category_id.isListed) {
+        productsToRemove.push(item.product_id._id);
+        continue;
+      }
+      if (!product.brand_id || !product.brand_id.isListed) {
+        productsToRemove.push(item.product_id._id);
+        continue;
+      }
+      if (!cartProductIds.has(product._id.toString())) {
+        validProducts.push(item);
+      }
+    }
   }
-  const totalWishlistCount = filteredProducts.length;
-  const pagedProducts = filteredProducts.slice(skipWishlist, skipWishlist + limitWishlist);
+  if (productsToRemove.length > 0) {
+    await Wishlist.updateOne(
+      { user_id: user._id },
+      { $pull: { products: { product_id: { $in: productsToRemove } } } }
+    );
+  }
+  const totalWishlistCount = validProducts.length;
+  const pagedProducts = validProducts.slice(skipWishlist, skipWishlist + limitWishlist);
   const processedWishlistItems = await Promise.all(
     pagedProducts.map(async (item) => {
       const product = item.product_id;
-      let displayImageUrl="/uploads/products/placeholder.png";
-      if (product.isDeleted || !product.isListed) return null;
+      let displayImageUrl = "/uploads/products/placeholder.png";
       let totalStock = 0;
-          product.colorVariants.forEach(color => {
-          color.variants.forEach(size => {
+      product.colorVariants.forEach(color => {
+        color.variants.forEach(size => {
           totalStock += size.stock;
-       });
-     });
+        });
+      });
       const bestOffer = await findBestOffer(product._id, product.category_id?._id, product.brand_id?._id);
-      product?.colorVariants?.forEach((colorVariant)=>{
-       if(colorVariant.images && colorVariant.images.length>0){
-        let firstImage=colorVariant.images[0];
-        displayImageUrl=firstImage.startsWith('http')?firstImage : `/uploads/products/${firstImage}`;
-      }
+      product?.colorVariants?.forEach((colorVariant) => {
+        if (colorVariant.images && colorVariant.images.length > 0) {
+          let firstImage = colorVariant.images[0];
+          displayImageUrl = firstImage.startsWith('http') ? firstImage : `/uploads/products/${firstImage}`;
+        }
       });
       let discountedPrice = null;
       if (bestOffer && product.min_price > 0) {
@@ -162,7 +187,7 @@ exports.getProfileSection = async (req, res) => {
       }
       return {
         ...product,
-        totalStock:totalStock,
+        totalStock,
         bestOffer,
         display_image_url: displayImageUrl,
         discounted_price: discountedPrice
@@ -175,7 +200,6 @@ exports.getProfileSection = async (req, res) => {
     currentPage: pageWishlist,
     limit: limitWishlist,
   };
-
   templatePath = "user/profile/partials/_wishlist";
   break;
 
@@ -201,6 +225,49 @@ exports.getProfileSection = async (req, res) => {
   };
   templatePath = "user/profile/partials/_wallet";
   break;
+
+
+
+  case "referral":
+  // Find the referral document for current user
+  const referral = await Referral.findOne({ referrer_user_id: req.user._id }).populate('referred_users.user_id', 'firstname lastname email');
+  
+  let referralCode = null;
+  let totalReferralEarnings = 0;
+  let totalReferredUsers = 0;
+  let referredUsers = [];
+
+  if (referral) {
+    referralCode = referral.code;
+    
+    // Filter only rewarded referrals and calculate totals
+    const rewardedUsers = referral.referred_users.filter(user => user.reward_given === true && user.status === 'REWARDED');
+    
+    totalReferredUsers = rewardedUsers.length;
+    totalReferralEarnings = rewardedUsers.reduce((sum, user) => sum + (user.reward_amount || 100), 0);
+    
+    // Format recent referred users for display (last 5)
+    referredUsers = rewardedUsers.slice(0, 5).map(user => ({
+      name: user.user_id?.firstname || 'Anonymous User',
+      earnedAmount: user.reward_amount || 100,
+      dateLabel: user.usedAt ? new Date(user.usedAt).toLocaleDateString('en-IN', { 
+        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+      }) : 'Recent'
+    }));
+  }
+
+  data.referral = {
+    code: referralCode,
+    totalReferralEarnings,
+    totalReferredUsers,
+    referredUsers
+  };
+
+  templatePath = "user/profile/partials/_referral";
+  break;
+
+
+
       case "orders":
   const pageOrders = parseInt(req.query.page) || 1;
   const limitOrders = parseInt(req.query.limit) || 10;
@@ -284,14 +351,18 @@ exports.getProfileSection = async (req, res) => {
 };
 
 exports.updateProfile = async (req, res) => {
+  console.log('update profile hittedd....................')
   try {
     const userId = req.user._id;
+    console.log(`user id : ${userId}`)
     const user = await User.findById(userId);
+    console.log(`user : ${user}`)
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
     const { firstname, lastname, email, mobile, originalEmail, addressId } =
       req.body;
+      console.log(`firstname:${firstname},lastname:${lastname},email:${email},mobile:${originalEmail},addressid:${addressId}`)
     const errors = {};
     if (!firstname || firstname.trim() === "") {
       errors.firstname = "First name is required.";
@@ -300,7 +371,7 @@ exports.updateProfile = async (req, res) => {
     }
     if (!lastname || lastname.trim() === "") {
       errors.lastname = "Last name is required.";
-    } else if (lastname.trim().length < 2) {
+    } else if (lastname.trim().length < 0) {
       errors.lastname = "Last name must be at least 2 characters long.";
     }
 
@@ -317,7 +388,7 @@ exports.updateProfile = async (req, res) => {
     if (addressId && !mongoose.Types.ObjectId.isValid(addressId)) {
       errors.addressId = "Invalid address ID provided.";
     }
-
+console.log(`errors : ${Object.keys(errors)}`);
     if (Object.keys(errors).length > 0) {
       if (req.file) {
         const newImagePath = path.join(
@@ -649,6 +720,8 @@ exports.addAddress = async (req, res) => {
     const city = req.body.city ? req.body.city.trim() : "";
     const state = req.body.state ? req.body.state.trim() : "";
     const pincode = req.body.pincode ? req.body.pincode.trim() : "";
+
+    
     const validationErrors = [];
     if (!name) {
       validationErrors.push("Name is required.");
@@ -809,3 +882,26 @@ exports.removeAddress = async (req, res) => {
       .json({ message: "Failed to remove address. Please try again." });
   }
 };
+
+
+exports.generateReferralCode = async (req,res)=>{
+  try{
+  let newReferral = await Referral.findOne({ referrer_user_id: req.user._id });
+if (!newReferral) {
+  const newReferralCode = await createUniqueReferralCode(req.user._id);
+  newReferral = new Referral({
+    code: newReferralCode,
+    referrer_user_id: req.user._id,
+    referred_users: [],  
+    reward_given: false,
+    reward_amount: 0,
+    status: 'PENDING'
+  });
+  await newReferral.save();
+  res.json({success:true,code:newReferralCode});
+}
+  }catch(error){
+    console.error('Error generating referral code:', error);
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+}

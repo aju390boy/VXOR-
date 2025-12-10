@@ -75,7 +75,10 @@
         <div class="flex-1 flex flex-col overflow-hidden">
             <%- include('../partials/admin/adminnavbar') %>
             <main class="main-content-div flex-1 w-[85%] overflow-x-hidden overflow-y-auto bg-gray-100 p-4 md:p-8">
-               <div class="breadcrumb mb-4 text-gray-500">Admin > Orders</div>
+<div class="breadcrumb mb-4">
+    <a href="/admin/dashboard">Admin</a> > 
+    <a href="/admin/orders">Orders</a>
+</div>
                 <header class="mb-8">
                     <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-2">ORDERS MANAGEMENT</h1>
                     <p class="text-gray-700">View, manage, and track all customer orders.</p>

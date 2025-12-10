@@ -270,7 +270,10 @@
 <div class="admin-wrapper">
     <%- include('../partials/admin/adminsidebar', { current: 'brand' }) %> 
     <div class="admin-main" style="margin-left: 250px; margin-top: 85px;">
-        <div class="breadcrumb">Admin > Brand</div>
+<div class="breadcrumb">
+    <a href="/admin/dashboard">Admin</a> > 
+    <a href="/admin/brand">Brand</a>
+</div>
         <div class="bg-white p-6 rounded-lg shadow-md">
             <h2 class="text-2xl font-bold mb-4 text-gray-800">Existing Brands</h2>
             <table class="brand-table">

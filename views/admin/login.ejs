@@ -52,7 +52,12 @@
                         popup: 'swal-custom-popup',
                         title: 'swal-custom-title',
                         content: 'swal-custom-content',
-                        confirmButton: 'swal-custom-confirm-button'
+                        confirmButton: 'swal-custom-confirm-button',
+                toast: true,           
+                position: 'top-end',   
+                timer: 3000,           
+                showConfirmButton: false,
+                timerProgressBar: true 
                     }
                 });
             } else if (successMessage) {
@@ -65,7 +70,12 @@
                         popup: 'swal-custom-popup',
                         title: 'swal-custom-title',
                         content: 'swal-custom-content',
-                        confirmButton: 'swal-custom-confirm-button'
+                        confirmButton: 'swal-custom-confirm-button',
+                toast: true,           
+                position: 'top-end',   
+                timer: 3000,           
+                showConfirmButton: false,
+                timerProgressBar: true 
                     }
                 });
             } else if (queryError) {
@@ -78,7 +88,12 @@
                         popup: 'swal-custom-popup',
                         title: 'swal-custom-title',
                         content: 'swal-custom-content',
-                        confirmButton: 'swal-custom-confirm-button'
+                        confirmButton: 'swal-custom-confirm-button',
+                toast: true,           
+                position: 'top-end',   
+                timer: 3000,           
+                showConfirmButton: false,
+                timerProgressBar: true 
                     }
                 }).then(() => {
                     window.history.replaceState({}, document.title, window.location.pathname);
@@ -88,12 +103,16 @@
                     icon: 'success',
                     title: 'Success!',
                     text: decodeURIComponent(querySuccess),
-                    confirmButtonText: 'OK',
                     customClass: {
                         popup: 'swal-custom-popup',
                         title: 'swal-custom-title',
                         content: 'swal-custom-content',
-                        confirmButton: 'swal-custom-confirm-button'
+                        confirmButton: 'swal-custom-confirm-button',
+                toast: true,           
+                position: 'top-end',   
+                timer: 3000,           
+                showConfirmButton: false,
+                timerProgressBar: true 
                     }
                 }).then(() => {
                     window.history.replaceState({}, document.title, window.location.pathname);

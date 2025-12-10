@@ -38,11 +38,31 @@ exports.getCheckout = async (req, res) => {
 
         const cartItemsWithPrices = await Promise.all(cart.items.map(async (item) => {
             const product = item.productId;
+            const productItem = await Product.findById(item.productId)
+            .populate('category_id')
+            .populate('brand_id')
+            .lean();
             if (!product) return null;
+            if(!productItem.isListed){
+                req.session.message = { type: 'error', text: 'One or more products is Not Listed.' };
+            return res.redirect('/user/cart');
+            }
+            if(productItem.isDeleted){
+                req.session.message = { type: 'error', text: 'One or more products is Tempererly Deleted.' };
+            return res.redirect('/user/cart');
+            }
+            if(!productItem.category_id || !productItem.category_id.isListed){
+                req.session.message = { type: 'error', text: 'Products Category is Didnt exists Or Not Listed.' };
+            return res.redirect('/user/cart');
+            }
+            if(!productItem?.brand_id || !productItem?.brand_id?.isListed){
+                req.session.message = { type: 'error', text: 'Products Brand is Didnt exists Or Not Listed.' };
+            return res.redirect('/user/cart');
+            }
 
             const sizeVariant = product.colorVariants.find(c => c.colorName === item.colorName)?.variants.find(s => s.size === item.size);
             if (!sizeVariant || sizeVariant.stock < item.quantity) {
-                return { ...item, isAvailable: false, finalPrice: 0, originalPrice: 0 };
+                return { ...item, iisAvalable: false, finalPrice: 0, originalPrice: 0 };
             }
             
             const originalPrice = sizeVariant.price;
@@ -60,7 +80,7 @@ exports.getCheckout = async (req, res) => {
         }));
 
         const validCartItems = cartItemsWithPrices.filter(item => item !== null);
-        if (validCartItems.some(item => !item.isAvailable)) {
+        if (validCartItems.some(item => !item?.isAvailable)) {
             req.session.message = { type: 'error', text: 'Some items in your cart are out of stock. Please review your cart.' };
             return res.redirect('/user/cart');
         }

@@ -128,7 +128,7 @@ if (inputReferralCode) {
 
     const emailSubject = 'VXOR: Verify Your Account';
     const emailHtml = `<p>Dear ${firstname},</p>
-      <p>Your One-Time Password (OTP) for Nutrixo account verification is: <strong>${otpCode}</strong></p>
+      <p>Your One-Time Password (OTP) for VXOR account verification is: <strong>${otpCode}</strong></p>
       <p>This OTP is valid for 10 minutes. Do not share it with anyone.</p>
       <p>Thank you,<br>VXOR Team</p>`;
     await sendMail(email, emailSubject, emailHtml);

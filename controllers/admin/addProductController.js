@@ -125,6 +125,11 @@ exports.addProduct = async (req, res) => {
               } of color #${i + 1}.`
             );
           }
+           if (parseFloat(sizeVariant.price) >= 50000){
+             errors.push(
+              `Price must be less than 50 Thousond`
+            );
+          }
           if (
             isNaN(parseInt(sizeVariant.stock)) ||
             parseInt(sizeVariant.stock) < 0
@@ -346,6 +351,11 @@ if (colorVariants !== undefined) {
                   `Price must be a positive number for size #${j + 1} of color #${i + 1}.`
                 );
               }
+               if (parseFloat(sizeVariant.price) >= 100000){
+                errors.push(
+              `Price must be less than 1 Lakh Rupees`
+            );
+          }
             }
             // Validate stock only if provided
             if ('stock' in sizeVariant) {

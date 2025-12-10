@@ -17,7 +17,11 @@
     <%- include('../partials/admin/adminsidebar', { current: 'sales' }) %>
 
     <div class="flex-grow p-8" style="margin-left: 250px; margin-top: 85px;">
-        
+        <div class="breadcrumb mb-8">
+    <a href="/admin/dashboard">Admin</a> > 
+    <a href="/admin/sales">Sales</a>
+</div>
+
 
         <div class="bg-white p-6 rounded-lg shadow-md mb-6">
             <form action="/admin/sales" method="GET" class="flex flex-wrap items-end gap-4">

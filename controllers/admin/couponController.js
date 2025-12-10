@@ -47,7 +47,7 @@ exports.createCoupon = async (req, res) => {
     } else if (description.length < 5) {
       errors.push("Coupon description should be meaningful (at least 5 characters).");
     }
-    const validDiscountTypes = ["flat", "percentage"];
+    const validDiscountTypes = ["fixed_amount", "percentage"];
     if (!discountType || !validDiscountTypes.includes(discountType.toLowerCase())) {
       errors.push("Discount type must be either 'flat' or 'percentage'.");
     }

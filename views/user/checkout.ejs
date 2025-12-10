@@ -19,7 +19,7 @@
     </div>
     <!-- Breadcrumb -->
     <div class="px-6 py-4 text-gray-400 text-sm">
-        <a href="/" class="hover:text-white">Home</a> <span class="mx-2">›</span> Checkout
+        <a href="/user/home" class="hover:text-white">Home</a> <span class="mx-2">›</span> Checkout
     </div>
 <!-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// -->
      <div class="px-6 py-8 flex flex-col justify-between lg:flex-row gap-8">
@@ -58,29 +58,56 @@
                 EDIT
             </button>
         </div>
-
+         <!-- EDIT ADDRESS MODAL -->
         <div x-show="isEditing" style="display: none;">
-            <form id="edit-address-form" class="space-y-3 pl-4">
-                <input type="text" name="name" value="<%= address.name %>" class="w-full bg-gray-700 p-2 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500">
-                <input type="text" name="address1" value="<%= address.address1 %>" class="w-full bg-gray-700 p-2 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500">
-                <input type="text" name="address2" value="<%= address.address2 %>" class="w-full bg-gray-700 p-2 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500">
-                <div class="grid grid-cols-3 gap-2">
-                    <input type="text" name="city" value="<%= address.city %>" class="bg-gray-700 p-2 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500">
-                    <input type="text" name="state" value="<%= address.state %>" class="bg-gray-700 p-2 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500">
-                    <input type="text" name="pincode" value="<%= address.pincode %>" class="bg-gray-700 p-2 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500">
-                </div>
-                <input type="tel" name="mobile" value="<%= address.mobile %>" class="w-full bg-gray-700 p-2 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500">
-                
-                <div class="flex items-center gap-2 pt-2">
-                    <button type="submit" class="text-sm font-medium bg-blue-600 hover:bg-blue-700 rounded-2xl px-3 py-2 text-white transition-colors">
-                        Save Changes
-                    </button>
-                    <button @click="isEditing = false" type="button" class="text-sm font-medium bg-gradient-to-br from-gray-600 to-gray-900 hover:bg-gray-700 rounded-2xl px-3 py-4 ml-2 mt-6 transition-colors">
-                        Cancel
-                    </button>
-                </div>
-            </form>
+    <form id="edit-address-form" class="space-y-3 pl-4">
+         <label class="block text-sm font-medium text-gray-300">Full Name</label>
+        <input type="text" name="name" value="<%= address.name %>" class="w-full bg-gray-700 p-2 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500">
+        <span id="editNameError" class="text-xs text-red-500 error-message"></span>
+         <label class="block text-sm font-medium text-gray-300">Mobile</label>
+        <input type="tel" name="mobile" value="<%= address.mobile %>" class="w-full bg-gray-700 p-2 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500">
+        <span id="editMobileError" class="text-xs text-red-500 error-message"></span>
+        <label class="block text-sm font-medium text-gray-300">Address 1</label>
+        <input type="text" name="address1" value="<%= address.address1 %>" class="w-full bg-gray-700 p-2 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500">
+        <span id="editAddress1Error" class="text-xs text-red-500 error-message"></span>
+          <label class="block text-sm font-medium text-gray-300">Address 2</label>
+        <input type="text" name="address2" value="<%= address.address2 %>" class="w-full bg-gray-700 p-2 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500">
+        <span id="editAddress2Error" class="text-xs text-red-500 error-message"></span>
+
+        <div class="grid grid-cols-3 gap-2">
+            <div>
+                 <label class="block text-sm font-medium text-gray-300">Pincode</label>
+                <input type="text" name="pincode" value="<%= address.pincode %>" maxlength="6" class="bg-gray-700 p-2 w-full rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500">
+                <span id="editPincodeError" class="text-xs text-red-500 error-message"></span>
+            </div>
+            <div>
+                 <label class="block text-sm font-medium text-gray-300">City</label>
+                 <input type="text" name="city" value="<%= address.city %>" readonly class="bg-gray-600 cursor-not-allowed p-2 w-full rounded-md text-gray-200 focus:outline-none border border-gray-500">
+                 <span id="editCityError" class="text-xs text-red-500 error-message"></span>
+            </div>
+            <div>
+                 <label class="block text-sm font-medium text-gray-300">State</label>
+                <input type="text" name="state" value="<%= address.state %>" readonly class="bg-gray-600 cursor-not-allowed p-2 w-full rounded-md text-gray-200 focus:outline-none border border-gray-500">
+                <span id="editStateError" class="text-xs text-red-500 error-message"></span>
+            </div>
         </div>
+         <div>
+                 <label class="block text-sm font-medium text-gray-300">Country</label>
+                <input type="text" name="country" value="<%= address.country %>" readonly class="bg-gray-600 cursor-not-allowed p-2 w-full rounded-md text-gray-200 focus:outline-none border border-gray-500">
+                <span id="editCountryError" class="text-xs text-red-500 error-message"></span>
+            </div>
+         
+        <div class="flex items-center gap-2 pt-2">
+            <button type="submit" class="text-sm font-medium bg-blue-600 hover:bg-blue-700 rounded-2xl px-3 py-2 text-white transition-colors">
+                Save Changes
+            </button>
+            <button @click="isEditing = false" type="button" class="text-sm font-medium bg-gradient-to-br from-gray-600 to-gray-900 hover:bg-gray-700 rounded-2xl px-3 py-4 ml-2 mt-6 transition-colors">
+                Cancel
+            </button>
+        </div>
+    </form>
+</div>
+        <!-- END EDIT ADDRESS -->
     <% } else { %>
         <div class="text-center py-8">
              <p class="text-gray-400 mb-4">No default address found. Please add one.</p>
@@ -188,8 +215,8 @@
         </div>
 
         <% if (isOverLimit) { %>
-            <p class=" ml-16 text-xs font-thin text-red-600 ">
-                 COD not available for orders over Rs. <%= codLimit.toLocaleString('en-IN') %>. Your total is Rs. <%=totals.grandTotal %>.
+            <p class=" ml-16 text-xs font-bold text-red-600 ">
+                 COD not available for orders over Rs. <%= codLimit.toLocaleString('en-IN') %>%>.
             </p>
         <% } %>
     </div>
@@ -330,62 +357,57 @@
 <div id="addAddressModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-gray-900 bg-opacity-75 transition-opacity duration-300 ease-in-out">
     <div class="flex items-center justify-center min-h-screen p-4">
         <div class="relative bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-auto p-6 md:p-8 transform scale-95 opacity-0 transition-all duration-300 ease-in-out">
-            
             <button type="button" class="absolute top-4 right-4 text-gray-400 hover:text-gray-100 transition-colors duration-200" onclick="closeModal('addAddressModal')">
                 <i class="fa-solid fa-xmark fa-lg"></i>
             </button>
-            
             <h3 class="text-2xl font-bold text-white mb-6 border-b border-gray-700 pb-3">Add New Address</h3>
 
-            <form id="add-address-form" method="POST" action="/user/profile/address/add">
+            <form id="add-address-form">
                 <div class="space-y-4">
                     <div>
-                        <label for="name" class="block text-sm font-medium text-gray-300">Full Name</label>
-                        <input type="text" name="name" id="name" required class="mt-1 block w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
-                        <span id="nameError" class="text-sm text-red-500 error-message"></span>
+                        <label class="block text-sm font-medium text-gray-300">Full Name</label>
+                        <input type="text" name="name" class="mt-1 block w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:border-blue-500">
+                        <span id="nameError" class="text-xs text-red-500 error-message"></span>
                     </div>
-
                     <div>
-                        <label for="mobile" class="block text-sm font-medium text-gray-300">Mobile Number</label>
-                        <input type="tel" name="mobile" id="mobile" required class="mt-1 block w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
-                        <span id="mobileError" class="text-sm text-red-500 error-message"></span>
+                        <label class="block text-sm font-medium text-gray-300">Mobile Number</label>
+                        <input type="tel" name="mobile" class="mt-1 block w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:border-blue-500">
+                        <span id="mobileError" class="text-xs text-red-500 error-message"></span>
                     </div>
-
                     <div>
-                        <label for="address1" class="block text-sm font-medium text-gray-300">Address Line 1</label>
-                        <input type="text" name="address1" id="address1" required class="mt-1 block w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
-                        <span id="address1Error" class="text-sm text-red-500 error-message"></span>
+                        <label class="block text-sm font-medium text-gray-300">Pincode <span class="text-gray-500 text-xs">(Auto-fill available)</span></label>
+                        <input type="text" name="pincode" maxlength="6" class="mt-1 block w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:border-blue-500">
+                        <span id="pincodeError" class="text-xs text-red-500 error-message"></span>
                     </div>
-                    
                     <div>
-                        <label for="address2" class="block text-sm font-medium text-gray-300">Address Line 2 (Optional)</label>
-                        <input type="text" name="address2" id="address2" class="mt-1 block w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
-                        <span id="address2Error" class="text-sm text-red-500 error-message"></span>
+                        <label class="block text-sm font-medium text-gray-300">Address Line 1</label>
+                        <input type="text" name="address1" class="mt-1 block w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:border-blue-500">
+                        <span id="address1Error" class="text-xs text-red-500 error-message"></span>
                     </div>
-
                     <div>
-                        <label for="city" class="block text-sm font-medium text-gray-300">City</label>
-                        <input type="text" name="city" id="city" required class="mt-1 block w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
-                        <span id="cityError" class="text-sm text-red-500 error-message"></span>
+                        <label class="block text-sm font-medium text-gray-300">Address Line 2</label>
+                        <input type="text" name="address2" class="mt-1 block w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:border-blue-500">
+                        <span id="address2Error" class="text-xs text-red-500 error-message"></span>
                     </div>
-
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300">City</label>
+                            <input type="text" name="city" readonly class="mt-1 block w-full px-4 py-2 bg-gray-600 cursor-not-allowed border border-gray-500 rounded-md text-gray-200">
+                            <span id="cityError" class="text-xs text-red-500 error-message"></span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300">State</label>
+                            <input type="text" name="state" readonly class="mt-1 block w-full px-4 py-2 bg-gray-600 cursor-not-allowed border border-gray-500 rounded-md text-gray-200">
+                            <span id="stateError" class="text-xs text-red-500 error-message"></span>
+                        </div>
+                    </div>
                     <div>
-                        <label for="state" class="block text-sm font-medium text-gray-300">State</label>
-                        <input type="text" name="state" id="state" required class="mt-1 block w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
-                        <span id="stateError" class="text-sm text-red-500 error-message"></span>
+                        <label class="block text-sm font-medium text-gray-300">Country</label>
+                        <input type="text" name="country" value="India" readonly class="mt-1 block w-full px-4 py-2 bg-gray-600 cursor-not-allowed border border-gray-500 rounded-md text-gray-200">
                     </div>
-
-                    <div>
-                        <label for="pincode" class="block text-sm font-medium text-gray-300">Pincode</label>
-                        <input type="text" name="pincode" id="pincode" required class="mt-1 block w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
-                        <span id="pincodeError" class="text-sm text-red-500 error-message"></span>
-                    </div>
-
-                    <input type="hidden" name="country" value="India">
                 </div>
-
                 <div class="mt-6 text-center">
-                    <button type="submit" class="inline-flex justify-center py-2 px-6 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <button type="submit" class="inline-flex justify-center py-2 px-6 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
                         Save Address
                     </button>
                 </div>
@@ -393,6 +415,7 @@
         </div>
     </div>
 </div>
+<!-- END ADD ADDRESS -->
 
 
 
@@ -682,114 +705,273 @@ const addressId = address._id;
 }
 
     ///////////////////////////////////////
-    const attachAddAddressFormListener = () => {
-            const addNewAddressBtn = document.getElementById('addNewAddressBtn');
-            const addAddressForm = document.getElementById('add-address-form');
-            if (addNewAddressBtn) {
-                addNewAddressBtn.addEventListener('click', () => {
-                    openModal('addAddressModal');
-                });
-            }
-            if (addAddressForm) {
-                addAddressForm.addEventListener('submit', async (event) => {
-                    event.preventDefault();
-                    document.querySelectorAll('#add-address-form .error-message').forEach(el => el.textContent = '');
-                    document.querySelectorAll('#add-address-form input').forEach(input => input.classList.remove('border-red-500'));
-                    const formData = new FormData(addAddressForm);
-                    const data = Object.fromEntries(formData.entries());
-                    try {
-                        const response = await fetch('/user/profile/address/add', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(data)
-                        });
-                        const result = await response.json();
-                        if (response.ok) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success!',
-                                text: result.message || 'Address added successfully!',
-                                 width:'400px',
-                                customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
-                                
-                            });
-                            closeModal('addAddressModal');
-                            addAddressForm.reset();
-                            window.location.reload();
-                        } else {
-                            if (result.errors) {
-                                for (const field in result.errors) {
-                                    const errorElement = document.getElementById(`${field}Error`);
-                                    if (errorElement) {
-                                        errorElement.textContent = result.errors[field];
-                                        addAddressForm.querySelector(`[name="${field}"]`).classList.add('border-red-500');
-                                    }
-                                }
-                            }
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Validation Error!',
-                                text: result.message || 'Please correct the errors in the form.',
-                                 width:'400px',
-                                customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
-                            });
-                        }
-                    } catch (error) {
-                        console.error('Error submitting add address form:', error);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Network Error!',
-                            text: 'Could not connect to server.',
-                             width:'400px',
-                            customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
-                        });
-                    }
-                });
-            }
-        };
-//////////////////////////////////////////////////////////////////////////////////
-const attachEditAddressFormListener = () => {
-    const editAddressForm = document.getElementById('edit-address-form');
-    if (editAddressForm && typeof address !== 'undefined' && address) {
-        editAddressForm.addEventListener('submit', async (event) => {
-            event.preventDefault(); 
-            const formData = new FormData(editAddressForm);
-            const data = Object.fromEntries(formData.entries());
-            const addressId = address._id; 
-            try {
-                const response = await fetch(`/user/profile/address/edit/${addressId}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                const result = await response.json();
-                if (response.ok) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success!',
-                        text: result.message || 'Address updated successfully!',
-                        width: '400px',
-                        customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
-                    });
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1500);
+   // ==========================================
+    //  SYSTEM: DYNAMIC REAL-TIME VALIDATION
+    // ==========================================
+    
+    // 1. Strict Rules
+    const validators = {
+        name: {
+            regex: /^[A-Za-z\s\.]{3,}$/,
+            error: "Name must be at least 3 letters."
+        },
+        mobile: {
+            regex: /^[6-9]\d{9}$/,
+            error: "Enter valid 10-digit mobile number."
+        },
+        pincode: {
+            regex: /^\d{6}$/,
+            error: "Pincode must be 6 digits."
+        },
+        address1: {
+            regex: /.+/, 
+            error: "Address Line 1 is required."
+        },
+        city: {
+            regex: /.+/,
+            error: "City is required."
+        },
+        state: {
+            regex: /.+/,
+            error: "State is required."
+        }
+    };
 
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error!',
-                        text: result.message || 'Could not update address.',
-                        width: '400px',
-                        customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
-                    });
+    // 2. The Instant Check Function
+    function validateField(input) {
+        const name = input.name;
+        const value = input.value.trim();
+        const rule = validators[name];
+
+        // Identify the Error Element ID based on which form we are in
+        const formPrefix = input.form.id === 'edit-address-form' ? 'edit' : '';
+        // If prefix exists, capitalize first letter of name (e.g., editMobileError)
+        const errorId = formPrefix 
+            ? `${formPrefix}${name.charAt(0).toUpperCase() + name.slice(1)}Error`
+            : `${name}Error`;
+            
+        const errorEl = document.getElementById(errorId);
+
+        // Skip fields we don't validate (like address2 or hidden inputs)
+        if (!rule) return true;
+
+        // CHECK VALIDITY
+        const isValid = rule.regex.test(value);
+
+        if (isValid) {
+            // SCENARIO: User typed correct 10 digits -> SUDDENLY GREEN
+            input.classList.remove('border-red-500', 'focus:border-red-500', 'border-gray-600');
+            input.classList.add('border-green-500', 'focus:border-green-500'); 
+            
+            // Hide Error Message
+            if (errorEl) errorEl.textContent = ""; 
+        } else {
+            // SCENARIO: User removed a digit -> SUDDENLY RED
+            input.classList.remove('border-green-500', 'focus:border-green-500', 'border-gray-600');
+            input.classList.add('border-red-500', 'focus:border-red-500');
+            
+            // Show Error Message
+            if (errorEl) errorEl.textContent = rule.error;
+        }
+
+        return isValid;
+    }
+
+    // 3. Attach "Input" Listeners (Triggers on every keystroke)
+    function attachDynamicValidation(formId) {
+        const form = document.getElementById(formId);
+        if (!form) return;
+
+        const inputs = form.querySelectorAll('input');
+        inputs.forEach(input => {
+            // Ignore hidden fields or country
+            if (input.type === 'hidden' || input.name === 'country') return;
+
+            // EVENT: 'input' fires immediately when a character is typed or deleted
+            input.addEventListener('input', () => validateField(input));
+        });
+    }
+
+    // 4. Final Check on Submit
+    function validateFormOnSubmit(form) {
+        let isFormValid = true;
+        const inputs = form.querySelectorAll('input');
+        inputs.forEach(input => {
+             if (input.name === 'address2' || input.type === 'hidden' || input.name === 'country') return;
+             // If any field fails validation, mark form as invalid
+             if (!validateField(input)) {
+                 isFormValid = false;
+             }
+        });
+        return isFormValid;
+    }
+    // ==========================================
+    //  HELPER: PINCODE AUTO-FILL LISTENER
+    // ==========================================
+    function attachPincodeListener(formId) {
+        const form = document.getElementById(formId);
+        if (!form) return;
+
+        const pincodeInput = form.querySelector('input[name="pincode"]');
+        const cityInput = form.querySelector('input[name="city"]');
+        const stateInput = form.querySelector('input[name="state"]');
+        const countryInput = form.querySelector('input[name="country"]');
+
+        if (!pincodeInput) return;
+
+        pincodeInput.addEventListener('input', async () => {
+            const pin = pincodeInput.value.trim();
+
+            if (pin.length !== 6) {
+                if(cityInput) cityInput.value = '';
+                if(stateInput) stateInput.value = '';
+                return;
+            }
+
+            if (/^\d{6}$/.test(pin)) {
+                try {
+                    if(cityInput) cityInput.placeholder = "Loading...";
+                    
+                    const res = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
+                    const data = await res.json();
+
+                    if (data[0].Status === "Success") {
+                        const info = data[0].PostOffice[0];
+                        if(cityInput) cityInput.value = info.District || "";
+                        if(stateInput) stateInput.value = info.State || "";
+                        if(countryInput) countryInput.value = info.Country || "India";
+                        
+                        // Clear error if valid
+                        pincodeInput.classList.remove('border-red-500');
+                        const errorEl = form.querySelector(form.id === 'edit-address-form' ? '#editPincodeError' : '#pincodeError');
+                        if(errorEl) errorEl.textContent = '';
+                    } else {
+                        if(cityInput) cityInput.value = '';
+                        if(stateInput) stateInput.value = '';
+                        const errorEl = form.querySelector(form.id === 'edit-address-form' ? '#editPincodeError' : '#pincodeError');
+                        if(errorEl) errorEl.textContent = 'Invalid Pincode';
+                    }
+                } catch (error) {
+                    console.error(error);
+                } finally {
+                    if(cityInput) cityInput.placeholder = "";
                 }
-            } catch (error) {
-                console.error('Error submitting edit address form:', error);
             }
         });
     }
-};
+
+    // ==========================================
+    //  UPDATED SUBMIT LISTENERS
+    // ==========================================
+
+    const attachAddAddressFormListener = () => {
+        const addNewAddressBtn = document.getElementById('addNewAddressBtn');
+        const addAddressForm = document.getElementById('add-address-form');
+        
+        // 1. Attach Pincode Listener
+        attachPincodeListener('add-address-form');
+        attachDynamicValidation('add-address-form'); // <--- NEW LINE
+
+        if (addNewAddressBtn) {
+            addNewAddressBtn.addEventListener('click', () => {
+                openModal('addAddressModal');
+            });
+        }
+        if (addAddressForm) {
+            addAddressForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                
+               // 2. CHECK ALL FIELDS ONE LAST TIME
+                if (!validateFormOnSubmit(addAddressForm)) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Invalid Input',
+                        text: 'Please fix the red fields before saving.',
+                        toast: true, position: 'top-end', timer: 3000, showConfirmButton: false
+                    });
+                    return;
+                }
+
+                const formData = new FormData(addAddressForm);
+                const data = Object.fromEntries(formData.entries());
+                try {
+                    const response = await fetch('/user/profile/address/add', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    const result = await response.json();
+                    if (response.ok) {
+                        Swal.fire({
+                            icon: 'success', title: 'Success!',
+                            text: result.message || 'Address added!',
+                            width:'400px', customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
+                        });
+                        closeModal('addAddressModal');
+                        addAddressForm.reset();
+                        window.location.reload();
+                    } else {
+                        Swal.fire({
+                            icon: 'error', title: 'Error',
+                            text: result.message || 'Failed to add address',
+                            width:'400px', customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
+                        });
+                    }
+                } catch (error) {
+                    Swal.fire({ icon: 'error', title: 'Network Error!', text: 'Could not connect.' });
+                }
+            });
+        }
+    };
+
+    const attachEditAddressFormListener = () => {
+        const editAddressForm = document.getElementById('edit-address-form');
+        
+        // 1. Attach Pincode Listener
+        attachPincodeListener('edit-address-form');
+        attachDynamicValidation('edit-address-form'); // <--- NEW LINE
+
+        if (editAddressForm && typeof address !== 'undefined' && address) {
+            editAddressForm.addEventListener('submit', async (event) => {
+                event.preventDefault(); 
+                
+               // 2. CHECK ALL FIELDS
+                if (!validateFormOnSubmit(editAddressForm)) {
+                     Swal.fire({
+                        icon: 'error',
+                        title: 'Invalid Input',
+                        text: 'Please fix the red fields.',
+                        toast: true, position: 'top-end', timer: 3000, showConfirmButton: false
+                    });
+                    return;
+                }
+
+                const formData = new FormData(editAddressForm);
+                const data = Object.fromEntries(formData.entries());
+                const addressId = address._id; 
+                try {
+                    const response = await fetch(`/user/profile/address/edit/${addressId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    const result = await response.json();
+                    if (response.ok) {
+                        Swal.fire({
+                            icon: 'success', title: 'Success!',
+                            text: result.message || 'Address updated!',
+                            width: '400px', customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
+                        });
+                        setTimeout(() => { window.location.reload(); }, 1500);
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Error!', text: result.message || 'Update failed.' });
+                    }
+                } catch (error) {
+                    console.error('Error submitting edit address form:', error);
+                }
+            });
+        }
+    };  
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 const attachSetDefaultListeners = () => {
     const setDefaultButtons = document.querySelectorAll('.set-default-btn');
@@ -833,3 +1015,17 @@ const attachSetDefaultListeners = () => {
 
 
 </script>
+<style>
+    .border-green-500 {
+        border-color: #22c55e !important;
+        border-width: 2px !important;
+    }
+    .focus\:border-green-500:focus {
+        border-color: #22c55e !important;
+        ring: 2px #22c55e !important;
+    }
+    .border-red-500 {
+        border-color: #ef4444 !important;
+        border-width: 2px !important;
+    }
+</style>

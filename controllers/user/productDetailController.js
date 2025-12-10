@@ -13,10 +13,10 @@ function findSimilarProducts(currentProduct, allProducts) {
   );
   for (const product of allProducts) {
     let score = 0;
-    if ( product.category_id && product.category_id.toString() === currentProduct.category_id._id.toString()) {
+    if ( product?.category_id && product?.category_id.toString() === currentProduct?.category_id?._id.toString()) {
       score += 10;
     }
-    if ( product.brand_id && product.brand_id.toString() === currentProduct.brand_id._id.toString()) {
+    if ( product?.brand_id && product?.brand_id.toString() === currentProduct?.brand_id?._id.toString()) {
       score += 7;
     }
     const priceDifference = Math.abs(product.min_price - currentProduct.min_price );
@@ -60,6 +60,15 @@ exports.getSingleProduct = async (req, res) => {
       req.session.message={icon:'error',title:'Error',text:'product is not Listed',background: '#1e1e1e', color: '#ffffff',width:'450px'};
       return res.redirect("/user/Product");
     }
+    if (!product.category_id || !product.category_id.isListed) {
+      req.session.message={icon:'error',title:'Error',text:'Products Category didnt exists Or Not Listed',background: '#1e1e1e', color: '#ffffff',width:'450px'};
+      return res.redirect("/user/Product");
+    }
+    if (!product.brand_id || !product.brand_id.isListed) {
+      req.session.message={icon:'error',title:'Error',text:'Products Brand didnt exists OR Not Listed',background: '#1e1e1e', color: '#ffffff',width:'450px'};
+      return res.redirect("/user/Product");
+    }
+
     const bestOffer = await findBestOffer(product._id, product.category_id?._id, product.brand_id?._id);
     const allOtherProducts = await Product.find({
       _id: { $ne: productId },
@@ -69,7 +78,6 @@ exports.getSingleProduct = async (req, res) => {
       .populate('category_id')
       .populate('brand_id')
       .lean();
-
     const allOtherProductsWithOffers = await Promise.all(
       allOtherProducts.map(async (p) => {
         const offer = await findBestOffer(p._id, p.category_id?._id, p.brand_id?._id);
@@ -77,7 +85,6 @@ exports.getSingleProduct = async (req, res) => {
       })
     );
     const similarProducts = findSimilarProducts(product, allOtherProductsWithOffers);
-
     let initialImages = [];
 if (product.colorVariants && product.colorVariants.length > 0) {
   product.colorVariants.forEach(variant => {
@@ -95,10 +102,6 @@ if (product.colorVariants && product.colorVariants.length > 0) {
   });
 }
 if (initialImages.length === 0) initialImages.push("/images/placeholder.png");
-
-    console.log(`initial images : ${initialImages}`);
-
-    // Show price/sizes for the first color by default (can be improved for UX)
     let initialDisplayPrice = 0;
     let initialAvailableSizes = [];
     if (product.colorVariants && product.colorVariants.length > 0) {
@@ -108,7 +111,6 @@ if (initialImages.length === 0) initialImages.push("/images/placeholder.png");
         ? defaultColorVariant.variants.map(v => v.size)
         : [];
     }
-
     res.render("user/productDetail", {
       product: {
         ...product, 

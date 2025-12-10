@@ -3,11 +3,10 @@ const Cart = require('../../model/cart.js')
 const {findBestOffer} = require('../../utils/offerHelper.js');
 
 exports.addToCart = async (req, res) => {
+  console.log('cart hitted.....................')
     const userId = req.user._id; 
     const { productId, colorName, size, quantity } = req.body;
-
     try {
-       
         const product = await Product.findById(productId);
         if (!product) {
             return res.status(404).json({ message: 'Product not found.' });
@@ -18,12 +17,10 @@ exports.addToCart = async (req, res) => {
          if (product.isDeleted) {
             return res.status(404).json({ message: 'Product is tempererly deleted.' });
         }
-        
         const colorVariant = product.colorVariants.find(c => c.colorName === colorName);
         if (!colorVariant) {
             return res.status(400).json({ message: 'Invalid color selected for this product.' });
         }
-        
         const sizeVariant = colorVariant.variants.find(s => s.size === size);
         if (!sizeVariant) {
             return res.status(400).json({ message: 'Invalid size selected for this product.' });
@@ -40,17 +37,13 @@ exports.addToCart = async (req, res) => {
             item.colorName === colorName &&
             item.size === size
         );
-
         if (existingItemIndex > -1) {
-           
             cart.items[existingItemIndex].quantity += quantity;
         } else {
-            
             cart.items.push({ productId, colorName, size, quantity });
         }
         await cart.save();
         res.status(200).json({ message: 'Product added to cart successfully.', cart });
-
     } catch (error) {
         console.error('Error adding to cart:', error);
         res.status(500).json({ message: 'Server error.', error: error.message });
@@ -72,7 +65,6 @@ exports.getCart = async (req, res) => {
                 ]
             })
             .lean();
-
         if (!cart || !cart.items || cart.items.length === 0) {
             return res.render('user/cart', {
                 cartItems: [],
@@ -88,17 +80,12 @@ exports.getCart = async (req, res) => {
         const cartItemsForEJS = await Promise.all(cart.items.map(async (item) => {
             const product = item.productId;
             if (!product) return null;
-
             const colorVariant = product.colorVariants.find(c => c.colorName === item.colorName);
             const sizeVariant = colorVariant ? colorVariant.variants.find(s => s.size === item.size) : null;
-            
             const originalPrice = sizeVariant ? sizeVariant.price : 0;
             const stock = sizeVariant ? sizeVariant.stock : 0;
-
             const isAvailable = !product.isDeleted && product.isListed && product.category_id?.isListed && product.brand_id?.isListed && stock > 0;
-
             const bestOffer = isAvailable ? await findBestOffer(product._id, product.category_id?._id, product.brand_id?._id) : null;
-            
             let finalPrice = originalPrice;
             if (bestOffer) {
                 finalPrice = originalPrice * (1 - bestOffer.discountPercentage / 100);
@@ -137,7 +124,6 @@ exports.getCart = async (req, res) => {
             total: total.toFixed(2),               
             message: message 
         });
-
     } catch (error) {
         console.error('Error fetching cart:', error);
         res.status(500).render('user/error', { message: 'Server error.', error: error.message });
@@ -165,16 +151,13 @@ exports.updateCartQunty = async (req, res) => {
     if (!cart) {
       return res.status(404).json({ message: 'Cart not found for this user.' });
     }
-
     const itemToUpdate = cart.items.find(item => item._id.toString() === itemId);
     if (!itemToUpdate) {
       return res.status(404).json({ message: 'Item not found in cart.' });
     }
-
     if (newQuantity < 1) {
       return res.status(400).json({ message: 'Quantity cannot be less than 1.' });
     }
-
     const product = itemToUpdate.productId;
     if (!product) {
       return res.status(404).json({ message: 'Product not found.' });
@@ -228,6 +211,7 @@ exports.updateCartQunty = async (req, res) => {
       price: sizeVariant.price,
 
     };
+    const itemsCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
 
     res.status(200).json({
       success: true,
@@ -238,7 +222,7 @@ exports.updateCartQunty = async (req, res) => {
         totalDiscount: totalDiscount.toFixed(2),
         tax: tax.toFixed(2),
         total: total.toFixed(2),
-        itemsCount: cart.items.length,
+        itemsCount,
       },
     });
   } catch (error) {

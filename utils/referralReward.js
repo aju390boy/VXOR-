@@ -61,7 +61,7 @@ async function rewardReferralUsers(referredUserId, orderId = null) {
       `Welcome referral bonus from Mr.${referrerFullName}`,
     );
     referredUserSubdoc.reward_given = true;
-    referredUserSubdoc.reward_amount = rewardForReferrer + rewardForReferred;
+    referredUserSubdoc.reward_amount = rewardForReferrer;
     referredUserSubdoc.status = 'REWARDED';
     referredUserSubdoc.usedAt = new Date();
     const allRewarded = referral.referred_users.every(u => u.reward_given);

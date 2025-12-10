@@ -126,3 +126,104 @@ thead th, tbody td {
   display: block;
   margin-top: 10px;
 }
+/* ///////////////////// */
+/* REPLACE these chart styles in dashboard.css */
+
+/* RESPONSIVE CHART - FINAL FIX */
+.chart-container {
+    display: flex !important;
+    justify-content: space-evenly !important; /* Better than space-around */
+    align-items: flex-end !important;
+    width: 100% !important;
+    height: 240px !important; /* Slightly shorter */
+    padding: 15px 8px !important; /* Tighter padding */
+    border-top: 1px solid #e5e7eb !important;
+    overflow: hidden !important;
+    gap: 2px !important; /* Minimal gap */
+}
+
+.bar-wrapper {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    height: 100% !important;
+    justify-content: flex-end !important;
+    flex: none !important; /* CRITICAL: Remove flex-1 */
+    width: calc(100% / 8) !important; /* Base: 12.5% per bar */
+    min-width: 12px !important;
+    max-width: 38px !important;
+}
+
+.chart-bar {
+    position: relative !important;
+    width: 100% !important; /* Full width of wrapper */
+    max-width: 32px !important;
+    min-width: 12px !important;
+    background-image: linear-gradient(to top, #8b5cf6, #6366f1) !important;
+    border-radius: 4px !important;
+    transition: all 0.3s ease-in-out !important;
+    height: calc(var(--bar-height, 0) * 1%) !important;
+    transform-origin: bottom !important;
+    animation: growBar 1.1s ease-out forwards !important;
+}
+
+.chart-bar:hover {
+    opacity: 0.85 !important;
+    transform: translateY(-2px) scale(1.03) !important;
+}
+
+.bar-label {
+    margin-top: 4px !important;
+    font-size: 0.65rem !important; /* Fixed small size */
+    font-weight: 500 !important;
+    color: #6b7280 !important;
+    text-align: center !important;
+    width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    padding: 0 2px !important;
+}
+
+.chart-tooltip {
+    position: absolute !important;
+    top: -28px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    background-color: #1f2937 !important;
+    color: white !important;
+    padding: 2px 5px !important;
+    border-radius: 3px !important;
+    font-size: 0.65rem !important;
+    white-space: nowrap !important;
+    opacity: 0 !important;
+    transition: all 0.2s ease !important;
+    pointer-events: none !important;
+    z-index: 20 !important;
+    min-width: max-content !important;
+}
+
+.chart-bar:hover .chart-tooltip {
+    opacity: 1 !important;
+    transform: translateX(-50%) translateY(-2px) !important;
+}
+
+/* Responsive breakpoints for many bars */
+@media (max-width: 1024px) {
+    .bar-wrapper {
+        width: calc(100% / 6) !important;
+        min-width: 14px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .bar-wrapper {
+        width: calc(100% / 5) !important;
+        min-width: 16px !important;
+    }
+    .chart-container {
+        height: 200px !important;
+        padding: 12px 6px !important;
+    }
+}
+

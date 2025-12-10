@@ -55,18 +55,18 @@ exports.postResendOtp = async (req, res) => {
     let emailSubject = "";
     let emailHtml = "";
     if (context === "signup") {
-      emailSubject = "Nutrixo: Resend OTP for Account Verification";
-      emailHtml = `<p>Your new OTP for Nutrixo account verification is: <strong>${newOtpCode}</strong></p>
+      emailSubject = "VXOR: Resend OTP for Account Verification";
+      emailHtml = `<p>Your new OTP for VXOR account verification is: <strong>${newOtpCode}</strong></p>
                          <p>This OTP is valid for <b>5 minutes</b>. Do not share it with anyone.</p>`;
     } else if (context === "forgot-password") {
-      emailSubject = "Nutrixo: Resend OTP for Password Reset";
+      emailSubject = "VXOR: Resend OTP for Password Reset";
       emailHtml = `<div style="font-family:Arial,sans-serif;padding:20px;">
               <h2>Hello ${user.firstname || ""}</h2>
-              <p>Here is your new OTP to reset your Nutrixo account password:</p>
+              <p>Here is your new OTP to reset your VXOR account password:</p>
               <h1 style="background:#eee;padding:10px 20px;width:fit-content;border-radius:5px;">${newOtpCode}</h1>
               <p>This OTP is valid for <b>5 minutes</b>. Do not share it with anyone.</p> // Consistent 5 minutes
               <br>
-              <p>Cheers,<br>The Nutrixo Team </p>
+              <p>Cheers,<br>VXOR Team </p>
             </div>`;
     } else {
       return res

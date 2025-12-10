@@ -8,6 +8,8 @@ const {findBestOffer} = require('../../utils/offerHelper.js');
 
 
 const formatProductForListing = (product, bestOffer = null) => {
+  let priceSum2=0;
+  let priceSum=0;
     let displayImageUrl = "/uploads/products/placeholder.png";
     if (product.colorVariants && product.colorVariants.length > 0) {
         const firstVariant = product.colorVariants[0];
@@ -22,9 +24,13 @@ const formatProductForListing = (product, bestOffer = null) => {
     let discountedPrice = null;
     if (bestOffer && minPrice > 0) {
         discountedPrice = minPrice * (1 - bestOffer.discountPercentage / 100);
+        priceSum+=discountedPrice;
+        priceSum2+= product.min_price || product.computed_min_price || 0;
     }
     return {
         ...product,
+        priceSum:priceSum,
+         priceSum2:priceSum2,
         display_price: minPrice,
         discounted_price: discountedPrice ? discountedPrice.toFixed(0) : null,
         display_image_url: displayImageUrl,
@@ -65,6 +71,35 @@ exports.getAllProducts = async (req, res) => {
         pipeline[0].$match.brand_id = { $in: brandIds };
       }
     }
+// --- NEW LOGIC --- //
+    pipeline.push(
+      {
+        $lookup: {
+          from: "categories",       
+          localField: "category_id",
+          foreignField: "_id",
+          as: "category_info"
+        }
+      },
+      { $unwind: "$category_info" },
+      { 
+        $match: { "category_info.isListed": true } 
+      },
+      {
+        $lookup: {
+          from: "brands",           
+          localField: "brand_id",
+          foreignField: "_id",
+          as: "brand_info"
+        }
+      },
+      { $unwind: "$brand_info" },
+      { 
+        $match: { "brand_info.isListed": true } 
+      }
+    );
+    // --- NEW LOGIC END ---
+
     if (rating) {
       const selectedRatings = Array.isArray(rating)
         ? rating.map(Number)
@@ -129,7 +164,7 @@ exports.getAllProducts = async (req, res) => {
             })
         );
      const formattedProducts = productsWithOffers.map(product => formatProductForListing(product, product.bestOffer));
-    const displaySortOptions = [
+     const displaySortOptions = [
       { value: "newest", label: "Newest Arrivals" },
       { value: "price_asc", label: "Price: Low to High" },
       { value: "price_desc", label: "Price: High to Low" },
@@ -164,6 +199,7 @@ exports.getAllProducts = async (req, res) => {
         : '<p class="text-white text-center w-full col-span-full text-sm font-bold">No products match your filters</p>';
     res.json({ html: html ,wishlistIds: wishlistProductIds});
 }else {
+      
       res.render("user/product", {
         products: formattedProducts,
         sortOptions: displaySortOptions,
@@ -211,8 +247,23 @@ exports.liveSearch = async (req, res) => {
 exports.getProductVariants = async (req, res) => {
     try {
         const product = await Product.findById(req.params.productId).select('colorVariants').lean();
-        if (!product) {
+        const productCheck=await Product.findById(req.params.productId);
+        console.log(`product check :${productCheck}`);
+        console.log(`move to cart ${product?.isListed}`);
+        if (!productCheck) {
             return res.status(404).json({ message: 'Product not found.' });
+        }
+        if (!productCheck?.isListed) {
+            return res.status(404).json({ message: 'Product is Not Listed.' });
+        }
+        if (productCheck?.isDeleted) {
+            return res.status(404).json({ message: 'Product is Tempererly Deleted.' });
+        }
+        if (!productCheck?.category_id && !product?.category_id?.isListed) {
+            return res.status(404).json({ message: 'Product Category is Not Listed.' });
+        }
+        if (!productCheck?.brand_id && !product?.brand_id?.isListed) {
+            return res.status(404).json({ message: 'Product Brand is Not Listed.' });
         }
         res.json(product.colorVariants);
     } catch (error) {

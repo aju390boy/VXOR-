@@ -35,18 +35,18 @@
       <div class=" space-x-4 mt-6">
         <% if (paymentFailed) { %>
          <a href="/user/checkout"> <button 
-            class="retry-btn px-4 py-1 text-md font-semibold text-yellow-600 transition"
+            class="retry-btn px-2  text-md font-bold rounded-2xl bg-yellow-500 text-gray-900 transition"
             data-order-id="<%= order._id %>"
             
           >
-            Retry Payment
+            Retry
           </button>
           </a>
         <% } %>
 
         <% if (hasCancelableStatus) { %>
           <button 
-            class="cancelEntireOrderBtn px-4 py-1 text-md font-semibold text-red-600 transition"
+            class="cancelEntireOrderBtn px-2 text-md font-bold bg-red-500 rounded-2xl text-gray-900 transition"
             data-order-id="<%= order._id %>"
           >
             Cancel
@@ -55,17 +55,17 @@
 
         <% if (allDelivered) { %>
           <button 
-            class="returnEntireOrderBtn px-4 py-1  font-semibold text-md text-blue-600 transition"
+            class="returnEntireOrderBtn px-2   font-bold text-md bg-blue-500 rounded-2xl text-gray-900 transition"
             data-order-id="<%= order._id %>"
           >
             Return
           </button>
         <% } %>
          <a href="/user/orders/<%= order.order_id || order._id %>/invoice" 
-             class="invoice-btn text-center w-full sm:w-auto px-6 py-1 text-md rounded-xl font-semibold text-white transition-all duration-300
-                    text-gray-300 "
+             class="invoice-btn text-center w-full sm:w-auto bg-white px-2   text-md rounded-xl font-bold text-white transition-all duration-300
+                    text-gray-900 "
              data-order-id="<%= order.order_id || order._id %>">
-            Download Invoice
+            Invoice
        </a>
      
       
@@ -156,46 +156,84 @@
 <% } %>
 
 <!-- Modals for Cancel and Return -->
+<!-- Cancel Modal with Predefined Reasons -->
 <div id="cancelModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
-    <div class="bg-white w-full max-w-md mx-auto rounded-2xl shadow-lg p-6 relative">
-        <button id="btnCloseCancel" class="absolute top-2 right-3 text-gray-400 hover:text-red-500 text-xl font-bold">×</button>
-        <h2 class="text-xl font-semibold mb-4 text-gray-800">Cancel Item</h2>
-        <form id="cancelForm" class="space-y-4">
-            <input type="hidden" id="cancelOrderId" name="orderId">
-            <input type="hidden" id="cancelItemId" name="itemId">
-            <div>
-                <label for="cancel-note" class="block text-gray-700 mb-1">Reason for Cancellation</label>
-                <textarea id="cancel-note" name="cancel-note" rows="4" required class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 resize-none" placeholder="Write your reason here..."></textarea>
-            </div>
-            <div class="flex justify-end">
-                <button type="submit" class="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg">
-                    Submit 
-                </button>
-            </div>
-        </form>
-    </div>
+  <div class="bg-white w-full max-w-md mx-auto rounded-2xl shadow-lg p-6 relative max-h-[90vh] overflow-y-auto">
+    <button id="btnCloseCancel" class="absolute top-2 right-3 text-gray-400 hover:text-red-500 text-xl font-bold">×</button>
+    <h2 class="text-xl font-semibold mb-4 text-gray-800">Cancel Item</h2>
+    <form id="cancelForm" class="space-y-4">
+      <input type="hidden" id="cancelOrderId" name="orderId">
+      <input type="hidden" id="cancelItemId" name="itemId">
+      
+      <!-- Predefined Reasons Dropdown -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Select Reason</label>
+        <select id="cancelReasonSelect" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400" required>
+          <option value="">Choose a reason...</option>
+          <option value="changed my mind">Changed my mind</option>
+          <option value="wrong product received">Wrong product received</option>
+          <option value="doesnt match description">Doesn't match description</option>
+          <option value="out of stock">Out of stock</option>
+          <option value="better price elsewhere">Better price elsewhere</option>
+          <option value="ordered by mistake">Ordered by mistake</option>
+          <option value="other">Other (please specify)</option>
+        </select>
+      </div>
+
+      <!-- Custom Reason (shows when "Other" selected) -->
+      <div id="customCancelReason" class="hidden">
+        <label for="cancel-note" class="block text-sm font-medium text-gray-700 mb-2">Please specify:</label>
+        <textarea id="cancel-note" name="cancel-note" rows="3" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 resize-none" placeholder="Enter your reason..."></textarea>
+      </div>
+
+      <div class="flex justify-end gap-3 pt-2">
+        <button type="button" id="cancelFormCancel" class="px-6 py-2 text-gray-600 bg-gray-200 hover:bg-gray-300 rounded-lg transition">Cancel</button>
+        <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-medium transition">Submit Cancellation</button>
+      </div>
+    </form>
+  </div>
 </div>
 
+
 <!-- Return Modal -->
+<!-- Return Modal with Predefined Reasons -->
 <div id="returnModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
-    <div class="bg-white w-full max-w-md mx-auto rounded-2xl shadow-lg p-6 relative">
-        <button id="btnCloseReturn" class="absolute top-2 right-3 text-gray-400 hover:text-red-500 text-xl font-bold">×</button>
-        <h2 class="text-xl font-semibold mb-4 text-gray-800">Return Request</h2>
-        <form id="returnForm" class="space-y-4">
-            <input type="hidden" id="returnOrderId" name="orderId">
-            <input type="hidden" id="returnItemId" name="itemId">
-            <div>
-                <label for="returnNote" class="block text-gray-700 mb-1">Reason for Return</label>
-                <textarea id="returnNote" name="returnNote" rows="4" required class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none" placeholder="Write your reason here..."></textarea>
-            </div>
-            <div class="flex justify-end">
-                <button type="submit" class="bg-purple-500 hover:bg-purple-600 text-white py-2 px-4 rounded-lg">
-                    Submit Request
-                </button>
-            </div>
-        </form>
-    </div>
+  <div class="bg-white w-full max-w-md mx-auto rounded-2xl shadow-lg p-6 relative max-h-[90vh] overflow-y-auto">
+    <button id="btnCloseReturn" class="absolute top-2 right-3 text-gray-400 hover:text-purple-500 text-xl font-bold">×</button>
+    <h2 class="text-xl font-semibold mb-4 text-gray-800">Return Request</h2>
+    <form id="returnForm" class="space-y-4">
+      <input type="hidden" id="returnOrderId" name="orderId">
+      <input type="hidden" id="returnItemId" name="itemId">
+      
+      <!-- Predefined Reasons Dropdown -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Select Reason</label>
+        <select id="returnReasonSelect" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400" required>
+          <option value="">Choose a reason...</option>
+          <option value="defective or damaged">Defective or damaged</option>
+          <option value="wrong item received">Wrong item received</option>
+          <option value="doesnt fit properly">Doesn't fit properly</option>
+          <option value="poor quality">Poor quality</option>
+          <option value="doesnt match description">Doesn't match description</option>
+          <option value="changed my mind">Changed my mind</option>
+          <option value="other">Other (please specify)</option>
+        </select>
+      </div>
+
+      <!-- Custom Reason (shows when "Other" selected) -->
+      <div id="customReturnReason" class="hidden">
+        <label for="returnNote" class="block text-sm font-medium text-gray-700 mb-2">Please specify:</label>
+        <textarea id="returnNote" name="returnNote" rows="3" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none" placeholder="Enter your reason..."></textarea>
+      </div>
+
+      <div class="flex justify-end gap-3 pt-2">
+        <button type="button" id="returnFormCancel" class="px-6 py-2 text-gray-600 bg-gray-200 hover:bg-gray-300 rounded-lg transition">Cancel</button>
+        <button type="submit" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded-lg font-medium transition">Submit Return Request</button>
+      </div>
+    </form>
+  </div>
 </div>
+
 <style>
   .custom-scrollbar::-webkit-scrollbar {
     height: 8px;

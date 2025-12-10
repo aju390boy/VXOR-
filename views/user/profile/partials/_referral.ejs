@@ -1,0 +1,273 @@
+<!-- views/referral.ejs - SWAPPED LAYOUT -->
+<div class="min-h-screen flex items-center justify-center mb-24">
+  <div class="w-full max-w-6xl rounded-2xl p-4 mb-24 bg-gray-900/90 border border-gray-800 shadow-2xl">
+    <!-- TOP: Animation + Heading (UNCHANGED) -->
+    <div class="flex flex-col items-center mb-2">
+      <div class="relative">
+        <!-- Outer glowing ring -->
+        <div class="w-28 h-28 rounded-full bg-gradient-to-tr from-pink-500 via-purple-500 to-blue-500 flex items-center justify-center shadow-[0_0_35px_rgba(236,72,153,0.9)]">
+          <!-- Three humans: center green (big), left yellow (small), right orange (small) -->
+          <div class="relative w-28 h-16">
+            <!-- Center: GREEN (big) -->
+            <div class="absolute left-9 -translate-x-1/2 top-4 -translate-y-1/2 flex flex-col items-center animate-float-mid z-20">
+              <div class="w-9 h-9 rounded-full bg-emerald-400 border-2 border-black/30"></div>
+              <div class="mt-1 w-10 h-3 rounded-full bg-emerald-500/90"></div>
+            </div>
+            <!-- Left: YELLOW (small) -->
+            <div class="absolute left-2 top-5 -translate-y-1/2 flex flex-col items-center animate-float-left z-10">
+              <div class="w-5 h-5 rounded-full bg-yellow-400 border-2 border-black/30"></div>
+              <div class="mt-1 w-8 h-3 rounded-full bg-yellow-500/90"></div>
+            </div>
+            <!-- Right: ORANGE (small) -->
+            <div class="absolute right-2 top-5 -translate-y-1/2 flex flex-col items-center animate-float-right z-10">
+              <div class="w-5 h-5 rounded-full bg-orange-400 border-2 border-black/30"></div>
+              <div class="mt-1 w-8 h-3 rounded-full bg-orange-500/90"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rotating dashed ring -->
+        <div class="absolute inset-0 -z-10 animate-spin-slow">
+          <div class="w-full h-full rounded-full border-4 border-dashed border-pink-500/60"></div>
+        </div>
+      </div>
+
+      <h1 class="mt-2 text-3xl font-extrabold text-white tracking-wide text-center">
+        Refer & Earn
+      </h1>
+      <p class="mt-2 mb-4 text-sm text-gray-300 text-center max-w-sm">
+        Invite your friends and unlock exclusive rewards every time they join using your referral code.
+      </p>
+    </div>
+
+    <!-- MIDDLE: TWO CONTAINERS (LEFT: CODE, RIGHT: HOW IT WORKS) -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <!-- LEFT: Referral code + copy + CTA text -->
+<% if (referral && referral.code) { %>
+  <!-- SHOW: Existing referral code + copy -->
+  <div class="relative bg-gradient-to-br from-pink-500/15 via-purple-600/15 to-pink-500/15 backdrop-blur-xl border border-purple-500/40 rounded-2xl p-3 shadow-xl">
+    <p class="text-xs uppercase tracking-[0.3em] text-purple-300/80 mb-2 text-center">
+      YOUR REFERRAL CODE
+    </p>
+    <!-- Animated colorful code text -->
+    <p
+      id="referralCodeText"
+      class="font-mono text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-[length:200%_auto] bg-[linear-gradient(to_right,#a855f7,#ec4899,#22c55e,#ec4899,#a855f7)] animate-[gradient_6s_ease_infinite] tracking-[0.5em] select-all text-center"
+    >
+      <%= referral.code %>
+    </p>
+    <p class="mt-2 text-xs text-gray-300 text-center">
+      Share this code with your friends and watch your rewards grow automatically.
+    </p>
+    <p class="mt-1 text-xs text-emerald-400 text-center">
+      Every successful signup turns into instant wallet money.
+    </p>
+    <!-- Copy icon - near bottom-right -->
+    <button
+      id="copyReferralBtn"
+      type="button"
+      class="absolute -bottom-4 right-1 p-2.5 rounded-2xl bg-gradient-to-br from-pink-500 via-purple-600 to-pink-500 hover:from-pink-400 hover:via-purple-500 hover:to-pink-400 text-white shadow-xl hover:shadow-[0_0_25px_rgba(236,72,153,0.9)] ring-2 ring-pink-500/60 hover:ring-pink-500/90 transition-all duration-300 hover:scale-110 active:scale-95 z-20"
+      title="Copy referral code"
+    >
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.3" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+      </svg>
+    </button>
+  </div>
+<% } else { %>
+  <!-- HIDE CODE, SHOW: Generate Referral Code Button -->
+  <div class="bg-gradient-to-br from-emerald-500/20 via-cyan-500/20 to-emerald-500/20 backdrop-blur-xl border-2 border-emerald-400/50 rounded-3xl p-8 text-center shadow-2xl hover:shadow-[0_20px_40px_rgba(34,197,94,0.4)] transition-all duration-500 group hover:scale-[1.02]">
+    
+    <!-- Animated starburst icon -->
+    <div class="relative mx-auto mb-4 w-20 h-20">
+      <div class="absolute inset-0 w-20 h-20 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 shadow-[0_0_30px_rgba(34,197,94,0.6)] animate-ping"></div>
+      <div class="relative w-20 h-20 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 flex items-center justify-center shadow-2xl group-hover:rotate-12 transition-transform duration-500 z-10">
+        <svg class="w-10 h-10 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
+        </svg>
+      </div>
+    </div>
+
+    <h3 class="text-xl font-black bg-gradient-to-r from-emerald-400 via-cyan-400 to-emerald-500 bg-clip-text text-transparent mb-2 tracking-tight">
+      Unlock Your Referral Power!
+    </h3>
+    
+    <p class="text-sm text-gray-200 mb-4 max-w-sm mx-auto leading-relaxed">
+      Create your unique referral code now and start earning <span class="font-bold text-emerald-400">₹100 per friend</span> instantly!
+    </p>
+    
+    <p class="text-xs text-gray-400 mb-6 italic">
+      One click → Unlimited earnings → Passive income forever ✨
+    </p>
+
+    <!-- Generate Button -->
+    <button
+      id="generateReferralBtn"
+      type="button"
+      class="group/btn relative px-8 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:via-teal-400 hover:to-cyan-400 text-white font-black text-lg shadow-2xl hover:shadow-[0_0_30px_rgba(34,197,94,0.8)] transform hover:-translate-y-1 active:scale-95 transition-all duration-300 overflow-hidden"
+    >
+      <span class="relative z-10 flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+        </svg>
+        GENERATE MY CODE
+      </span>
+      <div class="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
+    </button>
+  </div>
+<% } %>
+<!-- Hidden container for show referral code dynamically -->
+<div id="referralCodeContainer" style="display:none;">
+  <div class="relative bg-gradient-to-br from-pink-500/15 via-purple-600/15 to-pink-500/15 backdrop-blur-xl border border-purple-500/40 rounded-2xl p-3 shadow-xl">
+    <p class="text-xs uppercase tracking-[0.3em] text-purple-300/80 mb-2 text-center">
+      YOUR REFERRAL CODE
+    </p>
+    <p
+      id="referralCodeText"
+      class="font-mono text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-[length:200%_auto] bg-[linear-gradient(to_right,#a855f7,#ec4899,#22c55e,#ec4899,#a855f7)] animate-[gradient_6s_ease_infinite] tracking-[0.5em] select-all text-center"
+    >
+      <!-- code will be inserted here -->
+    </p>
+    <p class="mt-2 text-xs text-gray-300 text-center">
+      Share this code with your friends and watch your rewards grow automatically.
+    </p>
+    <p class="mt-1 text-xs text-emerald-400 text-center">
+      Every successful signup turns into instant wallet money.
+    </p>
+    <button
+      id="copyReferralBtn"
+      type="button"
+      class="absolute -bottom-4 right-1 p-2.5 rounded-2xl bg-gradient-to-br from-pink-500 via-purple-600 to-pink-500 hover:from-pink-400 hover:via-purple-500 hover:to-pink-400 text-white shadow-xl hover:shadow-[0_0_25px_rgba(236,72,153,0.9)] ring-2 ring-pink-500/60 hover:ring-pink-500/90 transition-all duration-300 hover:scale-110 active:scale-95 z-20"
+      title="Copy referral code"
+    >
+      <!-- SVG omitted for brevity -->
+    </button>
+  </div>
+</div>
+
+
+<!-- end of that logic -->
+
+      <!-- RIGHT: How it works -->
+      <div class="bg-gradient-to-br from-pink-500/15 via-purple-600/15 to-pink-500/15 backdrop-blur-xl border border-purple-500/40 rounded-2xl p-3">
+        <h2 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+          <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-r from-emerald-500 to-cyan-500 text-sm font-bold">
+            ?
+          </span>
+          How it works
+        </h2>
+        <ol class="space-y-3 text-sm text-gray-200">
+          <li class="flex gap-3">
+            <span class=" flex h-6 w-6 items-center justify-center rounded-full bg-purple-600 text-xs font-bold text-white">
+              1
+            </span>
+            <p>Share your referral code with friends.</p>
+          </li>
+          <li class="flex gap-3">
+            <span class=" flex h-6 w-6 items-center justify-center rounded-full bg-pink-500 text-xs font-bold text-white">
+              2
+            </span>
+            <p>When they sign up using your code, they get ₹50 in their wallet.</p>
+          </li>
+          <li class="flex gap-3">
+            <span class=" flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-xs font-bold text-white">
+              3
+            </span>
+            <p>You earn ₹100 for each successful referral.</p>
+          </li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- BOTTOM: Referral impact -->
+    <div class=" bg-gradient-to-br from-pink-500/15 via-purple-600/15 to-pink-500/15 backdrop-blur-xl border border-purple-500/40 rounded-2xl p-2 mb-5">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-sm font-semibold text-white flex items-center gap-2">
+          <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500/90 text-xs font-bold text-black">
+            ★
+          </span>
+          Your referral impact
+        </h2>
+        <span class="text-[10px] uppercase tracking-widest text-gray-400">
+          LIVE STATS
+        </span>
+      </div>
+      <!-- Total earnings -->
+      <div class="mb-2 flex items-center justify-between">
+        <div>
+          <p class="text-[11px] text-gray-400 uppercase tracking-widest">Total earnings</p>
+          <p class="text-2xl font-bold text-emerald-400">
+            ₹<%= referral.totalReferralEarnings || 0 %>
+          </p>
+        </div>
+        <div class="text-right">
+          <p class="text-[11px] text-gray-400 uppercase tracking-widest">Friends joined</p>
+          <p class="text-lg font-semibold text-white">
+            <%= referral.totalReferredUsers || 0 %>
+          </p>
+        </div>
+      </div>
+
+      <!-- Referred users list -->
+      <div class="space-y-2 max-h-40 overflow-y-auto pr-1">
+        <% if (referral.referredUsers && referral.referredUsers.length > 0) { %>
+          <% referral.referredUsers.forEach(function(user){ %>
+            <div class="flex items-center justify-between text-xs text-gray-200 bg-gray-900/60 rounded-xl px-3 py-2">
+              <div class="flex items-center gap-2">
+                <span class="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]"></span>
+                <span class="font-semibold"><%= user.name || 'Friend' %></span>
+              </div>
+              <div class="text-[11px] text-gray-400 flex items-center gap-2">
+                <span class="text-emerald-400 font-semibold">+₹<%= user.earnedAmount || 100 %></span>
+                <span class="h-1 w-1 rounded-full bg-gray-500"></span>
+                <span><%= user.dateLabel || 'Just now' %></span>
+              </div>
+            </div>
+          <% }) %>
+        <% } else { %>
+          <p class="text-xs text-gray-500 text-center mt-2">
+            No referrals yet. Invite your first friend and your earnings will appear here.
+          </p>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Final line -->
+    <p id="copyStatus" class="mt-3 text-xs text-center text-gray-400">
+      Share your code with friends to start earning rewards instantly.
+    </p>
+  </div>
+</div>
+
+<!-- Animations + copy script -->
+<style>
+  @keyframes spin-slow {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  .animate-spin-slow {
+    animation: spin-slow 10s linear infinite;
+  }
+
+  @keyframes float-soft {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+  @keyframes gradient {
+  0% { background-position: 0% center; }
+  50% { background-position: 100% center; }
+  100% { background-position: 0% center; }
+}
+
+  .animate-float-mid {
+    animation: float-soft 2.8s ease-in-out infinite;
+  }
+  .animate-float-left {
+    animation: float-soft 3.2s ease-in-out infinite;
+  }
+  .animate-float-right {
+    animation: float-soft 3.6s ease-in-out infinite;
+  }
+</style>
+
+

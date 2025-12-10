@@ -68,14 +68,66 @@
     </div>
     <div class="nav-center flex justify-center flex-grow gap-3">
         <a href="/user/home" class="text-gray-400 font-semibold hover:text-white transition text-sm">HOME</a>
-        <a href="/user/product" class="text-gray-400 font-semibold hover:text-white transition text-sm">CATEGORY</a>
-        <a href="/user/product" class="text-gray-400 font-semibold hover:text-white transition text-sm">BRAND</a>
+
+
+        <!-- CATEGORY DROPDOWN -->
+<div x-data="{ open: false }" class="relative">
+    <button @click="open = !open"
+        class="text-gray-300 hover:text-white font-semibold text-sm tracking-wide transition">
+        CATEGORY
+        <i class="fa-solid fa-chevron-down ml-1 text-xs"></i>
+    </button>
+
+    <div x-show="open" x-transition
+        @click.outside="open = false"
+        class="absolute left-0 mt-2 w-36 bg-gray-900/95 backdrop-blur-sm border border-gray-700 rounded-xl shadow-xl py-2 z-50 origin-top"
+        style="display: none;">
+
+        <% categories.forEach(cat => { %>
+            <a href="/user/product?category=<%= cat.name %>"
+                class="block px-4 py-2 text-gray-300 hover:bg-gray-800/70 hover:text-white text-sm rounded-md transition">
+                <%= cat.name %>
+            </a>
+        <% }) %>
+
+    </div>
+</div>
+
+
+   <!-- BRAND DROPDOWN -->
+<div x-data="{ open: false }" class="relative">
+    <button @click="open = !open"
+        class="text-gray-300 hover:text-white font-semibold text-sm tracking-wide transition">
+        BRAND
+        <i class="fa-solid fa-chevron-down ml-1 text-xs"></i>
+    </button>
+
+    <div x-show="open" x-transition
+        @click.outside="open = false"
+        class="absolute left-0 mt-2 w-36 bg-gray-900/95 backdrop-blur-sm border border-gray-700 rounded-xl shadow-xl py-2 z-50 origin-top"
+        style="display: none;">
+
+        <% brands.forEach(brand => { %>
+            <a href="/user/product?brand=<%= brand.name %>"
+                class="block px-4 py-2 text-gray-300 hover:bg-gray-800/70 hover:text-white text-sm rounded-md transition">
+                <%= brand.name %>
+            </a>
+        <% }) %>
+
+    </div>
+</div>
+
+
+      
+      
+      
         <a href="/user/about" class="text-gray-400 font-semibold hover:text-white transition text-sm">ABOUT</a>
         <a href="/user/contact" class="text-gray-400 font-semibold hover:text-white transition text-sm">CONTACT</a>
     </div>
     <div class="nav-right flex items-center gap-3">
        
         <a href="/user/profile?section=wishlist" class="text-lg"><i class="fa-solid fa-heart"></i></a>
+        <!-- cart starting -->
       <a href="/user/cart" class="relative text-gray-300 hover:text-white">
     <i class="fas fa-shopping-cart fa-lg"></i>
 
@@ -91,6 +143,7 @@
         </span>
     <% } %>
 </a>
+<!-- cart ending -->
         <a href="/user/profile" class="text-lg"><i class="fa-solid fa-user"></i></a>
     </div>
 </nav>
@@ -111,7 +164,7 @@
     .replace(referralCode, `<span class="referral-code">${referralCode}</span>`)
     .replace(fluorescentAmountForReferrar, `<span class="fluorescent-amount">${fluorescentAmountForReferrar}</span>`)
     .replace(fluorescentAmountForReferrered, `<span class="fluorescent-amount1">${fluorescentAmountForReferrered}</span>`);
-  const speed = 2.5;
+  const speed = 1.5;
   const textWidth = scrollingText.offsetWidth;
   const containerWidth = container.offsetWidth;
   let position = containerWidth;

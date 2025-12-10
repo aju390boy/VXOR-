@@ -335,46 +335,86 @@
 </div>
 
 <!-- Modals for Cancel and Return -->
+<!-- Cancel Modal with Predefined Reasons -->
 <div id="cancelModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
-    <div class="bg-white w-full max-w-md mx-auto rounded-2xl shadow-lg p-6 relative">
-        <button id="btnCloseCancel" class="absolute top-2 right-3 text-gray-400 hover:text-red-500 text-xl font-bold">×</button>
-        <h2 class="text-xl font-semibold mb-4 text-gray-800">Cancel Item</h2>
-        <form id="cancelForm" class="space-y-4">
-            <input type="hidden" id="cancelOrderId" name="orderId">
-            <input type="hidden" id="cancelItemId" name="itemId">
-            <div>
-                <label for="cancel-note" class="block text-gray-700 mb-1">Reason for Cancellation</label>
-                <textarea id="cancel-note" name="cancel-note" rows="4" required class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 resize-none" placeholder="Write your reason here..."></textarea>
-            </div>
-            <div class="flex justify-end">
-                <button type="submit" class="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg">
-                    Submit 
-                </button>
-            </div>
-        </form>
-    </div>
+  <div class="bg-white w-full max-w-md mx-auto rounded-2xl shadow-lg p-6 relative max-h-[90vh] overflow-y-auto">
+    <button id="btnCloseCancel" class="absolute top-2 right-3 text-gray-400 hover:text-red-500 text-xl font-bold">×</button>
+    <h2 class="text-xl font-semibold mb-4 text-gray-800">Cancel Item</h2>
+    <form id="cancelForm" class="space-y-4">
+      <input type="hidden" id="cancelOrderId" name="orderId">
+      <input type="hidden" id="cancelItemId" name="itemId">
+      
+      <!-- Predefined Reasons Dropdown -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Select Reason</label>
+        <select id="cancelReasonSelect" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400" required>
+          <option value="">Choose a reason...</option>
+          <option value="changed my mind">Changed my mind</option>
+          <option value="wrong product received">Wrong product received</option>
+          <option value="doesnt match description">Doesn't match description</option>
+          <option value="out of stock">Out of stock</option>
+          <option value="better price elsewhere">Better price elsewhere</option>
+          <option value="ordered by mistake">Ordered by mistake</option>
+          <option value="other">Other (please specify)</option>
+        </select>
+      </div>
+
+      <!-- Custom Reason (shows when "Other" selected) -->
+      <div id="customCancelReason" class="hidden">
+        <label for="cancel-note" class="block text-sm font-medium text-gray-700 mb-2">Please specify:</label>
+        <textarea id="cancel-note" name="cancel-note" rows="3" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 resize-none" placeholder="Enter your reason..."></textarea>
+      </div>
+
+      <div class="flex justify-end gap-3 pt-2">
+        <button type="button" id="cancelFormCancel" class="px-6 py-2 text-gray-600 bg-gray-200 hover:bg-gray-300 rounded-lg transition">Cancel</button>
+        <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-medium transition">Submit Cancellation</button>
+      </div>
+    </form>
+  </div>
 </div>
 
+<!-- cancel modal end -->
+
 <!-- Return Modal -->
+<!-- Return Modal with Predefined Reasons -->
 <div id="returnModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
-    <div class="bg-white w-full max-w-md mx-auto rounded-2xl shadow-lg p-6 relative">
-        <button id="btnCloseReturn" class="absolute top-2 right-3 text-gray-400 hover:text-red-500 text-xl font-bold">×</button>
-        <h2 class="text-xl font-semibold mb-4 text-gray-800">Return Request</h2>
-        <form id="returnForm" class="space-y-4">
-            <input type="hidden" id="returnOrderId" name="orderId">
-            <input type="hidden" id="returnItemId" name="itemId">
-            <div>
-                <label for="returnNote" class="block text-gray-700 mb-1">Reason for Return</label>
-                <textarea id="returnNote" name="returnNote" rows="4" required class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none" placeholder="Write your reason here..."></textarea>
-            </div>
-            <div class="flex justify-end">
-                <button type="submit" class="bg-purple-500 hover:bg-purple-600 text-white py-2 px-4 rounded-lg">
-                    Submit Request
-                </button>
-            </div>
-        </form>
-    </div>
+  <div class="bg-white w-full max-w-md mx-auto rounded-2xl shadow-lg p-6 relative max-h-[90vh] overflow-y-auto">
+    <button id="btnCloseReturn" class="absolute top-2 right-3 text-gray-400 hover:text-purple-500 text-xl font-bold">×</button>
+    <h2 class="text-xl font-semibold mb-4 text-gray-800">Return Request</h2>
+    <form id="returnForm" class="space-y-4">
+      <input type="hidden" id="returnOrderId" name="orderId">
+      <input type="hidden" id="returnItemId" name="itemId">
+      
+      <!-- Predefined Reasons Dropdown -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Select Reason</label>
+        <select id="returnReasonSelect" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400" required>
+          <option value="">Choose a reason...</option>
+          <option value="defective or damaged">Defective or damaged</option>
+          <option value="wrong item received">Wrong item received</option>
+          <option value="doesnt fit properly">Doesn't fit properly</option>
+          <option value="poor quality">Poor quality</option>
+          <option value="doesnt match description">Doesn't match description</option>
+          <option value="changed my mind">Changed my mind</option>
+          <option value="other">Other (please specify)</option>
+        </select>
+      </div>
+
+      <!-- Custom Reason (shows when "Other" selected) -->
+      <div id="customReturnReason" class="hidden">
+        <label for="returnNote" class="block text-sm font-medium text-gray-700 mb-2">Please specify:</label>
+        <textarea id="returnNote" name="returnNote" rows="3" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 resize-none" placeholder="Enter your reason..."></textarea>
+      </div>
+
+      <div class="flex justify-end gap-3 pt-2">
+        <button type="button" id="returnFormCancel" class="px-6 py-2 text-gray-600 bg-gray-200 hover:bg-gray-300 rounded-lg transition">Cancel</button>
+        <button type="submit" class="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded-lg font-medium transition">Submit Return Request</button>
+      </div>
+    </form>
+  </div>
 </div>
+
+<!-- return modal end -->
 <script>
 function openModal(modal) {
   if (modal) modal.classList.remove('hidden');
@@ -386,17 +426,28 @@ function closeModal(modal) {
 document.addEventListener('DOMContentLoaded', () => {
   const cancelModal = document.getElementById('cancelModal');
   const returnModal = document.getElementById('returnModal');
-  const btnCloseCancel = document.getElementById('btnCloseCancel');
-  const btnCloseReturn = document.getElementById('btnCloseReturn');
-  const cancelForm = document.getElementById('cancelForm');
-  const returnForm = document.getElementById('returnForm');
+  const cancelReasonSelect = document.getElementById('cancelReasonSelect');
+  const returnReasonSelect = document.getElementById('returnReasonSelect');
+  const customCancelReason = document.getElementById('customCancelReason');
+  const customReturnReason = document.getElementById('customReturnReason');
 
-  // --- Item-level Modal Openers ---
+  // Toggle custom reason fields
+  function toggleCustomReason(select, customDiv) {
+    if (select.value === 'other') {
+      customDiv.classList.remove('hidden');
+    } else {
+      customDiv.classList.add('hidden');
+    }
+  }
+
+  cancelReasonSelect?.addEventListener('change', () => toggleCustomReason(cancelReasonSelect, customCancelReason));
+  returnReasonSelect?.addEventListener('change', () => toggleCustomReason(returnReasonSelect, customReturnReason));
+
+  // Item-level Modal Openers (unchanged)
   document.body.addEventListener('click', (e) => {
     const btn = e.target.closest('button');
     if (!btn) return;
 
-    // Item Cancel
     if (btn.classList.contains('cancel-item-btn')) {
       const orderId = btn.dataset.orderId;
       const itemId = btn.dataset.itemId;
@@ -406,7 +457,6 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Item Return
     if (btn.classList.contains('return-item-btn')) {
       const orderId = btn.dataset.orderId;
       const itemId = btn.dataset.itemId;
@@ -416,59 +466,102 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Close Modals
-    if (btn === btnCloseCancel) closeModal(cancelModal);
-    if (btn === btnCloseReturn) closeModal(returnModal);
+    if (btn.id === 'btnCloseCancel') closeModal(cancelModal);
+    if (btn.id === 'btnCloseReturn') closeModal(returnModal);
+    if (btn.id === 'cancelFormCancel') closeModal(cancelModal);
+    if (btn.id === 'returnFormCancel') closeModal(returnModal);
   });
 
-  // Close modal when clicking backdrop
-  cancelModal.addEventListener('click', function (e) {
-    if (e.target === cancelModal) closeModal(cancelModal);
-  });
-  returnModal.addEventListener('click', function (e) {
-    if (e.target === returnModal) closeModal(returnModal);
+  // Close on backdrop click
+  [cancelModal, returnModal].forEach(modal => {
+    modal?.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal(modal);
+    });
   });
 
-  // --- Form Submission Logic ---
-  async function handleFormSubmit(form, url, body) {
+  // Form Submission with Predefined Reasons
+  async function handleFormSubmit(formId, url) {
+    const form = document.getElementById(formId);
+    const selectId = formId === 'cancelForm' ? 'cancelReasonSelect' : 'returnReasonSelect';
+    const customId = formId === 'cancelForm' ? 'cancel-note' : 'returnNote';
+    
+    const reasonSelect = document.getElementById(selectId);
+    const customReason = document.getElementById(customId);
+    
+    let reason = reasonSelect.value;
+    if (reason === 'other' && customReason.value.trim()) {
+      reason = customReason.value.trim();
+    }
+    
+    if (!reason) {
+      Swal.fire({
+        title: 'Required!',
+        text: 'Please select a reason.',
+        icon: 'warning',
+        toast: true,
+        position: 'top-end'
+      });
+      return;
+    }
+
     try {
       const response = await fetch(url, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
+        body: JSON.stringify({ reason })
       });
       const result = await response.json();
+      
       if (response.ok) {
-        Swal.fire({ icon: 'success', title: 'Success!', text: result.message })
-          .then(() => location.reload());
+        Swal.fire({
+          title: 'Success!',
+          text: result.message || 'Request submitted successfully!',
+          icon: 'success',
+          toast: true,
+          position: 'top-end',
+          timer: 2500,
+          showConfirmButton: false
+        }).then(() => {
+          location.reload();
+        });
       } else {
-        Swal.fire({ icon: 'error', title: 'Oops...', text: result.message });
+        Swal.fire({
+          title: 'Error!',
+          text: result.message || 'Something went wrong!',
+          icon: 'error',
+          toast: true,
+          position: 'top-end'
+        });
       }
     } catch (error) {
-      Swal.fire({ icon: 'error', title: 'Oops...', text: 'An error occurred.' });
+      Swal.fire({
+        title: 'Error!',
+        text: 'Network error occurred.',
+        icon: 'error',
+        toast: true,
+        position: 'top-end'
+      });
     } finally {
-      closeModal(form.closest('.fixed'));
+      closeModal(document.getElementById(formId).closest('.fixed'));
     }
   }
 
-  // Cancel form
-  cancelForm.addEventListener('submit', (e) => {
+  // Cancel Form
+  document.getElementById('cancelForm').addEventListener('submit', (e) => {
     e.preventDefault();
-    const orderId = cancelForm.querySelector('#cancelOrderId').value;
-    const itemId = cancelForm.querySelector('#cancelItemId').value;
-    const reason = cancelForm.querySelector('#cancel-note').value;
+    const orderId = document.getElementById('cancelOrderId').value;
+    const itemId = document.getElementById('cancelItemId').value;
     const url = `/user/orders/${orderId}/items/${itemId}/request-cancellation`;
-    handleFormSubmit(cancelForm, url, { reason });
+    handleFormSubmit('cancelForm', url);
   });
 
-  // Return form
-  returnForm.addEventListener('submit', (e) => {
+  // Return Form
+  document.getElementById('returnForm').addEventListener('submit', (e) => {
     e.preventDefault();
-    const orderId = returnForm.querySelector('#returnOrderId').value;
-    const itemId = returnForm.querySelector('#returnItemId').value;
-    const reason = returnForm.querySelector('#returnNote').value;
+    const orderId = document.getElementById('returnOrderId').value;
+    const itemId = document.getElementById('returnItemId').value;
     const url = `/user/orders/${orderId}/items/${itemId}/request-return`;
-    handleFormSubmit(returnForm, url, { reason });
+    handleFormSubmit('returnForm', url);
   });
 });
 </script>

@@ -76,20 +76,174 @@ exports.getSingleOrder = async (req, res) => {
 };
 
 exports.updateProductStatus = async (req, res) => {
-  try {
-    const { orderId, productId } = req.params;
-    const { status } = req.body;
-    const order = await Order.findById(orderId);
-    if (!order) return res.status(404).json({ message: "Order not found" });
-    const item = order.products.id(productId);
-    if (!item)
-      return res.status(404).json({ message: "Product item not found" });
-    item.status = status;
-    await order.save();
-    res.json({ message: "Product status updated successfully" });
-  } catch (err) {
-    res.status(500).json({ message: "Failed to update status" });
-  }
+    // We'll use Mongoose transactions to ensure atomicity for complex operations
+    const session = await Order.startSession();
+    try {
+        session.startTransaction();
+
+        const { orderId, productId } = req.params;
+        const { status: newStatus } = req.body; // Use alias for clarity
+
+        const order = await Order.findById(orderId).session(session);
+        if (!order) {
+            await session.abortTransaction();
+            return res.status(404).json({ message: "Order not found" });
+        }
+        
+
+        const item = order.products.id(productId);
+        if (!item) {
+            await session.abortTransaction();
+            return res.status(404).json({ message: "Product item not found" });
+        }
+        
+        const currentStatus = item.status;
+        const userId = order.user_id;
+        const totalItems = order.products.length;
+
+        // --- 4. Check for Same Status Update ---
+        if (currentStatus === newStatus) {
+            await session.abortTransaction();
+            return res.status(400).json({ message: `Product is already in status: ${currentStatus}` });
+        }
+
+        // --- 1. & 6. Validation for Final/Restricted States ---
+        const finalStates = ["CANCELLED", "RETURNED"];
+        if (finalStates.includes(currentStatus)) {
+            // Check if the item is already CANCELLED or RETURNED (Requirement 1)
+            // Or if it's already RETURN REQUESTED and trying to update to RETURNED (Requirement 6)
+            if (currentStatus === "CANCELLED" || currentStatus === "RETURNED") {
+                await session.abortTransaction();
+                return res.status(400).json({ 
+                    message: `The product is already ${currentStatus}.` 
+                });
+            }
+        }
+        
+        // Specific restriction for RETURNED (Requirement 6)
+        const invalidReturnFrom = ["CONFIRMED", "PROCESSING", "PACKED", "SHIPPED", "CANCELLED", "CANCELLATION REQUESTED"];
+        if (newStatus === "RETURNED" && invalidReturnFrom.includes(currentStatus)) {
+            await session.abortTransaction();
+            return res.status(400).json({ 
+                message: `Cannot update to RETURNED from current status: ${currentStatus}.` 
+            });
+        }
+        
+        // Specific restriction for CANCELLED (Requirement 5)
+        const invalidCancelFrom = ["RETURN REQUESTED", "RETURNED","DELIVERED"];
+        if (newStatus === "CANCELLED" && invalidCancelFrom.includes(currentStatus)) {
+            await session.abortTransaction();
+            return res.status(400).json({ 
+                message: `Cannot update to CANCELLED from current status: ${currentStatus}.` 
+            });
+        }
+
+        // --- 2. Enforcing One-Way Progression (Forward Flow) ---
+        const invalidTransitions = {
+            'CONFIRMED': ['PENDING'], 
+            'PROCESSING': ['PENDING', 'CONFIRMED'],
+            'PACKED': ['PENDING', 'CONFIRMED', 'PROCESSING'], 
+            'SHIPPED': ['PENDING', 'CONFIRMED', 'PROCESSING', 'PACKED'],
+            'DELIVERED': ['PENDING', 'CONFIRMED', 'PROCESSING', 'PACKED', 'SHIPPED'],
+        };
+        const isInvalidBackward = invalidTransitions[currentStatus] && invalidTransitions[currentStatus].includes(newStatus);
+        if (isInvalidBackward) {
+            await session.abortTransaction();
+            return res.status(400).json({ 
+                message: `Cannot go from ${currentStatus} back to ${newStatus}.` 
+            });
+        }
+
+
+       const forwardStatuses = ["CONFIRMED", "PROCESSING", "PACKED", "SHIPPED", "DELIVERED"];
+        // FIX 1: Correct the logical OR operator usage
+        if (forwardStatuses.includes(newStatus) && currentStatus === "PENDING") {
+            // Assuming order.payment_status field exists and indicates overall payment status.
+            if (order.payment_status !== "COMPLETED") {
+                await session.abortTransaction();
+                return res.status(400).json({ 
+                    message: `Payment status is ${order.payment_status}, not yet COMPLETED. Cannot move to ${newStatus}.` 
+                });
+            }
+        }
+        
+
+
+
+        let refundAmount = 0; // Initialize refund amount
+        let needsRefund = false;
+        let needsStockIncrement = false;
+
+        // --- 5. Handling CANCELLED Status (Refund & Stock Increment) ---
+        const cancellableStatuses = ["CONFIRMED", "PROCESSING", "PACKED", "SHIPPED"];
+        if (newStatus === "CANCELLED" && cancellableStatuses.includes(currentStatus)) {
+            needsRefund = true;
+            needsStockIncrement = true;
+        }
+
+        // --- 6. Handling RETURNED Status (Refund & Stock Increment) ---
+        const returnableStatuses = ["DELIVERED", "RETURN REQUESTED"];
+        if (newStatus === "RETURNED" && returnableStatuses.includes(currentStatus)) {
+            needsRefund = true;
+            needsStockIncrement = true;
+        }
+        
+        if (needsRefund) {
+             // Calculate the refund amount for this product item
+             const itemTax = (order.tax || 0) / totalItems;
+             const itemCoupon = (order.coupon_discount || 0) / totalItems;
+             const itemOffer = (order.offer_discount || 0) / totalItems;
+             
+             // The refund formula: (Item Price) + (Prorated Tax) - (Prorated Coupon) - (Prorated Offer)
+             refundAmount = (item.price * item.quantity) + (itemTax * item.quantity) - (itemCoupon * item.quantity) - (itemOffer * item.quantity);
+
+             // Perform the refund
+             await refundToWallet(
+                 userId, 
+                 refundAmount, 
+                 order.order_id, 
+                 `Refund for ${newStatus} product`
+             );
+        }
+        
+        if (needsStockIncrement) {
+             // Increase product stock quantity
+             await incrementProductQuantity(
+                 item.product_id,
+                 item.colorName,
+                 item.size,
+                 item.quantity
+             );
+        }
+
+        // --- Final Update and Save ---
+        item.status = newStatus;
+
+        // *** NEW LOGIC: Check if all items are finalized (CANCELLED or RETURNED) ***
+        const allItemsFinalized = order.products.every(p => {
+            // Check the current item's new status if it's the one we're updating
+            const statusToCheck = (p._id.toString() === productId) ? newStatus : p.status;
+            return finalStates.includes(statusToCheck);
+        });
+        
+        if (allItemsFinalized && order.payment_status !== "REFUNDED") {
+            order.payment_status = "REFUNDED";
+        }
+        await order.save({ session }); // Pass the session to the save method
+
+        await session.commitTransaction(); // Commit all changes if successful
+
+        res.json({ message: "Product status updated successfully" });
+
+    } catch (err) {
+        await session.abortTransaction(); // Rollback all changes if an error occurred
+        console.error(err);
+        res.status(500).json({ 
+            message: err.message || "Failed to update status due to an internal error." 
+        });
+    } finally {
+        session.endSession();
+    }
 };
 
 // Update product item expected delivery
@@ -186,7 +340,8 @@ exports.handleOrderRequestAction = async (req, res) => {
             order.payment_status = "REFUNDED";
           }
           order.order_cancellation_reason = null;
-        } else if (["WALLET", "ONLINE"].includes(order.payment_method)) {
+        } else if (["WALLET", "razorpay"].includes(order.payment_method)) {
+          console.log("wallet or online........................")
           if (order.payment_status === "COMPLETED") {
             await refundToWallet(
               userId,
@@ -244,7 +399,7 @@ exports.handleOrderRequestAction = async (req, res) => {
             order.payment_status = "REFUNDED";
           }
           order.order_return_reason = null;
-        } else if (["WALLET", "ONLINE"].includes(order.payment_method)) {
+        } else if (["WALLET", "razorpay"].includes(order.payment_method)) {
           if (order.payment_status === "COMPLETED") {
             await refundToWallet(
               userId,
@@ -328,10 +483,14 @@ exports.handleProductRequestAction = async (req, res) => {
       session.endSession();
       return res.status(404).json({ message: "Product item not found" });
     }
-    const productOffers = item.offer_applied || 0;
-    const couponDiscount = item.coupon_discount || 0;
+    const totalItems = order.products.length;
+
+// Split and distribute common charges
+const itemTax = (order.tax || 0) / totalItems;
+const itemCoupon = (order.coupon_discount || 0) / totalItems;
+const itemOffer = (order.offer_discount || 0) / totalItems;
     const refundAmount =
-      (item.price || 0) + order.tax - productOffers - couponDiscount;
+      (item.price || 0) + itemTax - itemCoupon - itemOffer;
     const prevStatus = item.prev_status || "CONFIRMED";
     //////approve/////////
     if (action === "approve") {
@@ -354,7 +513,7 @@ exports.handleProductRequestAction = async (req, res) => {
           order.payment_status='REFUNDED';
          }
 
-        if (["WALLET", "ONLINE"].includes(order.payment_method)) {
+        if (["WALLET", "razorpay"].includes(order.payment_method)) {
           if (refundAmount > 0) {
             await refundToWallet(
               userId,
@@ -395,7 +554,7 @@ exports.handleProductRequestAction = async (req, res) => {
          if(allStats){
           order.payment_status='REFUNDED';
          }
-        if (["WALLET", "ONLINE", "COD"].includes(order.payment_method)) {
+        if (["WALLET", "razorpay", "COD"].includes(order.payment_method)) {
           if (refundAmount > 0) {
             await refundToWallet(
               userId,
@@ -490,6 +649,7 @@ async function incrementProductQuantity(
 
 /////refund wallet///////
 async function refundToWallet(userId, amount, orderId, description) {
+  console.log('refund hitted................')
   let wallet = await Wallet.findOne({ user_id: userId });
   if (!wallet)
     wallet = new Wallet({ user_id: userId, balance: 0, transactions: [] });

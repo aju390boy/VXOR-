@@ -1,16 +1,12 @@
 <%# views/user/profile/profileMain.ejs %>
 <% title = 'VIXOR | My Profile'; -%>
-
 <%# Breadcrumb %>
 <div class="flex justify-between items-center px-6 py-2 bg-gray-900 mt-2 flex-wrap gap-1">
     <div class="breadcrumb text-xs text-gray-400">
         <a href="/user/home" class="text-gray-400 font-bold hover:text-white">HOME</a> > <span>MY PROFILE</span>
     </div>
 </div>
-
 <div class="flex flex-col md:flex-row px-10 py-2 bg-gray-900 min-h-5 text-gray-400">
-
-    
     <aside id="profile-sidebar" class="
         w-full md:w-1/4 lg:w-1/5
         p-4 md:p-6 border-r border-gray-800 bg-gray-900
@@ -33,7 +29,7 @@
             </li>
             <li>
                 <a href="/user/profile/section/wishlist" data-section="wishlist" class="sidebar-link flex items-center gap-3 py-4 px-2 rounded text-gray-400 hover:bg-gray-800 hover:text-white transition duration-200">
-                    <i class="fa-regular fa-heart"></i> WISHLIST
+                    <i class="fa-solid fa-heart"></i>WISHLIST
                 </a>
             </li>
             <li>
@@ -49,6 +45,11 @@
             <li>
                 <a href="/user/profile/section/wallet" data-section="wallet" class="sidebar-link flex items-center gap-3 py-4 px-2 rounded text-gray-400 hover:bg-gray-800 hover:text-white transition duration-200">
                     <i class="fa-solid fa-wallet"></i> WALLET
+                </a>
+            </li>
+             <li>
+                <a href="/user/profile/section/referral" data-section="referral" class="sidebar-link flex items-center gap-3 py-4 px-2 rounded text-gray-400 hover:bg-gray-800 hover:text-white transition duration-200">
+                    <i class="fa-solid fa-gift"></i> REFER AND EARN
                 </a>
             </li>
             <li class="mt-4 border-t border-gray-700 pt-4">
@@ -88,6 +89,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
     function openModal(modalId) {
         const modal = document.getElementById(modalId);
@@ -132,28 +134,57 @@
 function bindCancelReturnModals() {
   const cancelModal = document.getElementById('cancelModal');
   const returnModal = document.getElementById('returnModal');
-  const cancelForm = document.getElementById('cancelForm');
-  const returnForm = document.getElementById('returnForm');
+  const cancelReasonSelect = document.getElementById('cancelReasonSelect');
+  const returnReasonSelect = document.getElementById('returnReasonSelect');
+  const customCancelReason = document.getElementById('customCancelReason');
+  const customReturnReason = document.getElementById('customReturnReason');
 
-  if (cancelModal) {
-    cancelModal.addEventListener('click', e => {
-      if (e.target === cancelModal) closeModal('cancelModal');
-    });
+  // Toggle custom reason fields
+  function toggleCustomReason(select, customDiv) {
+    if (select?.value === 'other') {
+      customDiv?.classList.remove('hidden');
+    } else {
+      customDiv?.classList.add('hidden');
+    }
   }
-  if (returnModal) {
-    returnModal.addEventListener('click', e => {
-      if (e.target === returnModal) closeModal('returnModal');
-    });
-  }
+
+  cancelReasonSelect?.addEventListener('change', () => toggleCustomReason(cancelReasonSelect, customCancelReason));
+  returnReasonSelect?.addEventListener('change', () => toggleCustomReason(returnReasonSelect, customReturnReason));
+
+  // Modal backdrop close
+  [cancelModal, returnModal].forEach(modal => {
+    if (modal) {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal(modal.id);
+      });
+    }
+  });
+
+  // Cancel Form Submission
+  const cancelForm = document.getElementById('cancelForm');
   if (cancelForm) {
-    cancelForm.addEventListener('submit', async e => {
+    cancelForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const orderId = document.getElementById('cancelOrderId').value;
-      const reason = document.getElementById('cancel-note').value.trim();
+      const reasonSelect = document.getElementById('cancelReasonSelect');
+      const customReason = document.getElementById('cancel-note');
+      
+      let reason = reasonSelect.value;
+      if (reason === 'other' && customReason?.value.trim()) {
+        reason = customReason.value.trim();
+      }
+      
       if (!reason) {
-        Swal.fire('Error', 'Please provide a cancellation reason.', 'error');
+        Swal.fire({
+          title: 'Required!',
+          text: 'Please select a cancellation reason.',
+          icon: 'warning',
+          toast: true,
+          position: 'top-end'
+        });
         return;
       }
+
       const url = `/user/orders/${orderId}/request-cancellation`;
       try {
         const resp = await fetch(url, {
@@ -162,27 +193,66 @@ function bindCancelReturnModals() {
           body: JSON.stringify({ reason }),
         });
         const data = await resp.json();
+        
         if (resp.ok) {
-          await Swal.fire('Success!', 'Order cancellation successfully submitted.', 'success');
+          Swal.fire({
+            title: 'Success!',
+            text: 'Cancellation request submitted!',
+            icon: 'success',
+            toast: true,
+            position: 'top-end',
+            timer: 2500,
+            showConfirmButton: false,
+            timerProgressBar: true
+          });
           closeModal('cancelModal');
-          window.location.href = '/user/profile?section=orders';
+          setTimeout(() => window.location.href = '/user/profile?section=orders', 500);
         } else {
-          Swal.fire('Error', data.message || 'Failed to cancel order.', 'error');
+          Swal.fire({
+            title: 'Error!',
+            text: data.message || 'Failed to cancel order.',
+            icon: 'error',
+            toast: true,
+            position: 'top-end'
+          });
         }
-      } catch {
-        Swal.fire('Error', 'Network error. Please try again later.', 'error');
+      } catch (error) {
+        Swal.fire({
+          title: 'Error!',
+          text: 'Network error. Please try again.',
+          icon: 'error',
+          toast: true,
+          position: 'top-end'
+        });
       }
     });
   }
+
+  // Return Form Submission
+  const returnForm = document.getElementById('returnForm');
   if (returnForm) {
-    returnForm.addEventListener('submit', async e => {
+    returnForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const orderId = document.getElementById('returnOrderId').value;
-      const reason = document.getElementById('returnNote').value.trim();
+      const reasonSelect = document.getElementById('returnReasonSelect');
+      const customReason = document.getElementById('returnNote');
+      
+      let reason = reasonSelect.value;
+      if (reason === 'other' && customReason?.value.trim()) {
+        reason = customReason.value.trim();
+      }
+      
       if (!reason) {
-        Swal.fire('Error', 'Please provide a return reason.', 'error');
+        Swal.fire({
+          title: 'Required!',
+          text: 'Please select a return reason.',
+          icon: 'warning',
+          toast: true,
+          position: 'top-end'
+        });
         return;
       }
+
       const url = `/user/orders/${orderId}/request-return`;
       try {
         const resp = await fetch(url, {
@@ -191,19 +261,42 @@ function bindCancelReturnModals() {
           body: JSON.stringify({ reason }),
         });
         const data = await resp.json();
+        
         if (resp.ok) {
-          await Swal.fire('Success!', 'Return request successfully submitted.', 'success');
+          Swal.fire({
+            title: 'Success!',
+            text: 'Return request submitted!',
+            icon: 'success',
+            toast: true,
+            position: 'top-end',
+            timer: 2500,
+            showConfirmButton: false,
+            timerProgressBar: true
+          });
           closeModal('returnModal');
-          window.location.href = '/user/profile?section=orders';
+          setTimeout(() => window.location.href = '/user/profile?section=orders', 500);
         } else {
-          Swal.fire('Error', data.message || 'Failed to request return.', 'error');
+          Swal.fire({
+            title: 'Error!',
+            text: data.message || 'Failed to request return.',
+            icon: 'error',
+            toast: true,
+            position: 'top-end'
+          });
         }
-      } catch {
-        Swal.fire('Error', 'Network error. Please try again later.', 'error');
+      } catch (error) {
+        Swal.fire({
+          title: 'Error!',
+          text: 'Network error. Please try again.',
+          icon: 'error',
+          toast: true,
+          position: 'top-end'
+        });
       }
     });
   }
 }
+
     /////////////////new logic end////////////
 
      let variantsData = [];
@@ -230,13 +323,63 @@ function bindCancelReturnModals() {
             colorSelector.appendChild(colorDot);
         });
     }
+    ////////////////DOM Content Loaded//////////////////////////
     document.addEventListener('DOMContentLoaded', () => {
         const profileContentArea = document.getElementById('profile-content');
         const sidebarLinks = document.querySelectorAll('.sidebar-link');
         const variantModal = document.getElementById('variantSelectorModal');
         let activeProductId = null;
         const loadSection = async (sectionName) => {
+                console.log('hitted......................')
+
             try {
+                
+                 if (sectionName === 'referral') {
+            const response = await fetch(`/user/profile/section/${sectionName}`);
+            if (!response.ok) {
+                const errorMessage = await response.text();
+                Swal.fire({ icon: 'error', title: 'Error!', text: `Error loading referral: ${errorMessage}`, width:'400px', customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' } });
+                return;
+            }
+            profileContentArea.innerHTML = await response.text();
+            
+           /////////////////////////new refferall logic//////////////////////////
+document.getElementById('generateReferralBtn')?.addEventListener('click', async () => {
+  const btn = document.getElementById('generateReferralBtn');
+  btn.innerHTML = '<span class="flex items-center gap-2"><div class="w-5 h-5 border-2 border-white rounded-full border-t-transparent animate-spin"></div>Generating...</span>';
+  try {
+    const response = await fetch('/user/profile/generate-referral', { method: 'POST' });
+    const data = await response.json();
+
+    if (data.success) {
+      Swal.fire({
+        icon: 'success',
+        title: 'Code Generated!',
+        text: `Your code: ${data.code}`,
+        timer: 2000
+      });
+      const referralCodeText = document.getElementById('referralCodeText');
+      if (referralCodeText) {
+        referralCodeText.textContent = data.code;
+      }
+      const referralCodeContainer = document.getElementById('referralCodeContainer');
+      const generateContainer = btn.closest('.bg-gradient-to-br');
+      if (referralCodeContainer && generateContainer) {
+        referralCodeContainer.style.display = 'block';
+        generateContainer.style.display = 'none';
+      }
+      btn.innerHTML = 'Generate Referral Code';
+    }
+  } catch (error) {
+    Swal.fire('Error', 'Failed to generate code', 'error');
+    btn.innerHTML = 'Generate Referral Code';
+  }
+});
+
+////////////////new reffereal logic end////////////////////////
+            initReferralCopy();
+            return;
+        }
                 const response = await fetch(`/user/profile/section/${sectionName}`);
                 if (!response.ok) {
                     const errorMessage = await response.text();
@@ -245,6 +388,16 @@ function bindCancelReturnModals() {
                     return;
                 }
                 profileContentArea.innerHTML = await response.text();
+                //////////////PINCODE AUTOMATICALLY GENERATE//////////////
+                if (sectionName === 'address') {
+    // Wait 100 milliseconds for HTML to fully load into the DOM
+    setTimeout(() => {
+        console.log("Attempting to attach listeners now...");
+        attachPincodeListener('add-address-form');
+        attachPincodeListener('edit-address-form');
+    }, 100); 
+}
+                ///////////////////////END PINCODE/////////////////////////
               bindCancelReturnModals();
             } catch (error) {
                 console.error('Error fetching profile section:', error);
@@ -270,66 +423,62 @@ function bindCancelReturnModals() {
             const removeWishlistBtn = e.target.closest('.remove-from-wishlist-btn'); 
             const moveToCartBtn = e.target.closest('.move-to-cart-btn');
             const btn = e.target.closest('button');
-
             ///////////new ////////////
             if (!btn) return;
-
  if (btn.classList.contains('cancelEntireOrderBtn')) {
-      const orderId = btn.dataset.orderId || btn.getAttribute('data-order-id');
-      if (!orderId) return;
-
-      const { isConfirmed } = await Swal.fire({
-        title: 'Are you sure?',
-        text: 'Do you want to cancel this order?',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Yes, cancel it',
-        cancelButtonText: 'No',
-      });
-      if (isConfirmed) {
-        document.getElementById('cancelOrderId').value = orderId;
-        document.getElementById('cancelItemId').value = ''; // entire order
-        openModal('cancelModal');
-      }
-    }
-    else if (btn.classList.contains('returnEntireOrderBtn')) {
-      const orderId = btn.dataset.orderId || btn.getAttribute('data-order-id');
-      if (!orderId) return;
-
-      const { isConfirmed } = await Swal.fire({
-        title: 'Return Request',
-        text: 'Do you want to request a return for this order?',
-        icon: 'info',
-        showCancelButton: true,
-        confirmButtonText: 'Yes, request return',
-        cancelButtonText: 'No',
-      });
-      if (isConfirmed) {
-        document.getElementById('returnOrderId').value = orderId;
-        document.getElementById('returnItemId').value = ''; // entire order
-        openModal('returnModal');
-      }
-    }
-     bindCancelReturnModals();
+  const orderId = btn.dataset.orderId || btn.getAttribute('data-order-id');
+  if (!orderId) return;
+  const result = await Swal.fire({
+    title: 'Cancel Entire Order?',
+    html: 'This will cancel <strong>all items</strong> in the order.',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: '<i class="fas fa-ban mr-2"></i> Yes, cancel!',
+    cancelButtonText: '<i class="fas fa-times mr-2"></i> No',
+    confirmButtonColor: '#dc2626',
+    cancelButtonColor: '#6b7280',
+    reverseButtons: true
+  });
+  if (result.isConfirmed) {
+    document.getElementById('cancelOrderId').value = orderId;
+    document.getElementById('cancelItemId').value = ''; // entire order
+    openModal('cancelModal');
+  }
+} else if (btn.classList.contains('returnEntireOrderBtn')) {
+  const orderId = btn.dataset.orderId || btn.getAttribute('data-order-id');
+  if (!orderId) return;
+  const result = await Swal.fire({
+    title: 'Return Entire Order?',
+    html: 'Request return for <strong>all items</strong> in the order?',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: '<i class="fas fa-rotate-left mr-2"></i> Yes, request!',
+    cancelButtonText: '<i class="fas fa-times mr-2"></i> No',
+    confirmButtonColor: '#8b5cf6',
+    cancelButtonColor: '#6b7280',
+    reverseButtons: true
+  });
+  if (result.isConfirmed) {
+    document.getElementById('returnOrderId').value = orderId;
+    document.getElementById('returnItemId').value = ''; // entire order
+    openModal('returnModal');
+  }
+}
+bindCancelReturnModals();
             //////////end///////////////
-
             if (event.target.id === 'addMoneyBtn') {
         const amountInput = document.getElementById('addAmountInput');
         const amount = amountInput.value;
-
         if (!amount || amount < 10) {
             Swal.fire({ icon: 'error', title: 'Invalid Amount', text: 'Please enter an amount of at least ₹10.'});
             return;
         }
-
         try {
-          
             const response = await fetch('/user/wallet/add-money', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ amount: amount })
             });
-
             const data = await response.json();
             if (!data.success) {
                 throw new Error(data.message);
@@ -427,7 +576,6 @@ function bindCancelReturnModals() {
             }else if (removeWishlistBtn) {
     const productId = removeWishlistBtn.dataset.productId;
     const wishlistItemCard = removeWishlistBtn.closest('.flex.items-center');
-
     Swal.fire({
         title: 'Are you sure?',
         text: "This item will be removed from your wishlist.",
@@ -451,9 +599,7 @@ function bindCancelReturnModals() {
                     method: 'DELETE'
                 });
                 const data = await response.json();
-                
                 if (response.ok && data.success) {
-                    // Remove the item from the page for instant feedback
                     wishlistItemCard.remove();
                     Swal.fire({ 
                         icon: 'success', 
@@ -475,18 +621,21 @@ function bindCancelReturnModals() {
 }else if (moveToCartBtn) {
                 activeProductId = moveToCartBtn.dataset.productId;
                 const productTitle = moveToCartBtn.dataset.title;
-
                 try {
-                    const response = await fetch(`/user/product/variants/${activeProductId}`);
-                    if (!response.ok) throw new Error('Could not fetch product details.');
-                    const variants = await response.json();
-                    
-                    populateVariantModal(variants, productTitle);
-                    openModal('variantSelectorModal'); 
-                } catch (error) {
-                    console.error("Could not fetch variants:", error);
-                    Swal.fire({ icon: 'error', title: 'Error', text: 'Could not load product options.' });
-                }
+    const response = await fetch(`/user/product/variants/${activeProductId}`);
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMsg = errorData.message || 'Could not fetch product details.';
+        Swal.fire({ icon: 'error', title: 'Error', text: errorMsg });
+        return;  // Stop further execution on error
+    }
+    const variants = await response.json();
+    populateVariantModal(variants, productTitle);
+    openModal('variantSelectorModal'); 
+} catch (error) {
+    console.error("Could not fetch variants:", error);
+    Swal.fire({ icon: 'error', title: 'Error', text: 'Could not load product options.' });
+}
             } 
 else if (editProfileModal && e.target === editProfileModal) {
                  closeModal('editProfileModal');
@@ -501,7 +650,7 @@ else if (editProfileModal && e.target === editProfileModal) {
             if (form.id === 'profile-update-form') {
                  clearErrorMessages(form);
     if (!validateProfileForm(form)) {
-        return; // Stop submission and show client-side errors
+        return;
     }
                 const formData = new FormData(form);
                 try {
@@ -728,14 +877,11 @@ else if (editProfileModal && e.target === editProfileModal) {
                 if (query === "") { loadSection('orders'); } else { debouncedSearch(query); }
             }
         });
-
-        //////
         if (variantModal) {
             const colorSelector = document.getElementById('variantModalColorSelector');
             const sizeSelector = document.getElementById('variantModalSizeSelector');
             const addToCartBtn = document.getElementById('modalAddToCartBtn');
             const closeBtn = document.getElementById('closeVariantModalBtn');
-
             colorSelector.addEventListener('click', (e) => {
                 if (e.target.classList.contains('w-6')) {
                     colorSelector.querySelectorAll('.w-6').forEach(dot => dot.classList.remove('border-white'));
@@ -743,7 +889,6 @@ else if (editProfileModal && e.target === editProfileModal) {
                     const colorIndex = e.target.dataset.index;
                     const selectedColor = variantsData[colorIndex];
                     document.getElementById('variantModalSelectedColor').innerText = selectedColor.colorName;
-
                     sizeSelector.innerHTML = '';
                     selectedColor.variants.forEach(sizeVar => {
                         const sizeBtn = document.createElement('button');
@@ -754,26 +899,21 @@ else if (editProfileModal && e.target === editProfileModal) {
                     });
                 }
             });
-
             sizeSelector.addEventListener('click', (e) => {
                 if (e.target.tagName === 'BUTTON') {
                     sizeSelector.querySelectorAll('button').forEach(btn => btn.classList.remove('bg-purple-600'));
                     e.target.classList.add('bg-purple-600');
                 }
             });
-
             addToCartBtn.addEventListener('click', async () => {
                 const selectedColorEl = colorSelector.querySelector('.border-white');
                 const selectedSizeEl = sizeSelector.querySelector('.bg-purple-600');
-
                 if (!selectedColorEl || !selectedSizeEl) {
                     Swal.fire({ icon: 'error', title: 'Selection Missing', text: 'Please select a color and size.' });
                     return;
                 }
-
                 const colorName = selectedColorEl.dataset.colorName;
                 const size = selectedSizeEl.dataset.size;
-
                 try {
                     const cartResponse = await fetch('/user/cart', {
                         method: 'POST',
@@ -788,7 +928,7 @@ else if (editProfileModal && e.target === editProfileModal) {
                     if (!wishlistResponse.ok) throw new Error(wishlistData.message);
                     
                     closeModal('variantSelectorModal');
-                    Swal.fire({ icon: 'success', title: 'Success!', text: 'Item moved to cart!' });
+                    Swal.fire({ icon: 'success', title: 'Success!', text: 'Item moved to cart!'});
                     window.location.href='/user/profile?section=wishlist'
                 } catch (error) {
                     console.error("Move to cart error:", error);
@@ -811,16 +951,13 @@ document.addEventListener('click', (event) => {
   if (event.target.classList.contains('prevPageBtn') || event.target.classList.contains('nextPageBtn')) {
     const container = event.target.closest('.pagination-container');
     if (!container) return;
-
     const section = container.dataset.section;
     const pageIndicator = container.querySelector('.pageIndicator');
     if (!pageIndicator) return;
-
     const text = pageIndicator.textContent;
     const match = text.match(/\d+/g);
     const currentPage = parseInt(match[0]);
     const totalPages = parseInt(match[1]);
-
     let newPage = currentPage;
     if (event.target.classList.contains('prevPageBtn') && currentPage > 1) {
       newPage = currentPage - 1;
@@ -842,16 +979,78 @@ function changePage(page, section) {
     })
     .catch(err => console.error(`Error loading ${section} page:`, err));
 }
+
+// REFERRAL COPY FUNCTIONALITY
+function initReferralCopy() {
+    const copyBtn = document.getElementById('copyReferralBtn');
+    const codeEl = document.getElementById('referralCodeText');
+    const statusEl = document.getElementById('copyStatus');
+    if (copyBtn && codeEl) {
+        copyBtn.addEventListener('click', async () => {
+            const text = codeEl.textContent.trim();
+            try {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    await navigator.clipboard.writeText(text);
+                } else {
+                    const temp = document.createElement('textarea');
+                    temp.value = text;
+                    temp.setAttribute('readonly', '');
+                    temp.style.position = 'absolute';
+                    temp.style.left = '-9999px';
+                    document.body.appendChild(temp);
+                    temp.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(temp);
+                }
+                const originalIcon = copyBtn.innerHTML;
+                copyBtn.innerHTML = `
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                `;
+                copyBtn.classList.add('bg-emerald-500', 'hover:bg-emerald-400');
+                copyBtn.classList.remove('from-pink-500', 'to-purple-500');
+                if (statusEl) {
+                    const originalText = statusEl.textContent;
+                    statusEl.textContent = '✅ Copied to clipboard!';
+                    statusEl.className = 'mt-8 text-center text-sm text-emerald-400 font-bold animate-pulse';
+                }
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalIcon;
+                    copyBtn.classList.remove('bg-emerald-500', 'hover:bg-emerald-400');
+                    copyBtn.classList.add('bg-gradient-to-r', 'from-pink-500', 'via-purple-500', 'to-pink-500');
+                    if (statusEl) {
+                        statusEl.textContent = 'Share your code with friends to start earning rewards instantly.';
+                        statusEl.className = 'mt-8 text-center text-sm text-gray-400 font-medium';
+                    }
+                }, 2000);
+            } catch (err) {
+                console.error('Copy failed:', err);
+                if (statusEl) {
+                    statusEl.textContent = '❌ Failed to copy';
+                    statusEl.className = 'mt-8 text-center text-sm text-red-400';
+                    setTimeout(() => {
+                        statusEl.className = 'mt-8 text-center text-sm text-gray-400';
+                        statusEl.textContent = 'Share your code with friends to start earning rewards instantly.';
+                    }, 2000);
+                }
+            }
+        });
+    }
+}
     });
+    ////////////DOM Content end///////////////
 
 
     ///////////////Profile validation//////////////////
-    function validateProfileForm(form) {
+   function validateProfileForm(form) {
     let isValid = true;
     const firstname = form.querySelector('[name="firstname"]');
     const lastname = form.querySelector('[name="lastname"]');
     const email = form.querySelector('[name="email"]');
     const mobile = form.querySelector('[name="mobile"]');
+    const addressId = form.querySelector('[name="addressId"]');
+    
     function showError(input, message) {
         if (!input) return;
         input.classList.add('border-red-500');
@@ -865,21 +1064,63 @@ function changePage(page, section) {
         errorMsg.textContent = message;
         isValid = false;
     }
+    
     clearErrorMessages(form);
-    if (firstname && (!firstname.value.trim() || !/^[A-Za-z\s\-\.]+$/.test(firstname.value.trim()))) {
-        showError(firstname, "First name must contain only alphabets, spaces, hyphens");
+
+    // First name: required, min 2 chars, alphabets/spaces/hyphens/dots only
+    if (firstname) {
+        console.log('first name exists.............')
+        const val = firstname.value.trim();
+        if (!val) {
+            showError(firstname, "First name is required.");
+        } else if (val.length < 2) {
+            showError(firstname, "First name must be at least 2 characters.");
+        } else if (!/^[A-Za-z\s\-\.]+$/.test(val)) {
+            showError(firstname, "First name must contain only letters, spaces, hyphens, or dots.");
+        }
     }
-    if (lastname && (!lastname.value.trim() || !/^[A-Za-z\s\-\.]+$/.test(lastname.value.trim()))) {
-        showError(lastname, "Last name must contain only alphabets, spaces, hyphens");
+
+    // Last name: required, min 2 chars, alphabets/spaces/hyphens/dots only
+    if (lastname) {
+        const val = lastname.value.trim();
+        if (!val) {
+            showError(lastname, "Last name is required.");
+        } else if (val.length < 0) {
+            showError(lastname, "Last name must be at least 2 characters.");
+        } else if (!/^[A-Za-z\s\-\.]+$/.test(val)) {
+            showError(lastname, "Last name must contain only letters, spaces, hyphens, or dots.");
+        }
     }
-    if (email && (!email.value.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim()))) {
-        showError(email, "Please enter a valid email address.");
+    
+    // Email: required, valid format
+    if (email) {
+        const val = email.value.trim();
+        if (!val) {
+            showError(email, "Email is required.");
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+            showError(email, "Please enter a valid email address.");
+        }
     }
-    if (mobile && !/^[6-9]\d{9}$/.test(mobile.value)) {
-        showError(mobile, "Enter a valid 10-digit mobile number");
+    
+    // Mobile: optional, if filled must be 10 digits starting with 6-9
+    if (mobile) {
+        const val = mobile.value.trim();
+        if (val && !/^[6-9]\d{9}$/.test(val)) {
+            showError(mobile, "Enter a valid 10-digit mobile number starting with 6-9.");
+        }
     }
+    
+    // Address ID: optional, valid MongoDB ObjectId format (24 hex chars)
+    if (addressId) {
+        const val = addressId.value.trim();
+        if (val && !/^[a-fA-F0-9]{24}$/.test(val)) {
+            showError(addressId, "Invalid address ID.");
+        }
+    }
+    
     return isValid;
 }
+
     /////////////Address validation//////////////
     function validateAddressForm(form) {
     let isValid = true;
@@ -891,6 +1132,7 @@ function changePage(page, section) {
     const state = form.querySelector('[name="state"]');
     const pincode = form.querySelector('[name="pincode"]');
     const country = form.querySelector('[name="country"]');
+    
     function showError(input, message) {
         input.classList.add('border-red-500');
         let errorMsg = form.querySelector(`#${input.name}Error`);
@@ -915,13 +1157,13 @@ function changePage(page, section) {
         showError(address2, "Address line 2 is Empty");
     }
     if (!city.value.trim() || !alphaRegex.test(city.value.trim())) {
-        showError(city, "City must contain only alphabets, spaces, hyphens");
+        showError(city, "City is Requered (Enter valid pincode)");
     }
     if (!state.value.trim() || !alphaRegex.test(state.value.trim())) {
-        showError(state, "State must contain only alphabets, spaces, hyphens");
+        showError(state, "State is Requered (Enter valid pincode)");
     }
     if (!country.value.trim() || !alphaRegex.test(country.value.trim())) {
-        showError(country, "Country must contain only alphabets, spaces, hyphens");
+        showError(country, "Country is Requered (Enter valid pincode)");
     }
     const mobileRegex = /^[6-9]\d{9}$/;
     if (!mobile.value.match(mobileRegex)) {
@@ -933,6 +1175,99 @@ function changePage(page, section) {
     }
     return isValid;
 }
+
+/////////////////////
+// --- NEW LOGIC: Pincode Auto-fill Function ---
+function attachPincodeListener(formId) {
+    console.log('hitted......................')
+
+    const form = document.getElementById(formId);
+    console.log(`form :${form}`)
+    if (!form) return; // Exit if form is not found
+
+    const pincodeInput = form.querySelector('input[name="pincode"]');
+    const cityInput = form.querySelector('input[name="city"]');
+    const stateInput = form.querySelector('input[name="state"]');
+    const countryInput = form.querySelector('input[name="country"]');
+
+    if (!pincodeInput) return;
+
+    pincodeInput.addEventListener('input', async () => {
+        const pin = pincodeInput.value.trim();
+
+        // Helper to clear error for specific field
+        const clearError = (input) => {
+            input.classList.remove('border-red-500');
+            const errorMsg = form.querySelector(`#${input.name}Error`);
+            if (errorMsg) errorMsg.textContent = '';
+        };
+
+        // Helper to show error
+        const setErrorMessage = (input, msg) => {
+            input.classList.add('border-red-500');
+            let errorMsg = form.querySelector(`#${input.name}Error`);
+            if (!errorMsg) {
+                errorMsg = document.createElement('div');
+                errorMsg.className = 'error-message text-red-500 text-xs mt-1';
+                errorMsg.id = `${input.name}Error`;
+                input.parentNode.appendChild(errorMsg);
+            }
+            errorMsg.textContent = msg;
+        };
+
+        // 1. Reset fields if length is not 6
+        if (pin.length !== 6) {
+            cityInput.value = '';
+            stateInput.value = '';
+            countryInput.value = '';
+            return;
+        }
+
+        // 2. Validate format (numbers only)
+        if (!/^[0-9]{6}$/.test(pin)) {
+            setErrorMessage(pincodeInput, "Pincode must be 6 digits");
+            return;
+        }
+
+        // 3. Fetch Data
+        try {
+            // Optional: Show loading state
+            cityInput.placeholder = "Loading...";
+             stateInput.placeholder = "Loading...";
+              countryInput.placeholder = "Loading...";
+            
+            const res = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
+            const data = await res.json();
+
+            if (data[0].Status === "Success") {
+                const info = data[0].PostOffice[0];
+
+                // Auto-fill inputs
+                cityInput.value = info.District || "";
+                stateInput.value = info.State || "";
+                countryInput.value = info.Country || "India";
+
+                // Clear any previous errors
+                clearError(pincodeInput);
+                clearError(cityInput);
+                clearError(stateInput);
+                clearError(countryInput);
+            } else {
+                setErrorMessage(pincodeInput, "INVALID PINCODE,LOCATION NOT FOUND");
+                cityInput.value = '';
+                stateInput.value = '';
+                countryInput.value = '';
+            }
+        } catch (error) {
+            console.error(error);
+            setErrorMessage(pincodeInput, "Network error. Unable to fetch location.");
+        } finally {
+            cityInput.placeholder = ""; 
+        }
+    });
+}
+//////////////////
+
 </script>
 
 <style>

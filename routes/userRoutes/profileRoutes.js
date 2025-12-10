@@ -18,5 +18,7 @@ router.post('/address/edit/:addressId', isAuthenticated, profileController.editA
 router.post('/address/remove/:addressId', isAuthenticated, profileController.removeAddress);
 router.post('/address/set-default/:addressId',isAuthenticated, profileController.setDefaultAddress);
 
+router.post('/generate-referral',isAuthenticated,profileController.generateReferralCode);
+
 
 module.exports = router;

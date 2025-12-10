@@ -187,6 +187,7 @@
     }
     /////////////////////////////////////////////
   async function updateCartQuantity(itemId, newQuantity) {
+    console.log('update cart quantity hitted......................')
   try {
     const response = await fetch(`/user/cart/update-quantity/${itemId}`, {
       method: 'PATCH',
@@ -204,34 +205,50 @@
 
     const data = await response.json();
     console.log(`data : ${data}`)
-
+/////////////new logic start/////////////
     if (data.success) {
-        
-        console.log('its successfull...........');
-      const quantitySpan = document.getElementById(`quantity-${itemId}`);
-      if (quantitySpan) {
-        quantitySpan.textContent = data.updatedItem.quantity;
+  const quantitySpan = document.getElementById(`quantity-${itemId}`);
+  if (quantitySpan) {
+    quantitySpan.textContent = data.updatedItem.quantity;
+  }
+  if (data.cartSummary) {
+    const { subtotal, tax, total, totalDiscount, itemsCount } = data.cartSummary;  // <-- add itemsCount here
+
+    const subtotalElem = document.getElementById('subtotal-value');
+    if (subtotalElem) subtotalElem.textContent = `₹${subtotal}`;
+    const taxElem = document.getElementById('tax-value');
+    if (taxElem) taxElem.textContent = `₹${tax}`;
+    const totalElem = document.getElementById('total-value');
+    if (totalElem) totalElem.textContent = `₹${total}`;
+    const discountSpan = document.querySelector('.text-green-400 span:last-child');
+    if (discountSpan) {
+      if (totalDiscount > 0) {
+        discountSpan.textContent = `- ₹${totalDiscount}`;
+        discountSpan.parentElement.style.display = '';
+      } else {
+        discountSpan.textContent = '';
+        discountSpan.parentElement.style.display = 'none'; 
       }
-      if (data.cartSummary) {
-        const { subtotal, tax, total, totalDiscount } = data.cartSummary;
-        const subtotalElem = document.getElementById('subtotal-value');
-        if (subtotalElem) subtotalElem.textContent = `₹${subtotal}`;
-        const taxElem = document.getElementById('tax-value');
-        if (taxElem) taxElem.textContent = `₹${tax}`;
-        const totalElem = document.getElementById('total-value');
-        if (totalElem) totalElem.textContent = `₹${total}`;
-        const discountSpan = document.querySelector('.text-green-400 span:last-child');
-        if (discountSpan) {
-          if (totalDiscount > 0) {
-            discountSpan.textContent = `- ₹${totalDiscount}`;
-            discountSpan.parentElement.style.display = '';
-          } else {
-            discountSpan.textContent = '';
-            discountSpan.parentElement.style.display = 'none'; 
-          }
-        }
+    }
+    
+    // Update navbar cart badge
+    const badge = document.getElementById('cart-count-badge');
+    if (badge) {
+      if (itemsCount > 0) {
+        badge.textContent = itemsCount;
+        badge.classList.remove('hidden');
+        badge.classList.add('flex');
+      } else {
+        badge.textContent = '0';
+        badge.classList.add('hidden');
+        badge.classList.remove('flex');
       }
-    } else {
+    }
+  }
+}
+
+    ///////////////new logic end//////////////
+    else {
       showAlert('error', data.message || 'Failed to update cart. Please try again.');
     }
   } catch (error) {
@@ -296,7 +313,7 @@
                 const maxStock = parseInt(button.dataset.stock, 10);
                 const newQuantity = currentQuantity + 1;
 
-                if (newQuantity >= maxStock ) {
+                if (newQuantity > maxStock ) {
                    showAlert('error',`selected quantity exceeds available stock of ${maxStock}`)
                 } else if (newQuantity >= MAX_QUANTITY) {
                     showAlert('error', `Sorry,  Quantity maximum limit of 5.`);
