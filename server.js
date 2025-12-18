@@ -27,7 +27,8 @@ app.use('/admin', adminRoutes);
 app.use('/*splat',(req,res)=>{
     res.status(404).render('user/error',{layout:false})
 });
-app.listen(3000, () => {
+const PORT = process.env.PORT_NUMBER || 3000;
+app.listen(PORT, () => {
     console.log('server is running on http://localhost:3000')
     connect();
 });

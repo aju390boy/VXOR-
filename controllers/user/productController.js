@@ -41,6 +41,9 @@ const formatProductForListing = (product, bestOffer = null) => {
 
 exports.getAllProducts = async (req, res) => {
   try {
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = 8; // items per page, tune for your grid
+    const skip = (page - 1) * limit;
     const { category, brand, price, rating, color, size, sort } = req.query;
     const message = req.session.message;
     delete req.session.message;
@@ -48,6 +51,8 @@ exports.getAllProducts = async (req, res) => {
     const wishlistProductIds = wishlist ? wishlist.products.map(p => p.product_id.toString()) : [];
     let queryObj = { isDeleted: false, isListed: true };
     let pipeline = [{ $match: queryObj }];
+  
+
 
     if (category) {
       const categoriesToFind = Array.isArray(category) ? category : [category];
@@ -155,15 +160,43 @@ exports.getAllProducts = async (req, res) => {
       sortOption.createdAt = -1;
     }
     pipeline.push({ $sort: sortOption });
-    const products = await Product.aggregate(pipeline).exec();
- const productsWithOffers = await Promise.all(
-            products.map(async (product) => {
-                const populatedProduct = await Product.findById(product._id).populate('category_id').populate('brand_id').lean();
-                const bestOffer = await findBestOffer(populatedProduct._id, populatedProduct.category_id?._id, populatedProduct.brand_id?._id);
-                return { ...product, bestOffer }; 
-            })
-        );
-     const formattedProducts = productsWithOffers.map(product => formatProductForListing(product, product.bestOffer));
+    /////////////////////////
+const countPipeline = [...pipeline];
+
+const dataPipeline = [
+  ...pipeline,
+  { $skip: skip },
+  { $limit: limit }
+];
+
+const [products, countResult] = await Promise.all([
+  Product.aggregate(dataPipeline).exec(),
+  Product.aggregate([
+    ...countPipeline,
+    { $count: "total" }
+  ]).exec()
+]); 
+
+const totalProducts = countResult[0]?.total || 0;
+const totalPages = Math.ceil(totalProducts / limit);
+
+    //////////////////////
+    const productsWithOffers = await Promise.all(
+  products.map(async (product) => {
+    const populatedProduct = await Product.findById(product._id)
+      .populate('category_id')
+      .populate('brand_id')
+      .lean();
+    const bestOffer = await findBestOffer(
+      populatedProduct._id,
+      populatedProduct.category_id?._id,
+      populatedProduct.brand_id?._id
+    );
+    return { ...product, bestOffer };
+  })
+);
+const formattedProducts = productsWithOffers.map(product =>
+  formatProductForListing(product, product.bestOffer));
      const displaySortOptions = [
       { value: "newest", label: "Newest Arrivals" },
       { value: "price_asc", label: "Price: Low to High" },
@@ -197,7 +230,7 @@ exports.getAllProducts = async (req, res) => {
             </a>
           `).join("")
         : '<p class="text-white text-center w-full col-span-full text-sm font-bold">No products match your filters</p>';
-    res.json({ html: html ,wishlistIds: wishlistProductIds});
+    res.json({ html: html ,wishlistIds: wishlistProductIds, currentPage: page,totalPages,totalProducts:totalProducts});
 }else {
       
       res.render("user/product", {
@@ -207,6 +240,8 @@ exports.getAllProducts = async (req, res) => {
         query: req.query,
         message,
         wishlistIds: wishlistProductIds,
+        currentPage: page,
+        totalPages
       });
     }
   } catch (error) {
@@ -244,12 +279,11 @@ exports.liveSearch = async (req, res) => {
     }
 };
 
+/////Wishlist to cart////////
 exports.getProductVariants = async (req, res) => {
     try {
         const product = await Product.findById(req.params.productId).select('colorVariants').lean();
         const productCheck=await Product.findById(req.params.productId);
-        console.log(`product check :${productCheck}`);
-        console.log(`move to cart ${product?.isListed}`);
         if (!productCheck) {
             return res.status(404).json({ message: 'Product not found.' });
         }

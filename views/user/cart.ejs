@@ -195,7 +195,7 @@
       body: JSON.stringify({ quantity: newQuantity }),
     });
 
-    if (!response.ok) {
+    if (!response.ok) { 
       const errorData = await response.text();
       console.error('Server response was not ok:', response.status, response.statusText);
       console.error('Server error response:', errorData);

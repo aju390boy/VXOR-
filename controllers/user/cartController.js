@@ -147,6 +147,7 @@ exports.updateCartQunty = async (req, res) => {
         { path: 'brand_id', select: 'name isListed' }
       ]
     });
+    
 
     if (!cart) {
       return res.status(404).json({ message: 'Cart not found for this user.' });
@@ -166,11 +167,15 @@ exports.updateCartQunty = async (req, res) => {
     const colorVariant = product.colorVariants.find(cv => cv.colorName === itemToUpdate.colorName);
     const sizeVariant = colorVariant?.variants.find(sv => sv.size === itemToUpdate.size);
     if (!sizeVariant) {
+        console.log('cart hitedd................1')
+
       return res.status(404).json({ message: 'Product variant not found.' });
     }
 
     if (newQuantity > sizeVariant.stock) {
-      return res.status(400).json({ message: `Selected quantity exceeds available stock (${sizeVariant.stock}).` });
+        console.log('cart hitedd................2')
+
+      return res.json({ message: `Selected quantity exceeds available stock (${sizeVariant.stock}).` });
     }
 
     itemToUpdate.quantity = newQuantity;

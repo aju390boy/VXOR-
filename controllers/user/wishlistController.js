@@ -7,7 +7,7 @@ exports.addToWishlist = async (req, res) => {
         const { productId } = req.params;
         let wishlist = await Wishlist.findOne({ user_id: userId });
         let cart = await Cart.findOne({userId:userId});
-    const isProductExistInCart=cart.items.some(item => item.productId.toString()=== productId);
+    const isProductExistInCart=cart?.items?.some(item => item.productId.toString()=== productId);
      if(isProductExistInCart){
           return res.status(409).json({success:false,message:'Product already in cart'})
         }

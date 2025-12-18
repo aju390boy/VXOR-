@@ -489,8 +489,13 @@ exports.handleProductRequestAction = async (req, res) => {
 const itemTax = (order.tax || 0) / totalItems;
 const itemCoupon = (order.coupon_discount || 0) / totalItems;
 const itemOffer = (order.offer_discount || 0) / totalItems;
-    const refundAmount =
-      (item.price || 0) + itemTax - itemCoupon - itemOffer;
+// Per-unit refund
+const perUnitRefund = (item.price || 0) + itemTax - itemCoupon - itemOffer;
+console.log(`per item refund : ${perUnitRefund}`)
+
+// Final refund for this line item (respect quantity)
+const refundAmount = perUnitRefund * (item.quantity || 1);
+console.log(`refund : ${refundAmount}`)
     const prevStatus = item.prev_status || "CONFIRMED";
     //////approve/////////
     if (action === "approve") {

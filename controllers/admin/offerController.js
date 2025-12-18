@@ -11,7 +11,6 @@ exports.getAllOffers = async (req, res) => {
         const limit = 2;
         const skip = (page - 1) * limit;
        
-    
         const totalOffers = await Offer.countDocuments(query);
         const totalPages = Math.ceil(totalOffers / limit);
         const offers = await Offer.find(query).skip(skip).limit(limit);

@@ -1,0 +1,59 @@
+<!-- Pagination -->
+    <div>
+   <%
+// helper to build query string from an object (supports arrays)
+function buildQuery(q) {
+  const params = [];
+  for (const key in q) {
+    if (!q[key]) continue;
+    if (Array.isArray(q[key])) {
+      q[key].forEach(v => params.push(encodeURIComponent(key) + '=' + encodeURIComponent(v)));
+    } else {
+      params.push(encodeURIComponent(key) + '=' + encodeURIComponent(q[key]));
+    }
+  }
+  return params.join('&');
+}
+%>
+
+<% if (totalPages > 1) { %>
+  <div class="flex justify-center items-center gap-2 mt-4 text-xs text-gray-400">
+    <% const q = Object.assign({}, query); %>
+
+    <% if (currentPage > 1) { %>
+      <% q.page = currentPage - 1; %>
+      <a href="/user/product?<%= buildQuery(q) %>"
+         class="px-2 py-1 rounded bg-gray-800 hover:bg-gray-700">
+        Prev
+      </a>
+    <% } else { %>
+      <span class="px-2 py-1 rounded bg-gray-900 text-gray-600 cursor-default">
+        Prev
+      </span>
+    <% } %>
+
+    <% for (let p = 1; p <= totalPages; p++) { %>
+      <% q.page = p; %>
+      <a href="/user/product?<%= buildQuery(q) %>"
+         class="px-2 py-1 rounded <%= p === currentPage ? 'bg-gray-400 text-black' : 'bg-gray-800 hover:bg-gray-700' %>">
+        <%= p %>
+      </a>
+    <% } %>
+
+    <% if (currentPage < totalPages) { %>
+      <% q.page = currentPage + 1; %>
+      <a href="/user/product?<%= buildQuery(q) %>"
+         class="px-2 py-1 rounded bg-gray-800 hover:bg-gray-700">
+        Next
+      </a>
+    <% } else { %>
+      <span class="px-2 py-1 rounded bg-gray-900 text-gray-600 cursor-default">
+        Next
+      </span>
+    <% } %>
+  </div>
+<% } %>
+</div>
+
+<!-- pagination End -->
+</div>

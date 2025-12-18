@@ -5,6 +5,43 @@ body {
   margin: 0;
   padding: 0;
 }
+.pagination-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;            /* space between buttons */
+  margin-top: 1.5rem;
+  min-height: 40px;       /* keeps vertical space even with 1 page */
+}
+
+.page-link {
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  border: 1px solid #374151; /* gray-700 */
+  background-color: #1f2933; /* gray-800-ish */
+  color: #d1d5db;            /* gray-300 */
+  text-decoration: none;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.page-link:hover {
+  background-color: #111827; /* gray-900-ish */
+}
+
+.page-link-active {
+  background-color: #9ca3af; /* gray-400 */
+  color: #000000;
+  border-color: #9ca3af;
+}
+
+.page-link-disabled {
+  background-color: #111827;
+  border-color: #1f2933;
+  color: #6b7280;            /* gray-500 */
+  cursor: default;
+  pointer-events: none;
+}
 
 /* Promo Banner */
 .promo-banner {
