@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="/styles/admin/adminnavbar.css">
     <link rel="stylesheet" href="/styles/admin/adminsidebar.css">
     <link rel="stylesheet" href="/styles/admin/products.css">
-    <link rel="stylesheet" href="/styles/category.css">
+    <link rel="stylesheet" href="/styles/admin/category.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -254,18 +254,16 @@ tableBody.addEventListener('change', async (e) => {
   }
 });
 ////////////////////////////////////////////////////////////////////////////////////
-
-    // Function to render pagination links based on current search results
     function renderPagination(currentPage, totalPages) {
-        if (!paginationDiv) return; // Exit if pagination div doesn't exist
+        if (!paginationDiv) return; 
 
-        paginationDiv.innerHTML = ''; // Clear existing pagination
+        paginationDiv.innerHTML = '';
 
         if (totalPages > 1) {
             // Previous button
             if (currentPage > 1) {
                 const prevLink = document.createElement('a');
-                prevLink.href = '#'; // Use # for AJAX pagination
+                prevLink.href = '#';
                 prevLink.innerHTML = '&laquo;';
                 prevLink.addEventListener('click', (e) => {
                     e.preventDefault();
@@ -273,11 +271,9 @@ tableBody.addEventListener('change', async (e) => {
                 });
                 paginationDiv.appendChild(prevLink);
             }
-
-            // Page numbers
             for (let i = 1; i <= totalPages; i++) {
                 const pageLink = document.createElement('a');
-                pageLink.href = '#'; // Use # for AJAX pagination
+                pageLink.href = '#'; 
                 pageLink.textContent = i;
                 if (currentPage === i) {
                     pageLink.classList.add('active');
@@ -288,11 +284,9 @@ tableBody.addEventListener('change', async (e) => {
                 });
                 paginationDiv.appendChild(pageLink);
             }
-
-            // Next button
             if (currentPage < totalPages) {
                 const nextLink = document.createElement('a');
-                nextLink.href = '#'; // Use # for AJAX pagination
+                nextLink.href = '#';
                 nextLink.innerHTML = '&raquo;';
                 nextLink.addEventListener('click', (e) => {
                     e.preventDefault();
@@ -302,10 +296,8 @@ tableBody.addEventListener('change', async (e) => {
             }
         }
     }
-
-    // Event listener for search input (triggers search on change/type)
     searchInput.addEventListener('input', () => {
-        performSearch(1); // Start search from page 1 whenever input changes
+        performSearch(1); 
     });
 
     async function handleProductAction(productId, actionType) {
@@ -313,8 +305,6 @@ tableBody.addEventListener('change', async (e) => {
   const confirmationMessage = actionType === 'delete'
     ? 'Are you sure you want to soft delete this product?'
     : 'Are you sure you want to restore this product?';
-
-  // Use SweetAlert2 for confirmation instead of native confirm()
   const result = await Swal.fire({
     title: 'Confirm',
     text: confirmationMessage,
@@ -339,12 +329,12 @@ tableBody.addEventListener('change', async (e) => {
         if (actionType === 'delete') {
           deleteForm.style.display = 'none';
           restoreForm.style.display = 'inline-block';
-        } else { // restore
+        } else { 
           deleteForm.style.display = 'inline-block';
           restoreForm.style.display = 'none';
         }
       }
-      await Swal.fire('Success', response.data.message, 'success'); // Show success popup
+      await Swal.fire('Success', response.data.message, 'success'); 
     } else {
       Swal.fire('Error', response.data.message || 'Action failed!', 'error');
     }
@@ -355,15 +345,13 @@ tableBody.addEventListener('change', async (e) => {
 }
 
 
-    // Attach event listeners using delegation to handle dynamically added rows (from search)
     tableBody.addEventListener('submit', (e) => {
-        // Check if the submitted form is a delete or restore form
         if (e.target.classList.contains('delete-form')) {
-            e.preventDefault(); // Prevent default form submission
+            e.preventDefault(); 
             const productId = e.target.dataset.productId;
             handleProductAction(productId, 'delete');
         } else if (e.target.classList.contains('restore-form')) {
-            e.preventDefault(); // Prevent default form submission
+            e.preventDefault();
             const productId = e.target.dataset.productId;
             handleProductAction(productId, 'restore');
         }

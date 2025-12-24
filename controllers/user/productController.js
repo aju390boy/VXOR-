@@ -42,7 +42,7 @@ const formatProductForListing = (product, bestOffer = null) => {
 exports.getAllProducts = async (req, res) => {
   try {
     const page = parseInt(req.query.page, 10) || 1;
-    const limit = 8; // items per page, tune for your grid
+    const limit = 8; 
     const skip = (page - 1) * limit;
     const { category, brand, price, rating, color, size, sort } = req.query;
     const message = req.session.message;

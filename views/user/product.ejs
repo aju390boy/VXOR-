@@ -204,7 +204,7 @@
           <div class="item-link no-underline text-inherit">
              <div class="flex justify-start items-start">
               <button class="addToWishlistBtn ml-32 px-4" data-product-id="<%= item._id %>" title="Add to Wishlist">
-                <i class="fa-solid fa-heart text-2xl <%= wishlistIds.includes(item._xxid.toString()) ? 'text-red-500' : 'text-gray-400 hover:text-red-500' %>"></i>
+                <i class="fa-solid fa-heart text-2xl <%= wishlistIds.includes(item._id.toString()) ? 'text-red-500' : 'text-gray-400 hover:text-red-500' %>"></i>
               </button>
             </div>
             <a href="/user/product/<%= item._id %>">

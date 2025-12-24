@@ -6,7 +6,7 @@ const {isNotAuthenticated,isAuthenticated,isVerified}=require('../../middlewares
 
 
 router.route('/')
-      .get(isAuthenticated,isVerified, productController.getAllProducts);
+      .get(isAuthenticated, productController.getAllProducts);
 router.get('/search',isAuthenticated, productController.liveSearch);
 router.get('/variants/:productId',isAuthenticated, productController.getProductVariants);
 router.get('/:id',isAuthenticated, productDetailController.getSingleProduct);
