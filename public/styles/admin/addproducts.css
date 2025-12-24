@@ -437,4 +437,28 @@ textarea {
             background-color: #dc2626;
             transform: translateY(-1px);
         }
-    
+    /* simple circular spinner */
+.spinner {
+  width: 1.25rem;               /* bigger circle */
+  height: 1.25rem;
+  border-radius: 9999px;        /* full circle */
+  border-width: 3px;
+  border-style: solid;
+  border-color: rgba(255, 255, 255, 0.25);
+  border-top-color: #ffffff;    /* visible arc */
+  display: inline-block;
+  animation: spinner-spin 0.7s linear infinite;
+}
+
+@keyframes spinner-spin {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* when loading, slightly dim + prevent clicks */
+button.loading-active {
+  opacity: 0.85;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+

@@ -128,10 +128,24 @@
                     <i class="fas fa-plus-circle"></i> Add New Color Variant
                 </button>
                 <input type="hidden" id="deletedImages" name="deletedImages" value="" />
-                <button type="submit" id="submitBtn" class="main-action-button w-full mt-8">
-                    <i class="fas fa-save"></i> Save Product
-                      <span class="loading hidden ml-2 animate-spin">⏳</span>
-                </button>
+                <button
+  type="submit"
+  id="submitBtn"
+  class="main-action-button w-full mt-8 flex items-center justify-center gap-2"
+>
+  <i class="fas fa-save"></i>
+
+  <span class="btn-text">
+    Save Product
+  </span>
+
+  <!-- spinner shown while loading -->
+  <span class="loading hidden ml-2" aria-hidden="true">
+    <span class="spinner"></span>
+  </span>
+</button>
+
+
             </form>
         </div>
     </div>
@@ -759,87 +773,84 @@
   // ==========================================
   // 3. SERVER SUBMISSION WITH LOADING STATE
   // ==========================================
-  const submitBtn = document.querySelector('#submitBtn');
-
-  // Show loading
-  if (submitBtn) {
-    submitBtn.disabled = true;
-    const loadingEl = submitBtn.querySelector('.loading');
-    const textEl = submitBtn.querySelector('.btn-text');
-    if (loadingEl) loadingEl.classList.remove('hidden');
-    if (textEl) textEl.textContent = 'Saving...';
-  }
-
-  try {
-    const response = await fetch(this.action, {
-      method: '<%= typeof product === "undefined" ? "POST" : "PATCH" %>',
-      body: formData
+ const submitBtn = document.querySelector('#submitBtn');
+// Show loading
+if (submitBtn) {
+  submitBtn.disabled = true;
+  submitBtn.classList.add('loading-active');
+  const loadingEl = submitBtn.querySelector('.loading');
+  const textEl = submitBtn.querySelector('.btn-text');
+  if (loadingEl) loadingEl.classList.remove('hidden');
+  if (textEl) textEl.textContent = 'Saving...';
+}
+try {
+  const response = await fetch(this.action, {
+    method: '<%= typeof product === "undefined" ? "POST" : "PATCH" %>',
+    body: formData
+  });
+  if (response.ok) {
+    const result = await response.json();
+    Swal.fire({
+      icon: 'success',
+      title: 'Success!',
+      text: result.message,
+      toast: true,
+      position: 'top-end',
+      timer: 3000,
+      showConfirmButton: false,
+      timerProgressBar: true
+    }).then(() => {
+      window.location.href = '/admin/products';
     });
-
-    if (response.ok) {
-      const result = await response.json();
-      Swal.fire({
-        icon: 'success',
-        title: 'Success!',
-        text: result.message,
-        toast: true,
-        position: 'top-end',
-        timer: 3000,
-        showConfirmButton: false,
-        timerProgressBar: true
-      }).then(() => {
-        window.location.href = '/admin/products';
-      });
-    } else {
-      const errorData = await response.json();
-      let errorMessage = 'An unknown error occurred.';
-      if (
-        errorData.message === 'Validation failed' &&
-        errorData.errors &&
-        errorData.errors.length
-      ) {
-        errorMessage = `<ul style="text-align: left; list-style-position: inside;">${errorData.errors
-          .map((e) => `<li>${e}</li>`)
-          .join('')}</ul>`;
-      } else if (errorData.message) {
-        errorMessage = errorData.message;
-      }
-
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        html: errorMessage,
-        toast: true,
-        position: 'top-end',
-        timer: 3000,
-        showConfirmButton: false,
-        timerProgressBar: true
-      });
+  } else {
+    const errorData = await response.json();
+    let errorMessage = 'An unknown error occurred.';
+    if (
+      errorData.message === 'Validation failed' &&
+      errorData.errors &&
+      errorData.errors.length
+    ) {
+      errorMessage = `<ul style="text-align: left; list-style-position: inside;">${errorData.errors
+        .map((e) => `<li>${e}</li>`)
+        .join('')}</ul>`;
+    } else if (errorData.message) {
+      errorMessage = errorData.message;
     }
-  } catch (error) {
-    console.error('Submission error:', error);
     Swal.fire({
       icon: 'error',
-      title: 'Oops...',
-      text: 'An error occurred during submission. Please try again later.',
+      title: 'Error',
+      html: errorMessage,
       toast: true,
       position: 'top-end',
       timer: 3000,
       showConfirmButton: false,
       timerProgressBar: true
     });
-  } finally {
-    // Hide loading
-    if (submitBtn) {
-      submitBtn.disabled = false;
-      const loadingEl = submitBtn.querySelector('.loading');
-      const textEl = submitBtn.querySelector('.btn-text');
-      if (loadingEl) loadingEl.classList.add('hidden');
-      if (textEl) textEl.textContent = 'Save Product';
-    }
   }
+} catch (error) {
+  console.error('Submission error:', error);
+  Swal.fire({
+    icon: 'error',
+    title: 'Oops...',
+    text: 'An error occurred during submission. Please try again later.',
+    toast: true,
+    position: 'top-end',
+    timer: 3000,
+    showConfirmButton: false,
+    timerProgressBar: true
+  });
+} finally {
+  // Hide loading
+  if (submitBtn) {
+    submitBtn.disabled = false;
+    submitBtn.classList.remove('loading-active');
+    const loadingEl = submitBtn.querySelector('.loading');
+    const textEl = submitBtn.querySelector('.btn-text');
+    if (loadingEl) loadingEl.classList.add('hidden');
+    if (textEl) textEl.textContent = 'Save Product';
+  }
+}
 });
-
         ///////////product form end//////////////
     </script>
 </body>
