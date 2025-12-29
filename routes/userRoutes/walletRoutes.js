@@ -4,8 +4,8 @@ const {isNotAuthenticated,isAuthenticated,isVerified}=require('../../middlewares
 const walletController = require('../../controllers/user/walletController.js');
 
 
-router.post('/add-money', walletController.createWalletOrder);
-router.post('/verify-payment', walletController.verifyWalletPayment);
+router.post('/add-money',isAuthenticated, isVerified,walletController.createWalletOrder);
+router.post('/verify-payment',isAuthenticated, isVerified,walletController.verifyWalletPayment);
 
 
 module.exports = router;

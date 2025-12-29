@@ -4,8 +4,8 @@ const {isNotAuthenticated,isAuthenticated,isVerified}=require('../../middlewares
 const wishlistController = require('../../controllers/user/wishlistController.js');
 
 
-router.post('/add/:productId', wishlistController.addToWishlist);
-router.delete('/remove/:productId', wishlistController.removeFromWishlist);
+router.post('/add/:productId',isAuthenticated,isVerified, wishlistController.addToWishlist);
+router.delete('/remove/:productId',isAuthenticated, isVerified,wishlistController.removeFromWishlist);
 
 
 module.exports = router;

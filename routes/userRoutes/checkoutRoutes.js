@@ -5,10 +5,10 @@ const checkoutController = require('../../controllers/user/checkoutController.js
 const placeorderController = require('../../controllers/user/placeorderController.js');
 
 
-router.get('/',isAuthenticated,checkoutController.getCheckout);
-router.post('/apply-coupon', checkoutController.applyCoupon);
-router.post('/remove-coupon', checkoutController.removeCoupon);
-router.post('/address/set-default/:addressId',isAuthenticated, placeorderController.setDefaultAddress);
+router.get('/',isAuthenticated,isVerified,checkoutController.getCheckout);
+router.post('/apply-coupon',isAuthenticated, isVerified,checkoutController.applyCoupon);
+router.post('/remove-coupon',isAuthenticated, isVerified,checkoutController.removeCoupon);
+router.post('/address/set-default/:addressId',isAuthenticated, isVerified,placeorderController.setDefaultAddress);
 
 
 

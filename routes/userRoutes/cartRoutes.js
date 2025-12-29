@@ -5,11 +5,11 @@ const cartController = require('../../controllers/user/cartController.js');
 
 
 router.route('/')
-      .post( isAuthenticated, cartController.addToCart)
-      .get( isAuthenticated, cartController.getCart);
-router.patch('/update-quantity/:itemId', isAuthenticated, cartController.updateCartQunty);
-router.delete('/remove-item/:itemId', isAuthenticated, cartController.removeCartItm);
-router.get('/count',isAuthenticated,cartController.getCartCount);
+      .post( isAuthenticated,isVerified, cartController.addToCart)
+      .get( isAuthenticated, isVerified,cartController.getCart);
+router.patch('/update-quantity/:itemId', isAuthenticated,isVerified, cartController.updateCartQunty);
+router.delete('/remove-item/:itemId', isAuthenticated,isVerified, cartController.removeCartItm);
+router.get('/count',isAuthenticated,isVerified,cartController.getCartCount);
 
 
 module.exports = router;

@@ -47,7 +47,7 @@ exports.getHome = async (req, res) => {
         const message = req.session.message;
         delete req.session.message;
         return res.render('user/home', {
-            bestSellers,
+            bestSellers,  
             topRated,
             whatsNew,
             title: 'User Home',

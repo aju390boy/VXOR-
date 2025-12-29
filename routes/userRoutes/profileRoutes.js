@@ -6,19 +6,19 @@ const profileController = require('../../controllers/user/profileController.js')
 
 
 router.get('/',isAuthenticated,isVerified,profileController.getProfilePage);
-router.get('/section/:sectionName',isAuthenticated, profileController.getProfileSection);
-router.post('/change-password',isAuthenticated,profileController.changePassword);
-router.post('/update',isAuthenticated,imageUploadMiddleware,profileController.updateProfile);
+router.get('/section/:sectionName',isAuthenticated, isVerified,profileController.getProfileSection);
+router.post('/change-password',isAuthenticated,isVerified,profileController.changePassword);
+router.post('/update',isAuthenticated,isVerified,imageUploadMiddleware,profileController.updateProfile);
 
-router.post('/verify-email-update',isAuthenticated,profileController.verifyEmailUpdate);
-router.post('/resend-email-otp',isAuthenticated,profileController.resendEmailUpdateOtp);
+router.post('/verify-email-update',isAuthenticated,isVerified,profileController.verifyEmailUpdate);
+router.post('/resend-email-otp',isAuthenticated,isVerified,profileController.resendEmailUpdateOtp);
 
-router.post('/address/add', isAuthenticated, profileController.addAddress);
-router.post('/address/edit/:addressId', isAuthenticated, profileController.editAddress);
-router.post('/address/remove/:addressId', isAuthenticated, profileController.removeAddress);
-router.post('/address/set-default/:addressId',isAuthenticated, profileController.setDefaultAddress);
+router.post('/address/add', isAuthenticated, isVerified,profileController.addAddress);
+router.post('/address/edit/:addressId', isAuthenticated,isVerified, profileController.editAddress);
+router.post('/address/remove/:addressId', isAuthenticated, isVerified,profileController.removeAddress);
+router.post('/address/set-default/:addressId',isAuthenticated,isVerified, profileController.setDefaultAddress);
 
-router.post('/generate-referral',isAuthenticated,profileController.generateReferralCode);
+router.post('/generate-referral',isAuthenticated,isVerified,profileController.generateReferralCode);
 
 
 module.exports = router;
