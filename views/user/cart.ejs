@@ -2,15 +2,15 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- Toast Notification HTML -->
-    <div id="toast-container" class="fixed top-0 right-0 -translate-x-1/2 mt-5 z-50 p-2">
-        <div id="toast-alert" class="hidden max-w-sm w-full rounded-xl shadow-lg p-2 transition-all duration-300">
+    <div id="toast-container" class="fixed top-16 right-0 bg-red-500 rounded-xl -translate-x-1/2 mt-4 z-50 ">
+        <div id="toast-alert" class="hidden max-w-sm w-full bg-red-500 rounded-xl shadow-lg p-0.5 mt-2 transition-all duration-300">
             <div class="flex items-center space-x-3">
                 <!-- Success Icon -->
-                <svg id="toast-icon-success" class="h-8 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg id="toast-icon-success" class="h-8 w-6 bg-red-500 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
                 <!-- Error Icon -->
-                <svg id="toast-icon-error" class="hidden h-8 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg id="toast-icon-error" class="hidden h-8 w-6 bg-red-500 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
                 <div class="flex-1">
@@ -19,7 +19,6 @@
             </div>
         </div>
     </div>
-    
     <!-- Custom Modal for Remove Confirmation -->
     <div id="remove-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 hidden">
         <div class="bg-gray-800 p-8 rounded-lg shadow-xl max-w-sm w-full text-center">
@@ -31,24 +30,19 @@
             </div>
         </div>
     </div>
-
     <!-- Breadcrumb -->
-    
     <div class="px-6 md:px-12 py-4 text-gray-500 text-sm">
         <a href="/" class="hover:text-white transition-colors">HOME</a> <span class="mx-2">›</span> CART
     </div>
-
     <div class="px-6 md:px-12 py-8 flex flex-col lg:flex-row gap-12">
         <% if (cartItems.length > 0) { %>
             <div class="flex-1">
                 <h1 class="text-3xl font-bold tracking-tight text-white mb-2">Your Cart</h1>
                 <div class="h-0.5 w-32 bg-purple-900 rounded-full mb-8"></div>
-                
                 <div class="space-y-6">
                 <% cartItems.forEach(item => { %>
                     <div class="flex items-center bg-gradient-to-br from-gray-900 to-gray-600 rounded-xl p-4 transition-all duration-300 hover:shadow-lg hover:border-purple-500/50  <%= item.isAvailable ? '' : 'opacity-50' %>">
                         <img src="<%= item.image %>" alt="<%= item.name %>" class="w-24 h-32 object-cover rounded-lg" />
-                        
                         <div class="flex-grow px-6">
                             <h3 class="text-lg font-semibold text-white"><%= item.name %></h3>
                             <p class="text-sm text-gray-400 mt-1">Size: <%= item.size %> / Color: <%= item.colorName %></p>
@@ -56,7 +50,6 @@
                                 <p class="text-red-500 font-semibold mt-2">CURRENTLY UNAVAILABLE</p>
                             <% } %>
                         </div>
-
                         <div class="flex flex-row items-end gap-4">
                             <div class="text-right mr-12 w-32">
                               <% if (item.bestOffer) { %>
@@ -75,15 +68,12 @@
                                     <%= item.isAvailable ? '' : 'disabled' %>>-</button>
                                 
                                 <span id="quantity-<%= item.id %>" class="w-10 text-center font-semibold text-lg"><%= item.quantity %></span>
-                                
                                 <button
                                     class="increase-quantity-btn w-8 h-8 rounded-full flex items-center justify-center bg-gray-700 text-lg text-white hover:bg-indigo-600 transition-colors"
                                     data-item-id="<%= item.id %>"
                                     data-stock="<%= item.stock %>"
                                     data-quantity="<%= item.quantity %>"
-                                    <%= item.isAvailable ? '' : 'disabled' %>>+</button>
-                                
-                                
+                                    <%= item.isAvailable ? '' : 'disabled' %>>+</button>        
                             </div>
                                 <button class="remove-from-cart-btn w-8 h-8 rounded-full flex items-center justify-center bg-gray-700 text-gray-300 hover:bg-red-500 hover:text-white transition-colors ml-4" data-item-id="<%= item.id %>">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
@@ -93,7 +83,6 @@
                 <% }) %>
                 </div>
             </div>
-
             <div class="lg:w-1/3">
                 <div class="sticky top-8">
                     <div class="bg-gradient-to-br from-gray-900 to-gray-600 rounded-2xl p-8 shadow-xl">
@@ -103,14 +92,12 @@
         <span>Subtotal (Original Price)</span>
         <span id="subtotal-value">₹<%= subtotal %></span>
     </div>
-    
     <% if (totalDiscount > 0) { %>
         <div class="flex justify-between text-green-400">
             <span>Offer Discount</span>
             <span>- ₹<%= totalDiscount %></span>
         </div>
     <% } %>
-
     <div class="flex justify-between">
         <span>Tax (5%)</span>
         <span id="tax-value">₹<%= tax %></span>
@@ -124,7 +111,7 @@
                         <button id="checkout-btn" class="w-full bg-gradient-to-br from-purple-900 to-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg text-lg transition-all duration-300 transform hover:scale-105 shadow-lg shadow-indigo-500/30">
                             Proceed to Checkout
                         </button>
-                        <a href="/user/product" class="block mt-6 text-center text-sm text-purple-700 hover:text-purple-500 transition-colors">← Continue Shopping</a>
+                        <a href="/product" class="block mt-6 text-center text-sm text-purple-700 hover:text-purple-500 transition-colors">← Continue Shopping</a>
                     </div>
                 </div>
             </div>
@@ -140,7 +127,6 @@
         <% } %>
     </div>
 </div>
-
 <style>
     @keyframes slideIn { from { transform: translateY(-100%); } to { transform: translateY(0); } }
     @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
@@ -150,7 +136,6 @@
         opacity: 0.5;
     }
 </style>
-
 <script>
     const toastAlert = document.getElementById('toast-alert');
     const toastMessage = document.getElementById('toast-message');
@@ -162,13 +147,13 @@
     let timeoutId;
     let itemIdToRemove;
     function showAlert(type, message) {
+        console.log('show alert function triggered.............')
         clearTimeout(timeoutId);
         toastMessage.textContent = message;
         toastAlert.classList.remove('bg-white', 'bg-green-500', 'bg-red-500');
         toastMessage.classList.remove('text-gray-900', 'text-white');
         successIcon.classList.add('hidden');
         errorIcon.classList.add('hidden');
-
         if (type === 'success') {
             toastAlert.classList.add('bg-green-500');
             toastMessage.classList.add('text-white');
@@ -189,12 +174,11 @@
   async function updateCartQuantity(itemId, newQuantity) {
     console.log('update cart quantity hitted......................')
   try {
-    const response = await fetch(`/user/cart/update-quantity/${itemId}`, {
+    const response = await fetch(`/cart/update-quantity/${itemId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ quantity: newQuantity }),
     });
-
     if (!response.ok) { 
       const errorData = await response.text();
       console.error('Server response was not ok:', response.status, response.statusText);
@@ -202,7 +186,6 @@
       showAlert('error', 'Failed to update cart. Please try again.');
       return;
     }
-
     const data = await response.json();
     console.log(`data : ${data}`)
 /////////////new logic start/////////////
@@ -213,7 +196,6 @@
   }
   if (data.cartSummary) {
     const { subtotal, tax, total, totalDiscount, itemsCount } = data.cartSummary;  // <-- add itemsCount here
-
     const subtotalElem = document.getElementById('subtotal-value');
     if (subtotalElem) subtotalElem.textContent = `₹${subtotal}`;
     const taxElem = document.getElementById('tax-value');
@@ -230,7 +212,6 @@
         discountSpan.parentElement.style.display = 'none'; 
       }
     }
-    
     // Update navbar cart badge
     const badge = document.getElementById('cart-count-badge');
     if (badge) {
@@ -246,7 +227,6 @@
     }
   }
 }
-
     ///////////////new logic end//////////////
     else {
       showAlert('error', data.message || 'Failed to update cart. Please try again.');
@@ -256,12 +236,10 @@
     showAlert('error', 'An unexpected error occurred. Please try again.');
   }
 }
-
-
 //////////////////////////////////////////////////////////////
     async function removeCartItem(itemId) {
         try {
-            const response = await fetch(`/user/cart/remove-item/${itemId}`, {
+            const response = await fetch(`/cart/remove-item/${itemId}`, {
                 method: 'DELETE'
             });
             
@@ -280,7 +258,6 @@
             showAlert('error', 'An unexpected error occurred. Please try again.');
         }
     }
-
     document.addEventListener('DOMContentLoaded', function() {
         const cartItems = <%- JSON.stringify(cartItems) %>;
         const message = <%- JSON.stringify(message || null) %>;
@@ -301,7 +278,7 @@
                 if (checkCartForUnavailableItems()) {
                     showAlert('error', 'Please remove all unavailable items before proceeding to checkout.');
                 } else {
-                    window.location.href = '/user/checkout';
+                    window.location.href = '/checkout';
                 }
             });
         }
@@ -324,12 +301,14 @@
         });
         decreaseQuantityBtns.forEach(button => {
             button.addEventListener('click', () => {
+                console.log('decrement hittedd...............')
                 const itemId = button.dataset.itemId;
                 const quantitySpan = document.getElementById(`quantity-${itemId}`);
                 const currentQuantity = parseInt(quantitySpan.textContent, 10);
                 const newQuantity = currentQuantity - 1;
                 const maxStock = parseInt(button.dataset.stock, 10);
                 if (newQuantity < 1) {
+                    console.log('also hitted...........')
                     showAlert('error', 'Quantity cannot be less than 1.');
                 } else if(newQuantity > maxStock){
                     showAlert('error','Cant decrement , Because stock already less');

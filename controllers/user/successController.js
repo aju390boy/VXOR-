@@ -5,7 +5,7 @@ exports.getSuccess = (req, res) => {
         const { orderId,customId,id } = req.query;
         console.log(orderId,customId);
         if (!orderId) {
-            return res.redirect('/user/profile?section=orders');
+            return res.redirect('/profile?section=orders');
         }
         let paymentMethod=true;
         res.render('user/success', {
@@ -25,7 +25,7 @@ exports.getFailure = (req,res) =>{
       const {orderId,customId} = req.query;
       console.log(`failure page custom  id : ${customId}`);
       if(!orderId){
-         return res.redirect('/user/profile?section=orders');
+         return res.redirect('/profile?section=orders');
       }
       res.render('user/failure',{
          orderId,

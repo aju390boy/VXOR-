@@ -33,6 +33,7 @@ exports.getCustomers = async (req, res) => {
     search,
     currentPage: page,
     totalPages,
+    currentPage:'customers',
     layout:false
   });
 };

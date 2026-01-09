@@ -2,7 +2,7 @@
 <% title = product.title || 'Product Details'; -%>
 <div class="detail-container">
    <!-- alert -->
-    <div id="toast-container" class="fixed top-6 right-2 -translate-x-1/2 mt-2 z-50">
+    <div id="toast-container" class="fixed top-24 right-2 -translate-x-1/2  z-50">
     <div id="toast-alert" class="hidden max-w-sm w-full rounded-xl shadow-lg p-1 transition-all duration-300">
         <div class="flex items-center space-x-3">
            <svg id="toast-icon-success" class="h-8 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -177,7 +177,7 @@
 <h1 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-green-600 text-center uppercase tracking-widest pb-5 shadow-lg shadow-green-500/30 mt-4 mb-12">Similar products</h1>
 <div class="similar-products-grid">
     <% similarProducts.slice(0, 4).forEach(similarProduct => { %>
-        <a href="/user/product/<%= similarProduct._id %>" class="product-card">
+        <a href="/product/<%= similarProduct._id %>" class="product-card">
             
            <% if (similarProduct.colorVariants && similarProduct.colorVariants.length > 0 && similarProduct.colorVariants[0].images && similarProduct.colorVariants[0].images.length > 0) { 
        const firstImage = similarProduct.colorVariants[0].images[0];
@@ -529,66 +529,79 @@
             }
         }, { passive: false });
         ////////////addtocart button ////////////////////////
-        if (addToCartBtn) {
-            addToCartBtn.addEventListener("click", async () => {
-                const quantity = parseInt(quantityValueSpan.textContent, 10);
-                const maxStock = parseInt(quantityValueSpan.dataset.maxStock);
-                const productId = productData._id;
-                const colorName = productData.colorVariants[currentSelectedColorIndex].colorName;
-                const size = currentSelectedSize;
+      if (addToCartBtn) {
+    addToCartBtn.addEventListener("click", async () => {
+        const quantity = parseInt(quantityValueSpan.textContent, 10);
+        const maxStock = parseInt(quantityValueSpan.dataset.maxStock);
+        const productId = productData._id;
+        const colorName = productData.colorVariants[currentSelectedColorIndex].colorName;
+        const size = currentSelectedSize;
 
-                if (!size) {
-                    showAlert('error', 'Please select a size before adding to cart.');
-                    return;
-                }
-                
-                if (maxStock <= 0) {
-                    showAlert('error', 'This item is out of stock.');
-                    return;
-                }
-                
-                const MAX_QUANTITY = 5;
+        if (!size) {
+            showAlert('error', 'Please select a size before adding to cart.');
+            return;
+        }
+
+        if (maxStock <= 0) {
+            showAlert('error', 'This item is out of stock.');
+            return;
+        }
+
+        const MAX_QUANTITY = 5;
         if (quantity > MAX_QUANTITY) {
             showAlert('error', `You can only add a maximum of ${MAX_QUANTITY} of this item.`);
             return;
         }
-                try {
-                    if (!addToCartBtn.classList.contains("tapis-roulant")) {
-                        addToCartBtn.classList.add("tapis-roulant");
-                    }
 
-                    const response = await fetch('/user/cart', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ productId, colorName, size, quantity })
-                    });
-                     
-                    const data = await response.json();
+        try {
+            if (!addToCartBtn.classList.contains("tapis-roulant")) {
+                addToCartBtn.classList.add("tapis-roulant");
+            }
 
-                    if (response.ok) {
-                        updateCartCount(); 
-                        console.log('after updateCartCount functon called')
-                        if (!addToCartBtn.classList.contains("added")) {
-                            addToCartBtn.classList.add("added");
-                            addToCartBtn.style.pointerEvents = "none";
-                            setTimeout(() => {
-                                addToCartBtn.classList.remove("added");
-                                addToCartBtn.classList.remove("tapis-roulant");
-                                addToCartBtn.style.pointerEvents = "initial";
-                                 showAlert('success', 'Product added to cart!');
-                            }, 3400);
-                        }
-                    } else {
-                       showAlert('error', data.message);
-                        addToCartBtn.classList.remove("tapis-roulant");
-                    }
-                } catch (error) {
-                    console.error('Network error:', error);
-                    showAlert('error', 'An unexpected error occurred. Please try again.');
-                    addToCartBtn.classList.remove("tapis-roulant");
-                }
+            const response = await fetch('/cart', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productId, colorName, size, quantity })
             });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Update Navbar Badge
+                if (typeof window.updateCartBadge === "function") {
+                    window.updateCartBadge(data.cartCount); 
+                }
+                
+                if (!addToCartBtn.classList.contains("added")) {
+                    addToCartBtn.classList.add("added");
+                    addToCartBtn.style.pointerEvents = "none";
+                    
+                    setTimeout(() => {
+                        addToCartBtn.classList.remove("added");
+                        addToCartBtn.classList.remove("tapis-roulant");
+                        addToCartBtn.style.pointerEvents = "initial";
+                        
+                        // ---------------------------------------------------
+                        // FIX: Reset quantity back to 1
+                        // ---------------------------------------------------
+                        if(quantityValueSpan) {
+                            quantityValueSpan.textContent = "1";
+                        }
+                        
+                        showAlert('success', 'Product added to cart!');
+                    }, 3400);
+                }
+            } else {
+                showAlert('error', data.message);
+                addToCartBtn.classList.remove("tapis-roulant");
+            }
+        } catch (error) {
+            console.error('Network error:', error);
+            showAlert('error', 'An unexpected error occurred. Please try again.');
+            addToCartBtn.classList.remove("tapis-roulant");
         }
+    });
+}
 
         //////wishlist //////
         const wishlistBtn = document.getElementById('addToWishlistBtn');
@@ -600,8 +613,8 @@ wishlistBtn.addEventListener('click', async () => {
   const isInWishlist = icon.classList.contains('text-red-500');
   try {
     const url = isInWishlist
-      ? `/user/wishlist/remove/${productId}`
-      : `/user/wishlist/add/${productId}`;
+      ? `/wishlist/remove/${productId}`
+      : `/wishlist/add/${productId}`;
 
     const method = isInWishlist ? 'DELETE' : 'POST';
 

@@ -161,6 +161,7 @@ exports.renderSalesPage = async (req, res) => {
             currentPage: page,
             totalPages,
             query: req.query,
+            currentPage:'sales',
             layout: false
         });
 

@@ -28,6 +28,7 @@ exports.getAllOffers = async (req, res) => {
             totalPages,
             message,
             current: 'offers',
+            currentPage:'offers',
             layout:false
         });
     } catch (error) {

@@ -66,10 +66,7 @@ exports.getDashboard = async (req, res) => {
 
         const salesDataMap = new Map(salesAggregation.map(d => [d._id, d.total]));
         const salesDataForChart = [];
-
-        // GROUPED TIME PERIODS - PERFECT 6-12 COLUMNS MAX
        if (salesRange === '24h') {
-    // BULLETPROOF: Direct MongoDB aggregation for 4-hour groups
     const hourlySales = await Order.aggregate([
         {
             $match: {
@@ -92,9 +89,7 @@ exports.getDashboard = async (req, res) => {
     ]);
 
     const hourlyMap = new Map(hourlySales.map(d => [d._id, d.total]));
-    
-    // Group into 4-hour chunks (MongoDB format guaranteed)
-    const groups = {
+        const groups = {
         '8PM-12AM': ['20:00', '21:00', '22:00', '23:00'],
         '12AM-4AM': ['00:00', '01:00', '02:00', '03:00'],
         '4AM-8AM': ['04:00', '05:00', '06:00', '07:00'],
@@ -106,7 +101,6 @@ exports.getDashboard = async (req, res) => {
     Object.entries(groups).forEach(([label, hours]) => {
         let groupSales = 0;
         hours.forEach(hour => {
-            // Check both yesterday and today for each hour
             const yesterdayKey = `2025-12-07 ${hour}`;
             const todayKey = `2025-12-08 ${hour}`;
             groupSales += (hourlyMap.get(yesterdayKey) || 0) + (hourlyMap.get(todayKey) || 0);
@@ -114,10 +108,7 @@ exports.getDashboard = async (req, res) => {
         salesDataForChart.push({ label, sales: groupSales });
         console.log(`sales cart : ${salesDataForChart}`)
     });
-
-
         } else if (salesRange === '1m') {
-            // 10 groups of 3 days (perfect spacing)
             const dayGroups = [
                 { startDay: 1, endDay: 4, label: '1st-3rd' },
                 { startDay: 4, endDay: 7, label: '4th-6th' },
@@ -161,10 +152,7 @@ exports.getDashboard = async (req, res) => {
                 salesDataForChart.push({ label, sales });
             }
         }
-
         const maxSales = Math.max(...salesDataForChart.map(d => d.sales), 1);
-
-        // BEST SELLING LOGIC (unchanged)
         let bestSelling;
         if (bestSellingType === 'products') {
             bestSelling = await Order.aggregate([
@@ -332,14 +320,10 @@ exports.getDashboard = async (req, res) => {
                 .sort({ totalSalesCount: -1 })
                 .limit(5);
         }
-
-        // Format best-selling items
         if (bestSellingType === 'products' || bestSellingType === 'category' || bestSellingType === 'brand') {
     bestSelling = bestSelling.map(item => {
         let displayImage = 'https://via.placeholder.com/96';
-        
-        // FLATTEN nested arrays and filter valid images
-        let flatImages = [];
+                let flatImages = [];
         if (item.productImages && Array.isArray(item.productImages)) {
             flatImages = item.productImages.flat().filter(img => 
                 img && typeof img === 'string' && img.trim().length > 0
@@ -356,11 +340,10 @@ exports.getDashboard = async (req, res) => {
         return {
             ...item,
             displayImage,
-            productImages: flatImages // Optional: clean up for frontend
+            productImages: flatImages 
         };
     });
 }
-
         res.render('admin/dashboard', {
             totalSales,
             orderCount,
@@ -371,6 +354,7 @@ exports.getDashboard = async (req, res) => {
             salesDataForChart,
             maxSales,
             salesRange,
+            currentPage : 'dashboard',
             layout: false
         });
 

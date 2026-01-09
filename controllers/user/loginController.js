@@ -34,7 +34,7 @@ exports.loginPost = (req, res, next) => {
         color: '#ffffff',
         width: '450px'
       };
-      return res.redirect('/user/home');
+      return res.redirect('/home');
     });
   })(req, res, next);
 };
@@ -54,7 +54,7 @@ exports.googleLoginSuccess = (req, res) => {
         color: '#ffffff',
         width: '450px'
       };
-     res.redirect('/user/home');
+     res.redirect('/home');
 };
 
 

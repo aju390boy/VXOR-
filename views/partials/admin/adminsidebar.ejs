@@ -1,40 +1,50 @@
 <div class="admin-sidebar">
   <ul>
-    <li class="active">
+    <li class="<%= locals.currentPage === 'dashboard' ? 'active' : '' %>">
       <a href="/admin/dashboard"><i class="fas fa-chart-line"></i> Dashboard</a>
     </li>
-     <li class="active">
+
+    <li class="<%= locals.currentPage === 'sales' ? 'active' : '' %>">
       <a href="/admin/sales"><i class="fas fa-coins"></i> Sales</a>
     </li>
-    <li>
+
+    <li class="<%= locals.currentPage === 'products' ? 'active' : '' %>">
       <a href="/admin/products"><i class="fas fa-box"></i> Products</a>
     </li>
-    <li>
+
+    <li class="<%= locals.currentPage === 'orders' ? 'active' : '' %>">
       <a href="/admin/orders"><i class="fas fa-receipt"></i> Orders</a>
     </li>
-    <li>
-      <a class="customers"  href="/admin/customers"><i class="fas fa-users"></i> Customers</a>
+
+    <li class="<%= locals.currentPage === 'customers' ? 'active' : '' %>">
+      <a class="customers" href="/admin/customers"><i class="fas fa-users"></i> Customers</a>
     </li>
-    <li>
+
+    <li class="<%= locals.currentPage === 'reviews' ? 'active' : '' %>">
       <a href="/admin/reviews"><i class="fas fa-star"></i> Reviews</a>
     </li>
-     <li>
-         <a href="/admin/offers"><i class="fas fa-tags"></i> Offers</a>
-        
-     </li>
+
+    <li class="<%= locals.currentPage === 'offers' ? 'active' : '' %>">
+      <a href="/admin/offers"><i class="fas fa-tags"></i> Offers</a>
+    </li>
   </ul>
+
   <hr />
+
   <ul>
-    <li>
+    <li class="<%= locals.currentPage === 'coupons' ? 'active' : '' %>">
       <a href="/admin/coupons"><i class="fas fa-tags"></i> Coupons</a>
     </li>
-    <li>
+
+    <li class="<%= locals.currentPage === 'banner' ? 'active' : '' %>">
       <a href="/admin/banner"><i class="fas fa-image"></i> Banner</a>
     </li>
-     <li>
+
+    <li class="<%= locals.currentPage === 'brand' ? 'active' : '' %>">
       <a href="/admin/brand"><i class="fas fa-receipt"></i> Brand</a>
     </li>
-    <li>
+
+    <li class="<%= locals.currentPage === 'category' ? 'active' : '' %>">
       <a href="/admin/category"><i class="fas fa-list"></i> Category</a>
     </li>
   </ul>

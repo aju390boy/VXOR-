@@ -148,7 +148,7 @@ exports.placeOrder = async (req, res) => {
         res.status(200).json({
             success: true,  
             message: "Order placed successfully!",
-            redirectUrl: `/user/payment/success?customId=${newOrder.order_id}&orderId=${newOrder._id}`
+            redirectUrl: `/payment/success?customId=${newOrder.order_id}&orderId=${newOrder._id}`
         });
     } catch (error) {
         console.error("Error placing order:", error);
@@ -282,7 +282,7 @@ exports.varifyPayment = async (req, res) => {
 
         if (generated_signature !== payment.razorpay_signature) {
             await Order.updateOne({ _id: dbOrderId }, { $set:{payment_status: 'FAILED','products.$[].status': 'PENDING'} });
-            return res.status(400).json({ success: false, message: 'Payment verification failed.',redirectUrl: `/user/payment/failure?orderId=${dbOrderId}&customId=${customId}` });
+            return res.status(400).json({ success: false, message: 'Payment verification failed.',redirectUrl: `/payment/failure?orderId=${dbOrderId}&customId=${customId}` });
         }
         const currentOrder = await Order.findById(dbOrderId).populate({
             path: 'products.product_id',
@@ -294,7 +294,7 @@ exports.varifyPayment = async (req, res) => {
         const validProductsInOrder = currentOrder.products.filter(item => item.product_id);
         if (validProductsInOrder.length !== currentOrder.products.length) {
             await Order.updateOne({ _id: dbOrderId }, { $set: {payment_status: 'FAILED','products.$[].status': 'PENDING'}});
-            return res.json({ success: false, message: `A product in your order is no longer available. Your payment will be refunded.`,redirectUrl: `/user/payment/failure?orderId=${dbOrderId}&customId=${customId}` });
+            return res.json({ success: false, message: `A product in your order is no longer available. Your payment will be refunded.`,redirectUrl: `/payment/failure?orderId=${dbOrderId}&customId=${customId}` });
         }
         for (const item of validProductsInOrder) {
             const product = item.product_id;
@@ -304,7 +304,7 @@ exports.varifyPayment = async (req, res) => {
 
             if (!sizeVariant || sizeVariant.stock < item.quantity) {
                 await Order.updateOne({ _id: dbOrderId }, { $set:{payment_status: 'FAILED','products.$[].status': 'PENDING'}});
-                return res.json({ success: false, message: `Stock for ${product.title} is no longer available. Your payment will be refunded.`, redirectUrl: `/user/payment/failure?orderId=${dbOrderId}&customId=${customId}` });
+                return res.json({ success: false, message: `Stock for ${product.title} is no longer available. Your payment will be refunded.`, redirectUrl: `/payment/failure?orderId=${dbOrderId}&customId=${customId}` });
             }
         }
         await Order.updateOne(
@@ -325,7 +325,7 @@ exports.varifyPayment = async (req, res) => {
         }
         await Cart.deleteOne({ userId: userId });
         delete req.session.coupon;
-        res.json({ success: true, redirectUrl: `/user/payment/success?customId=${customId}&orderId=${dbOrderId}` });
+        res.json({ success: true, redirectUrl: `/payment/success?customId=${customId}&orderId=${dbOrderId}` });
     } catch (error) {
         console.error("Error verifying payment:", error);
         res.status(500).json({ success: false, message: "Server error during verification." });

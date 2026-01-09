@@ -12,6 +12,7 @@ const salesRoutes = require('./salesRoutes.js');
 const orderRoutes = require('./orderRoutes.js');
 const customerRoutes = require('./customerRoutes.js');
 const logoutRoutes = require('./logoutRoutes.js');
+const bannerRoutes = require('./bannerRoutes.js');
 
 router.use('/coupons',couponRoutes);
 router.use('/offers',offerRoutes);
@@ -24,5 +25,6 @@ router.use('/logout',logoutRoutes);
 router.use('/orders',orderRoutes);
 router.use('/customers',customerRoutes);
 router.use('/products',productRoutes);
+router.use('/banner',bannerRoutes);
 
 module.exports = router;

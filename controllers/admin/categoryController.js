@@ -13,8 +13,9 @@ exports.getCategories = async (req, res) => {
         const categories = await Category.find(query).skip(skip).limit(limit);
        const message=req.session.message; 
        delete req.session.message;
-        res.render('admin/category', { categories, message, currentPage: page,
-            totalPages,layout: false });
+        res.render('admin/category', 
+            { categories, message, currentPage: page,
+            totalPages,currentPage:'category', layout: false });
     } catch (err) {
         console.error("Error fetching categories:", err.message);
         res.status(500).redirect('/admin/category')

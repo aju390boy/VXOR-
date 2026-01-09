@@ -43,7 +43,8 @@ exports.addToCart = async (req, res) => {
             cart.items.push({ productId, colorName, size, quantity });
         }
         await cart.save();
-        res.status(200).json({ message: 'Product added to cart successfully.', cart });
+        const cartCount = cart.items.reduce((acc, item) => acc + item.quantity, 0);
+        res.status(200).json({ message: 'Product added to cart successfully.', cart,cartCount });
     } catch (error) {
         console.error('Error adding to cart:', error);
         res.status(500).json({ message: 'Server error.', error: error.message });

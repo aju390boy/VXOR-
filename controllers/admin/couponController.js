@@ -19,6 +19,7 @@ exports.getAllCoupons = async (req, res) => {
             totalPages,
             message,
             current: 'coupons',
+            currentPage:'coupons',
              layout:false
         });
     } catch (error) {

@@ -50,23 +50,23 @@ exports.getSingleProduct = async (req, res) => {
       .lean();
     if (!product) {
       req.session.message={icon:'error',title:'Error',text:'product is not found',background: '#1e1e1e', color: '#ffffff',width:'450px'};
-      return res.redirect("/user/Product");
+      return res.redirect("/Product");
     }
      if (product.isDeleted) {
       req.session.message={icon:'error',title:'Error',text:'product is tempererly deleted',background: '#1e1e1e', color: '#ffffff',width:'450px'};
-      return res.redirect("/user/Product");
+      return res.redirect("/Product");
     }
      if (!product.isListed) {
       req.session.message={icon:'error',title:'Error',text:'product is not Listed',background: '#1e1e1e', color: '#ffffff',width:'450px'};
-      return res.redirect("/user/Product");
+      return res.redirect("/Product");
     }
     if (!product.category_id || !product.category_id.isListed) {
       req.session.message={icon:'error',title:'Error',text:'Products Category didnt exists Or Not Listed',background: '#1e1e1e', color: '#ffffff',width:'450px'};
-      return res.redirect("/user/Product");
+      return res.redirect("/Product");
     }
     if (!product.brand_id || !product.brand_id.isListed) {
       req.session.message={icon:'error',title:'Error',text:'Products Brand didnt exists OR Not Listed',background: '#1e1e1e', color: '#ffffff',width:'450px'};
-      return res.redirect("/user/Product");
+      return res.redirect("/Product");
     }
 
     const bestOffer = await findBestOffer(product._id, product.category_id?._id, product.brand_id?._id);

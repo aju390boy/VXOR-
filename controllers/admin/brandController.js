@@ -48,6 +48,7 @@ exports.getBrands = async (req, res) => {
             message, 
             currentPage: page,
             totalPages,
+            currentPage:'brand',
             layout: false 
         });
     } catch (err) {

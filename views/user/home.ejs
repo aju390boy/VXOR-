@@ -8,16 +8,16 @@
     <source src="/videos/navvideo.mp4" type="video/mp4" />
   </video>
   <div class="parallax-overlay">
-    <h1 class="hero-text"><a href="/user/product">GEAR UP WITH VXOR</a></h1>
+    <h1 class="hero-text"><a href="/product">GEAR UP WITH VXOR</a></h1>
     <p class="hero-sub">Premium Helmets. Built for Speed.</p>
-    <button class="hero-btn click-effect"><a href="/user/product">Explore Now</a></button>
+    <button class="hero-btn click-effect"><a href="/product">Explore Now</a></button>
   </div>
 </section>
 
 <h2 class="home-things"> BEST SELLERS</h2>
 <div class="best-sellers-container">
   <% bestSellers.forEach(item => { %>
-    <a href="/user/product/<%= item._id %>" class="item-link no-underline text-inherit">
+    <a href="/product/<%= item._id %>" class="item-link no-underline text-inherit">
       <div class="item-block-2">
         <div class="product">
           <img src="<%= item.display_image_url %>" alt="<%= item.title %>">
@@ -39,7 +39,7 @@
 <h2 class="home-things"> TOP RATED</h2>
 <div class="top-rated-container">
   <% topRated.forEach(item => { %>
-    <a href="/user/product/<%= item._id %>" class="item-link no-underline text-inherit">
+    <a href="/product/<%= item._id %>" class="item-link no-underline text-inherit">
     <div class="item-block-2">
       <div class="product"><img src="<%= item.display_image_url %>" alt="<%= item.title %>"></div>
       <div class="details">
@@ -59,7 +59,7 @@
 <h2 class="home-things"> WHAT'S NEW</h2>
 <div class="whats-new-container">
   <% whatsNew.forEach(item => { %>
-    <a href="/user/product/<%= item._id %>" class="item-link no-underline text-inherit">
+    <a href="/product/<%= item._id %>" class="item-link no-underline text-inherit">
     <div class="item-block-3">
       <div class="product"><img src="<%= item.display_image_url %>" alt="<%= item.title %>"></div>
       <div class="details">
@@ -157,7 +157,7 @@
 <script>
   history.pushState(null, null, location.href);
   window.onpopstate = function () {
-    location.replace("/user/home");
+    location.replace("/home");
   };
 </script>
 

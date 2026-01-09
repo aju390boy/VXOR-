@@ -19,7 +19,7 @@
     </div>
     <!-- Breadcrumb -->
     <div class="px-6 py-4 text-gray-400 text-sm">
-        <a href="/user/home" class="hover:text-white">Home</a> <span class="mx-2">›</span> Checkout
+        <a href="/home" class="hover:text-white">Home</a> <span class="mx-2">›</span> Checkout
     </div>
 <!-- ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// -->
      <div class="px-6 py-8 flex flex-col justify-between lg:flex-row gap-8">
@@ -111,7 +111,7 @@
     <% } else { %>
         <div class="text-center py-8">
              <p class="text-gray-400 mb-4">No default address found. Please add one.</p>
-             <a href="/user/profile?section=address" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-lg transition-colors">Add New Address</a>
+             <a href="/profile?section=address" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-lg transition-colors">Add New Address</a>
         </div>
     <% } %>
 
@@ -267,7 +267,7 @@
                              </div>
 
 
-            <a href="/user/cart" class="block mb-2 text-sm text-purple-700 font-extrabold hover:underline">Edit Cart</a>
+            <a href="/cart" class="block mb-2 text-sm text-purple-700 font-extrabold hover:underline">Edit Cart</a>
             <!-- coupon -->
                <div class="space-y-3 text-gray-300">
         <div class="coupon-area">
@@ -542,7 +542,7 @@ const addressId = address._id;
     try {
         //  COD and Wallet //
         if (paymentMethod === 'COD' || paymentMethod === 'WALLET') {
-            const response = await fetch('/user/placeorder/place-order', {
+            const response = await fetch('/placeorder/place-order', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ addressId, paymentMethod })
@@ -558,7 +558,7 @@ const addressId = address._id;
             }
 
         } else if (paymentMethod === 'razorpay') {
-            const createOrderResponse = await fetch('/user/placeorder/create-payment-order', {
+            const createOrderResponse = await fetch('/placeorder/create-payment-order', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ addressId, paymentMethod })
@@ -581,7 +581,7 @@ const addressId = address._id;
                 description: "Order Payment",
                 order_id: razorpayOrder.id,
                 handler: async function (response) {
-                    const verifyResponse = await fetch('/user/placeorder/verify-payment', {
+                    const verifyResponse = await fetch('/placeorder/verify-payment', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -596,7 +596,7 @@ const addressId = address._id;
                         window.location.href = verifyData.redirectUrl;
                     } else {
                         showToast('error', verifyData.message || 'Payment verification failed.');
-                         window.location.href = `/user/payment/failure?orderId=${dbOrderId}&customId=${customId}`;
+                         window.location.href = `/payment/failure?orderId=${dbOrderId}&customId=${customId}`;
                     }
                 },
                 prefill: {
@@ -614,7 +614,7 @@ const addressId = address._id;
                  placeOrderBtn.disabled = false;
                 placeOrderBtn.innerText = 'Place Order';
                 try {
-        await fetch('/user/payment/order-failed', {
+        await fetch('/payment/order-failed', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ dbOrderId: dbOrderId ,customId:customId}) 
@@ -622,7 +622,7 @@ const addressId = address._id;
     } catch (error) {
         console.error('Could not notify server of payment failure:', error);
     }
-    window.location.href = `/user/payment/failure?orderId=${dbOrderId}&customId=${customId}`;
+    window.location.href = `/payment/failure?orderId=${dbOrderId}&customId=${customId}`;
             });
             rzp1.open(); 
         }
@@ -651,7 +651,7 @@ const addressId = address._id;
             }
 
             try {
-                const response = await fetch('/user/checkout/apply-coupon', {
+                const response = await fetch('/checkout/apply-coupon', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ couponCode: couponCode })
@@ -687,7 +687,7 @@ const addressId = address._id;
     if (removeCouponBtn) {
     removeCouponBtn.addEventListener('click', async () => {
         try {
-            const response = await fetch('/user/checkout/remove-coupon', { method: 'POST' });
+            const response = await fetch('/checkout/remove-coupon', { method: 'POST' });
             const data = await response.json();
             if (data.success) {
                 couponDiscountRow.classList.add('hidden');
@@ -742,35 +742,26 @@ const addressId = address._id;
         const name = input.name;
         const value = input.value.trim();
         const rule = validators[name];
-
-        // Identify the Error Element ID based on which form we are in
         const formPrefix = input.form.id === 'edit-address-form' ? 'edit' : '';
-        // If prefix exists, capitalize first letter of name (e.g., editMobileError)
         const errorId = formPrefix 
             ? `${formPrefix}${name.charAt(0).toUpperCase() + name.slice(1)}Error`
             : `${name}Error`;
             
         const errorEl = document.getElementById(errorId);
-
-        // Skip fields we don't validate (like address2 or hidden inputs)
         if (!rule) return true;
 
         // CHECK VALIDITY
         const isValid = rule.regex.test(value);
 
         if (isValid) {
-            // SCENARIO: User typed correct 10 digits -> SUDDENLY GREEN
             input.classList.remove('border-red-500', 'focus:border-red-500', 'border-gray-600');
             input.classList.add('border-green-500', 'focus:border-green-500'); 
             
-            // Hide Error Message
             if (errorEl) errorEl.textContent = ""; 
         } else {
-            // SCENARIO: User removed a digit -> SUDDENLY RED
             input.classList.remove('border-green-500', 'focus:border-green-500', 'border-gray-600');
             input.classList.add('border-red-500', 'focus:border-red-500');
             
-            // Show Error Message
             if (errorEl) errorEl.textContent = rule.error;
         }
 
@@ -784,10 +775,8 @@ const addressId = address._id;
 
         const inputs = form.querySelectorAll('input');
         inputs.forEach(input => {
-            // Ignore hidden fields or country
             if (input.type === 'hidden' || input.name === 'country') return;
 
-            // EVENT: 'input' fires immediately when a character is typed or deleted
             input.addEventListener('input', () => validateField(input));
         });
     }
@@ -798,7 +787,6 @@ const addressId = address._id;
         const inputs = form.querySelectorAll('input');
         inputs.forEach(input => {
              if (input.name === 'address2' || input.type === 'hidden' || input.name === 'country') return;
-             // If any field fails validation, mark form as invalid
              if (!validateField(input)) {
                  isFormValid = false;
              }
@@ -895,7 +883,7 @@ const addressId = address._id;
                 const formData = new FormData(addAddressForm);
                 const data = Object.fromEntries(formData.entries());
                 try {
-                    const response = await fetch('/user/profile/address/add', {
+                    const response = await fetch('/profile/address/add', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(data)
@@ -950,7 +938,7 @@ const addressId = address._id;
                 const data = Object.fromEntries(formData.entries());
                 const addressId = address._id; 
                 try {
-                    const response = await fetch(`/user/profile/address/edit/${addressId}`, {
+                    const response = await fetch(`/profile/address/edit/${addressId}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(data)
@@ -980,7 +968,7 @@ const attachSetDefaultListeners = () => {
             const addressId = button.dataset.addressId;
 
             try {
-                const response = await fetch(`/user/checkout/address/set-default/${addressId}`, {
+                const response = await fetch(`/checkout/address/set-default/${addressId}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                 });

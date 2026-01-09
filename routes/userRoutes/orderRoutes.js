@@ -5,8 +5,7 @@ const orderController = require('../../controllers/user/orderController.js');
 const orderdetailController = require('../../controllers/user/orderdetailController.js');
 
 
-router.get('/search',isAuthenticated,orderController.searchUserOrders)
-
+router.get('/search',isAuthenticated,orderController.searchUserOrders);
 // Route example:
 router.get('/:orderId/items/:itemId', isAuthenticated, isVerified,orderdetailController.getOrderDetail);
 router.get('/:orderId/invoice', isAuthenticated,isVerified,orderdetailController.downloadInvoice);

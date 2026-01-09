@@ -20,7 +20,7 @@ exports.getOrderDetail = async (req, res) => {
       .lean();
     if (!order) {
       req.session.message = { icon: 'error', title: 'Error', text: 'Order does not exist' };
-      return res.redirect('/user/orders');
+      return res.redirect('/orders');
     }
     order.canCancelAll = order.products.some(p => ['CONFIRMED', 'PROCESSING', 'PACKED'].includes(p.status));
     order.canReturnAll = order.products.every(p => p.status === 'DELIVERED');
@@ -72,7 +72,7 @@ exports.getOrderDetail = async (req, res) => {
       itemDetail = order.products.find(item => item._id.toString() === itemId);
       if (!itemDetail) {
         req.session.message = { icon: 'error', title: 'Error', text: 'Order item not found' };
-        return res.redirect(`/user/orders/${orderId}`);
+        return res.redirect(`/orders/${orderId}`);
       }
       itemStatus = itemDetail.status;
       itemUpdatedAt = itemDetail.updatedAt || order.updatedAt;
@@ -115,7 +115,7 @@ exports.getOrderDetail = async (req, res) => {
   } catch (error) {
     console.error('Error fetching order details:', error);
     req.session.message = { icon: 'error', title: 'Error!', text: 'Error fetching order details' };
-    res.status(500).redirect('/user/orders');
+    res.status(500).redirect('/orders');
   }
 };
 
@@ -134,12 +134,12 @@ exports.downloadSingleInvoice = async (req, res) => {
       .lean();
     if (!order) {
       req.session.message = { type: 'error', text: 'Invoice not found.' };
-      return res.redirect(`/user/profile?section=orders`);
+      return res.redirect(`/profile?section=orders`);
     }
     const item = order.products.find(p => p._id.toString() === itemId);
     if (!item || !item.product_id) {
       req.session.message = { type: 'error', text: 'Item not found in this order.' };
-      return res.redirect(`/user/profile?section=orders`);
+      return res.redirect(`/profile?section=orders`);
     }
     const doc = new PDFDocument({ size: 'A4', margin: 50 });
     res.setHeader('Content-Type', 'application/pdf');
@@ -254,7 +254,7 @@ exports.downloadSingleInvoice = async (req, res) => {
   } catch (error) {
     console.error('Error generating single item invoice:', error);
     req.session.message = { type: 'error', text: 'Error generating invoice.' };
-    res.redirect(`/user/orders/${req.params.orderId}`);
+    res.redirect(`/orders/${req.params.orderId}`);
   }
 };
 exports.downloadInvoice = async (req, res) => {
@@ -264,7 +264,7 @@ exports.downloadInvoice = async (req, res) => {
     const TAX_RATE = 0.05;
     if (!orderId) {
       req.session.message = { icon: 'error', title: 'Error!', text: 'Order ID is missing' };
-      return res.status(400).redirect('/user/orderDetail');
+      return res.status(400).redirect('/orderDetail');
     }
     const order = await Order.findOne({ order_id: orderId, user_id: userId })
       .populate('products.product_id', 'title')
@@ -273,7 +273,7 @@ exports.downloadInvoice = async (req, res) => {
       .lean();
     if (!order) {
       req.session.message = { icon: 'error', title: 'Error!', text: 'Invoice not found or you do not have permission to view it.' };
-      return res.status(404).redirect('/user/orderDetail');
+      return res.status(404).redirect('/orderDetail');
     }
     const doc = new PDFDocument({ size: 'A4', margin: 50 });
     res.setHeader('Content-Type', 'application/pdf');
@@ -403,7 +403,7 @@ exports.downloadInvoice = async (req, res) => {
   } catch (error) {
     console.error('Error generating invoice:', error);
     req.session.message = { icon: 'error', title: 'Error!', text: 'Server error occurred while generating invoice.' };
-    res.status(500).redirect('/user/orderDetail');
+    res.status(500).redirect('/orderDetail');
   }
 };
 ///////Cancel///////////

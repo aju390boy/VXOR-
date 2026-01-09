@@ -25,6 +25,7 @@ exports.renderOrdersPage = async (req, res) => {
                 orderId: order.order_id,
                 _id: order._id 
             })),
+            currentPage:'orders',
             layout: false
         });
     } catch (err) {

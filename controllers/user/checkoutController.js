@@ -10,7 +10,6 @@ const {findBestOffer} = require('../../utils/offerHelper.js');
 exports.getCheckout = async (req, res) => {
     const TAX_RATE = 0.05;
     const userId = req.user._id;
-
     try {
         const cart = await Cart.findOne({ userId }).populate({
             path: 'items.productId',
@@ -26,71 +25,87 @@ exports.getCheckout = async (req, res) => {
         }).lean();
 
         if (!cart || cart.items.length === 0) {
-            return res.redirect('/user/cart');
+            return res.redirect('/cart');
         }
-
         const allAddresses = await Address.find({ user_id: userId }).lean();
         const defaultAddress = allAddresses.find(addr => addr.isDefault);
         const wallet = await Wallet.findOne({ user_id: userId }).lean();
         const walletBalance = wallet ? wallet.balance : 0;
         let originalSubtotal = 0;
         let offerSubtotal = 0; 
-
-        const cartItemsWithPrices = await Promise.all(cart.items.map(async (item) => {
-            const product = item.productId;
+        const validCartItems = []; 
+        for (const item of cart.items) {
+            // Validate Quantity Limit first
+            if (item.quantity > 5) {
+                req.session.message = { type: 'error', text: 'One or more products exceed the max quantity limit'};
+                return res.redirect('/cart');
+            }
+            // Fetch Product Data
             const productItem = await Product.findById(item.productId)
-            .populate('category_id')
-            .populate('brand_id')
-            .lean();
-            if (!product) return null;
-            if(!productItem.isListed){
+                .populate('category_id')
+                .populate('brand_id')
+                .lean();
+            // Validate Product Status
+            if (!productItem) {
+                req.session.message = { type: 'error', text: 'Product not found.' };
+                return res.redirect('/cart');
+            }
+            if (!productItem.isListed) {
                 req.session.message = { type: 'error', text: 'One or more products is Not Listed.' };
-            return res.redirect('/user/cart');
+                return res.redirect('/cart');
             }
-            if(productItem.isDeleted){
-                req.session.message = { type: 'error', text: 'One or more products is Tempererly Deleted.' };
-            return res.redirect('/user/cart');
+            if (productItem.isDeleted) {
+                req.session.message = { type: 'error', text: 'One or more products is Temporarily Deleted.' };
+                return res.redirect('/cart');
             }
-            if(!productItem.category_id || !productItem.category_id.isListed){
-                req.session.message = { type: 'error', text: 'Products Category is Didnt exists Or Not Listed.' };
-            return res.redirect('/user/cart');
+            if (!productItem.category_id || !productItem.category_id.isListed) {
+                req.session.message = { type: 'error', text: 'Product Category does not exist or is Not Listed.' };
+                return res.redirect('/cart');
             }
-            if(!productItem?.brand_id || !productItem?.brand_id?.isListed){
-                req.session.message = { type: 'error', text: 'Products Brand is Didnt exists Or Not Listed.' };
-            return res.redirect('/user/cart');
+            if (!productItem.brand_id || !productItem.brand_id.isListed) {
+                req.session.message = { type: 'error', text: 'Product Brand does not exist or is Not Listed.' };
+                return res.redirect('/cart');
             }
-
-            const sizeVariant = product.colorVariants.find(c => c.colorName === item.colorName)?.variants.find(s => s.size === item.size);
+            // Validate Stock
+            const sizeVariant = productItem.colorVariants
+                .find(c => c.colorName === item.colorName)?.variants
+                .find(s => s.size === item.size);
             if (!sizeVariant || sizeVariant.stock < item.quantity) {
-                return { ...item, iisAvalable: false, finalPrice: 0, originalPrice: 0 };
+                validCartItems.push({ 
+                    ...item, 
+                    productId: productItem, 
+                    isAvailable: false, 
+                    finalPrice: 0, 
+                    originalPrice: 0 
+                });
+                continue;
             }
-            
             const originalPrice = sizeVariant.price;
-            const bestOffer = await findBestOffer(product._id, product.category_id?._id, product.brand_id?._id);
-            
+            const bestOffer = await findBestOffer(productItem._id, productItem.category_id?._id, productItem.brand_id?._id);
             let finalPrice = originalPrice;
             if (bestOffer) {
                 finalPrice = originalPrice * (1 - bestOffer.discountPercentage / 100);
             }
-
+            // Update Totals
             originalSubtotal += originalPrice * item.quantity;
             offerSubtotal += finalPrice * item.quantity;
-
-            return { ...item, finalPrice, originalPrice, bestOffer, isAvailable: true };
-        }));
-
-        const validCartItems = cartItemsWithPrices.filter(item => item !== null);
-        if (validCartItems.some(item => !item?.isAvailable)) {
-            req.session.message = { type: 'error', text: 'Some items in your cart are out of stock. Please review your cart.' };
-            return res.redirect('/user/cart');
+            validCartItems.push({ 
+                ...item, 
+                productId: productItem, 
+                finalPrice, 
+                originalPrice, 
+                bestOffer, 
+                isAvailable: true 
+            });
         }
-
+        if (validCartItems.some(item => !item.isAvailable)) {
+            req.session.message = { type: 'error', text: 'Some items in your cart are out of stock. Please review your cart.' };
+            return res.redirect('/cart');
+        }
         const totalDiscount = originalSubtotal - offerSubtotal;
         const tax = offerSubtotal * TAX_RATE;
         const total = offerSubtotal + tax;
-        const isCodAvailable = true; 
-        
-        // 5. Render the page with all the new, accurate data
+        const isCodAvailable = total <= 20000; 
         res.render('user/checkout', {
             title: 'Checkout',
             user: req.user,

@@ -31,7 +31,7 @@ const isNotAuthenticated = (req, res, next) => {
     return next();
   }
 
-  return res.redirect('/user/home');
+  return res.redirect('/home');
 };
 
 

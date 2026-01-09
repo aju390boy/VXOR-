@@ -49,7 +49,7 @@
   /* Navbar Responsive Styles */
   .navbar {
     position: fixed;
-    top: 0.5rem; 
+    top: 1.2rem; 
     left: 0;
     right: 0;
 
@@ -243,7 +243,7 @@
 
     <!-- Center Navigation -->
     <div class="nav-center">
-      <a href="/user/home" class="text-gray-400 hover:text-white">HOME</a>
+      <a href="/home" class="text-gray-400 hover:text-white">HOME</a>
       
       <!-- Category Dropdown -->
       <div class="dropdown" x-data="{ open: false }">
@@ -256,7 +256,7 @@
         </button>
         <div class="dropdown-menu" x-show="open" x-transition @click.outside="open = false">
           <% categories.forEach(cat => { %>
-            <a href="/user/product?category=<%= cat.name %>" class="dropdown-item">
+            <a href="/product?category=<%= cat.name %>" class="dropdown-item">
               <%= cat.name %>
             </a>
           <% }) %>
@@ -274,32 +274,32 @@
         </button>
         <div class="dropdown-menu" x-show="open" x-transition @click.outside="open = false">
           <% brands.forEach(brand => { %>
-            <a href="/user/product?brand=<%= brand.name %>" class="dropdown-item">
+            <a href="/product?brand=<%= brand.name %>" class="dropdown-item">
               <%= brand.name %>
             </a>
           <% }) %>
         </div>
       </div>
 
-      <a href="/user/about" class="text-gray-400 hover:text-white">ABOUT</a>
-      <a href="/user/contact" class="text-gray-400 hover:text-white">CONTACT</a>
+      <a href="/about" class="text-gray-400 hover:text-white">ABOUT</a>
+      <a href="/contact" class="text-gray-400 hover:text-white">CONTACT</a>
     </div>
 
     <!-- Right Icons -->
     <div class="nav-right">
-      <a href="/user/profile?section=wishlist" title="Wishlist">
+      <a href="/profile?section=wishlist" title="Wishlist">
         <i class="fa-solid fa-heart text-lg"></i>
       </a>
       
       <!-- Cart -->
-      <a href="/user/cart" class="relative" title="Cart">
-        <i class="fas fa-shopping-cart text-lg"></i>
-        <% if (locals.cartCount && cartCount > 0) { %>
-          <span class="cart-badge"><%= cartCount %></span>
-        <% } %>
-      </a>
+     <a href="/cart" class="relative" title="Cart">
+  <i class="fas fa-shopping-cart text-lg"></i>
+  <span id="cart-count-badge" class="cart-badge" style="display: <%= (locals.cartCount && cartCount > 0) ? 'flex' : 'none' %>;">
+    <%= (locals.cartCount) ? cartCount : 0 %>
+  </span>
+</a>
       
-      <a href="/user/profile" title="Profile">
+      <a href="/profile" title="Profile">
         <i class="fa-solid fa-user text-lg"></i>
       </a>
     </div>
@@ -307,71 +307,94 @@
 </nav>
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-  // Scrolling banner animation
-  const container = document.querySelector('.referral-container');
-  const scrollingText = document.getElementById('scrollingText');
-  const referralCode = "<%= referralCode || 'VXOR2025' %>";
-  const fluorescentAmountForReferrar = "$100";
-  const fluorescentAmountForReferrered = "$50";
-  
-  const messages = [
-    "🔒 VXOR Helmets — Certified Safety + Style for Every Rider",
-    `👥 Refer & Earn! Share code <span class="referral-code">${referralCode}</span> → Get <span class="fluorescent-amount">${fluorescentAmountForReferrar}</span> per invite`,
-    `🎁 New riders! Use any referral code → Instant <span class="fluorescent-amount1">${fluorescentAmountForReferrered}</span> off first helmet`,
-    "🏍️ Ride Safe • Shop Smart • VXOR Has Your Back"
-  ];
-  
-  const combinedText = messages.join('   ●   ');
-  scrollingText.innerHTML = combinedText;
-  
-  // Responsive animation speed
-  const getSpeed = () => {
-    const width = window.innerWidth;
-    return width < 640 ? 0.8 : width < 1024 ? 1.2 : 1.8;
+  // 1. GLOBAL FUNCTION: Available to all other scripts
+  // Call this function from your 'Add to Cart' logic: window.updateCartBadge(5);
+  window.updateCartBadge = function(newCount) {
+    const badge = document.getElementById('cart-count-badge');
+    if (badge) {
+      // Update the number text
+      badge.innerText = newCount;
+      
+      // Show or hide the badge based on the count
+      if (newCount > 0) {
+        badge.style.display = 'flex';
+        
+        // Optional: Reset animation to draw attention
+        badge.style.animation = 'none';
+        badge.offsetHeight; /* Trigger reflow */
+        badge.style.animation = 'pulse 2s infinite';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
   };
-  
-  let speed = getSpeed();
-  let position = container.offsetWidth;
-  
-  function animate() {
-    const containerWidth = container.offsetWidth;
-    const textWidth = scrollingText.scrollWidth;
+
+  // 2. PAGE LOAD LOGIC
+  document.addEventListener('DOMContentLoaded', () => {
+    // --- Scrolling banner animation ---
+    const container = document.querySelector('.referral-container');
+    const scrollingText = document.getElementById('scrollingText');
+    const referralCode = "<%= referralCode || 'VXOR2025' %>";
+    const fluorescentAmountForReferrar = "$100";
+    const fluorescentAmountForReferrered = "$50";
     
-    position -= speed;
-    if (position < -textWidth) {
-      position = containerWidth;
+    const messages = [
+      "🔒 VXOR Helmets — Certified Safety + Style for Every Rider",
+      `👥 Refer & Earn! Share code <span class="referral-code">${referralCode}</span> → Get <span class="fluorescent-amount">${fluorescentAmountForReferrar}</span> per invite`,
+      `🎁 New riders! Use any referral code → Instant <span class="fluorescent-amount1">${fluorescentAmountForReferrered}</span> off first helmet`,
+      "🏍️ Ride Safe • Shop Smart • VXOR Has Your Back"
+    ];
+    
+    const combinedText = messages.join('   ●   ');
+    scrollingText.innerHTML = combinedText;
+    
+    // Responsive animation speed
+    const getSpeed = () => {
+      const width = window.innerWidth;
+      return width < 640 ? 0.8 : width < 1024 ? 1.2 : 1.8;
+    };
+    
+    let speed = getSpeed();
+    let position = container.offsetWidth;
+    
+    function animate() {
+      const containerWidth = container.offsetWidth;
+      const textWidth = scrollingText.scrollWidth;
+      
+      position -= speed;
+      if (position < -textWidth) {
+        position = containerWidth;
+      }
+      
+      scrollingText.style.transform = `translateX(${position}px)`;
+      requestAnimationFrame(animate);
     }
     
-    scrollingText.style.transform = `translateX(${position}px)`;
-    requestAnimationFrame(animate);
-  }
-  
-  // Update speed on resize
-  let animationFrame;
-  window.addEventListener('resize', () => {
-    speed = getSpeed();
-    position = container.offsetWidth;
-    if (animationFrame) cancelAnimationFrame(animationFrame);
-  });
-  
-  animate();
-  
-  // Navbar scroll effect
-  let lastScroll = 0;
-  window.addEventListener('scroll', () => {
-    const navbar = document.querySelector('.navbar');
-    const currentScroll = window.scrollY;
+    // Update speed on resize
+    let animationFrame;
+    window.addEventListener('resize', () => {
+      speed = getSpeed();
+      position = container.offsetWidth;
+      if (animationFrame) cancelAnimationFrame(animationFrame);
+    });
     
-    if (currentScroll > 100) {
-      navbar.style.background = 'rgba(0, 0, 0, 0.98)';
-      navbar.style.backdropFilter = 'blur(30px)';
-    } else {
-      navbar.style.background = 'rgba(0, 0, 0, 0.95)';
-      navbar.style.backdropFilter = 'blur(20px)';
-    }
+    animate();
     
-    lastScroll = currentScroll;
+    // --- Navbar scroll effect ---
+    let lastScroll = 0;
+    window.addEventListener('scroll', () => {
+      const navbar = document.querySelector('.navbar');
+      const currentScroll = window.scrollY;
+      
+      if (currentScroll > 100) {
+        navbar.style.background = 'rgba(0, 0, 0, 0.98)';
+        navbar.style.backdropFilter = 'blur(30px)';
+      } else {
+        navbar.style.background = 'rgba(0, 0, 0, 0.95)';
+        navbar.style.backdropFilter = 'blur(20px)';
+      }
+      
+      lastScroll = currentScroll;
+    });
   });
-});
 </script>

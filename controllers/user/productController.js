@@ -207,7 +207,7 @@ const formattedProducts = productsWithOffers.map(product =>
    if (req.xhr || req.headers.accept.includes("application/json")) {
     const html = formattedProducts.length > 0
         ? formattedProducts.map(item => `
-            <a href="/user/product/${item._id}" class="item-link no-underline text-inherit">
+            <a href="/product/${item._id}" class="item-link no-underline text-inherit">
               <div class="item-block border border-gray-800 rounded-lg overflow-hidden hover:scale-105 transition bg-black-400">
                 <div class="product">
                   <img src="${item.display_image_url}" alt="${item.title}" class="w-full h-60 object-cover">

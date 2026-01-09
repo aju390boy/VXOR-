@@ -96,7 +96,8 @@ exports.getAllProducts = async (req, res) => {
             currentPage: page,    
             totalPages: totalPages,
             categories: await Category.find().lean(),
-            brands: await Brand.find().lean() ,     
+            brands: await Brand.find().lean() ,  
+            currentPage:'products',   
             layout:false
         });
 

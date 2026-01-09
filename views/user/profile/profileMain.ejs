@@ -3,7 +3,7 @@
 <%# Breadcrumb %>
 <div class="flex justify-between items-center px-6 py-2 bg-gray-900 mt-2 flex-wrap gap-1">
     <div class="breadcrumb text-xs text-gray-400">
-        <a href="/user/home" class="text-gray-400 font-bold hover:text-white">HOME</a> > <span>MY PROFILE</span>
+        <a href="/home" class="text-gray-400 font-bold hover:text-white">HOME</a> > <span>MY PROFILE</span>
     </div>
 </div>
 <div class="flex flex-col md:flex-row px-10 py-2 bg-gray-900 min-h-5 text-gray-400">
@@ -18,37 +18,37 @@
         <h2 class="text-lg font-bold mb-7 text-white  border-b border-gray-700 pb-2">MY ACCOUNT</h2>
         <ul class="flex flex-col gap-2">
             <li>
-                <a href="/user/profile/section/profile" data-section="profile" class="sidebar-link flex items-center gap-3 py-4 px-2 rounded text-gray-400 hover:bg-gray-800 hover:text-white transition duration-200">
+                <a href="/profile/section/profile" data-section="profile" class="sidebar-link flex items-center gap-3 py-4 px-2 rounded text-gray-400 hover:bg-gray-800 hover:text-white transition duration-200">
                     <i class="fa-regular fa-user"></i> PROFILE
                 </a>
             </li>
             <li>
-                <a href="/user/profile/section/orders" data-section="orders" class="sidebar-link flex items-center gap-3 py-4 px-2 rounded text-gray-400 hover:bg-gray-800 hover:text-white transition duration-200">
+                <a href="/profile/section/orders" data-section="orders" class="sidebar-link flex items-center gap-3 py-4 px-2 rounded text-gray-400 hover:bg-gray-800 hover:text-white transition duration-200">
                     <i class="fa-solid fa-box"></i> ORDERS
                 </a>
             </li>
             <li>
-                <a href="/user/profile/section/wishlist" data-section="wishlist" class="sidebar-link flex items-center gap-3 py-4 px-2 rounded text-gray-400 hover:bg-gray-800 hover:text-white transition duration-200">
+                <a href="/profile/section/wishlist" data-section="wishlist" class="sidebar-link flex items-center gap-3 py-4 px-2 rounded text-gray-400 hover:bg-gray-800 hover:text-white transition duration-200">
                     <i class="fa-solid fa-heart"></i>WISHLIST
                 </a>
             </li>
             <li>
-                <a href="/user/profile/section/address" data-section="address" class="sidebar-link flex items-center gap-3 py-4 px-2 rounded text-gray-400 hover:bg-gray-800 hover:text-white transition duration-200">
+                <a href="/profile/section/address" data-section="address" class="sidebar-link flex items-center gap-3 py-4 px-2 rounded text-gray-400 hover:bg-gray-800 hover:text-white transition duration-200">
                     <i class="fa-solid fa-location-dot"></i> ADDRESS
                 </a>
             </li>
             <li>
-                <a href="/user/profile/section/change-password" data-section="change-password" class="sidebar-link flex items-center gap-3 py-4 px-2 rounded text-gray-400 hover:bg-gray-800 hover:text-white transition duration-200">
+                <a href="/profile/section/change-password" data-section="change-password" class="sidebar-link flex items-center gap-3 py-4 px-2 rounded text-gray-400 hover:bg-gray-800 hover:text-white transition duration-200">
                     <i class="fa-solid fa-key"></i> PASSWORD
                 </a>
             </li>
             <li>
-                <a href="/user/profile/section/wallet" data-section="wallet" class="sidebar-link flex items-center gap-3 py-4 px-2 rounded text-gray-400 hover:bg-gray-800 hover:text-white transition duration-200">
+                <a href="/profile/section/wallet" data-section="wallet" class="sidebar-link flex items-center gap-3 py-4 px-2 rounded text-gray-400 hover:bg-gray-800 hover:text-white transition duration-200">
                     <i class="fa-solid fa-wallet"></i> WALLET
                 </a>
             </li>
              <li>
-                <a href="/user/profile/section/referral" data-section="referral" class="sidebar-link flex items-center gap-3 py-4 px-2 rounded text-gray-400 hover:bg-gray-800 hover:text-white transition duration-200">
+                <a href="/profile/section/referral" data-section="referral" class="sidebar-link flex items-center gap-3 py-4 px-2 rounded text-gray-400 hover:bg-gray-800 hover:text-white transition duration-200">
                     <i class="fa-solid fa-gift"></i> REFER AND EARN
                 </a>
             </li>
@@ -185,7 +185,7 @@ function bindCancelReturnModals() {
         return;
       }
 
-      const url = `/user/orders/${orderId}/request-cancellation`;
+      const url = `/orders/${orderId}/request-cancellation`;
       try {
         const resp = await fetch(url, {
           method: 'PATCH',
@@ -206,7 +206,7 @@ function bindCancelReturnModals() {
             timerProgressBar: true
           });
           closeModal('cancelModal');
-          setTimeout(() => window.location.href = '/user/profile?section=orders', 500);
+          setTimeout(() => window.location.href = '/profile?section=orders', 500);
         } else {
           Swal.fire({
             title: 'Error!',
@@ -253,7 +253,7 @@ function bindCancelReturnModals() {
         return;
       }
 
-      const url = `/user/orders/${orderId}/request-return`;
+      const url = `/orders/${orderId}/request-return`;
       try {
         const resp = await fetch(url, {
           method: 'PATCH',
@@ -274,7 +274,7 @@ function bindCancelReturnModals() {
             timerProgressBar: true
           });
           closeModal('returnModal');
-          setTimeout(() => window.location.href = '/user/profile?section=orders', 500);
+          setTimeout(() => window.location.href = '/profile?section=orders', 500);
         } else {
           Swal.fire({
             title: 'Error!',
@@ -335,7 +335,7 @@ function bindCancelReturnModals() {
             try {
                 
                  if (sectionName === 'referral') {
-            const response = await fetch(`/user/profile/section/${sectionName}`);
+            const response = await fetch(`/profile/section/${sectionName}`);
             if (!response.ok) {
                 const errorMessage = await response.text();
                 Swal.fire({ icon: 'error', title: 'Error!', text: `Error loading referral: ${errorMessage}`, width:'400px', customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' } });
@@ -348,7 +348,7 @@ document.getElementById('generateReferralBtn')?.addEventListener('click', async 
   const btn = document.getElementById('generateReferralBtn');
   btn.innerHTML = '<span class="flex items-center gap-2"><div class="w-5 h-5 border-2 border-white rounded-full border-t-transparent animate-spin"></div>Generating...</span>';
   try {
-    const response = await fetch('/user/profile/generate-referral', { method: 'POST' });
+    const response = await fetch('/profile/generate-referral', { method: 'POST' });
     const data = await response.json();
 
     if (data.success) {
@@ -380,7 +380,7 @@ document.getElementById('generateReferralBtn')?.addEventListener('click', async 
             initReferralCopy();
             return;
         }
-                const response = await fetch(`/user/profile/section/${sectionName}`);
+                const response = await fetch(`/profile/section/${sectionName}`);
                 if (!response.ok) {
                     const errorMessage = await response.text();
 
@@ -474,7 +474,7 @@ bindCancelReturnModals();
             return;
         }
         try {
-            const response = await fetch('/user/wallet/add-money', {
+            const response = await fetch('/wallet/add-money', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ amount: amount })
@@ -492,7 +492,7 @@ bindCancelReturnModals();
                 description: "Add Money to Wallet",
                 order_id: order.id,
                 handler: async function (response) {
-                    const verifyResponse = await fetch('/user/wallet/verify-payment', {
+                    const verifyResponse = await fetch('/wallet/verify-payment', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -531,7 +531,7 @@ bindCancelReturnModals();
                 }).then(async (result) => {
                     if (result.isConfirmed) {
                         try {
-                            const response = await fetch(`/user/profile/address/remove/${addressId}`, { method: 'POST' });
+                            const response = await fetch(`/profile/address/remove/${addressId}`, { method: 'POST' });
                             const resData = await response.json();
                             if (response.ok) {
                                 Swal.fire({ icon: 'success', title: 'Removed!', text: resData.message, width:'400px', customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' } });
@@ -560,7 +560,7 @@ bindCancelReturnModals();
                 }).then(async (result) => {
                     if (result.isConfirmed) {
                         try {
-                            const response = await fetch(`/user/profile/address/set-default/${addressId}`, { method: 'POST' });
+                            const response = await fetch(`/profile/address/set-default/${addressId}`, { method: 'POST' });
                             const resData = await response.json();
                             if (response.ok) {
                                 Swal.fire({ icon: 'success', title: 'Success!', text: resData.message, width:'400px', customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' } });
@@ -595,7 +595,7 @@ bindCancelReturnModals();
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {
-                const response = await fetch(`/user/wishlist/remove/${productId}`, {
+                const response = await fetch(`/wishlist/remove/${productId}`, {
                     method: 'DELETE'
                 });
                 const data = await response.json();
@@ -608,7 +608,7 @@ bindCancelReturnModals();
                         width:'400px',
                         customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' }
                     });
-                    window.location.href = '/user/profile?section=wishlist';
+                    window.location.href = '/profile?section=wishlist';
                 } else {
                     Swal.fire({ icon: 'error', title: 'Error!', text: data.message, width:'400px', customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' } });
                 }
@@ -622,7 +622,7 @@ bindCancelReturnModals();
                 activeProductId = moveToCartBtn.dataset.productId;
                 const productTitle = moveToCartBtn.dataset.title;
                 try {
-    const response = await fetch(`/user/product/variants/${activeProductId}`);
+    const response = await fetch(`/product/variants/${activeProductId}`);
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         const errorMsg = errorData.message || 'Could not fetch product details.';
@@ -654,7 +654,7 @@ else if (editProfileModal && e.target === editProfileModal) {
     }
                 const formData = new FormData(form);
                 try {
-                    const response = await fetch('/user/profile/update', { method: 'POST', body: formData });
+                    const response = await fetch('/profile/update', { method: 'POST', body: formData });
                     const result = await response.json();
                     if (!response.ok) {
                         Swal.fire({ icon: 'error', title: 'Update Failed', text: result.message, width: '400px', customClass: { popup: 'swal-dark-bg', title: 'swal-dark-title', content: 'swal-dark-content', confirmButton: 'swal-dark-button' } });
@@ -696,7 +696,7 @@ else if (editProfileModal && e.target === editProfileModal) {
             }, 1000);
             resendBtn.addEventListener('click', () => {
                   clearInterval(timerInterval);
-                fetch('/user/profile/resend-email-otp', {
+                fetch('/profile/resend-email-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ newEmail: result.newEmail })
@@ -728,7 +728,7 @@ else if (editProfileModal && e.target === editProfileModal) {
             clearInterval(timerInterval);
         },
         preConfirm: (otp) => {
-             return fetch('/user/profile/verify-email-update', {
+             return fetch('/profile/verify-email-update', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ otp: otp, newEmail: result.newEmail }) 
@@ -771,9 +771,9 @@ else if (editProfileModal && e.target === editProfileModal) {
                 const isEditAddress = form.id === 'edit-address-form';
                 const addressId = isEditAddress ? form.querySelector('#editAddressId').value : null;
                 const urlMap = {
-                    'change-password-form': '/user/profile/change-password',
-                    'add-address-form': '/user/profile/address/add',
-                    'edit-address-form': `/user/profile/address/edit/${addressId}`
+                    'change-password-form': '/profile/change-password',
+                    'add-address-form': '/profile/address/add',
+                    'edit-address-form': `/profile/address/edit/${addressId}`
                 };
                 const url = urlMap[form.id];
                 const formData = new FormData(form);
@@ -862,7 +862,7 @@ else if (editProfileModal && e.target === editProfileModal) {
             if (!tableBody) return;
             tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-gray-400">Searching...</td></tr>`;
             try {
-                const response = await fetch(`/user/orders/search?q=${encodeURIComponent(query)}`);
+                const response = await fetch(`/orders/search?q=${encodeURIComponent(query)}`);
                 if (!response.ok) throw new Error('Search request failed');
                 tableBody.innerHTML = await response.text();
             } catch (error) {
@@ -915,7 +915,7 @@ else if (editProfileModal && e.target === editProfileModal) {
                 const colorName = selectedColorEl.dataset.colorName;
                 const size = selectedSizeEl.dataset.size;
                 try {
-                    const cartResponse = await fetch('/user/cart', {
+                    const cartResponse = await fetch('/cart', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ productId: activeProductId, colorName, size, quantity: 1 })
@@ -923,13 +923,13 @@ else if (editProfileModal && e.target === editProfileModal) {
                     const cartData = await cartResponse.json();
                     if (!cartResponse.ok) throw new Error(cartData.message);
 
-                    const wishlistResponse = await fetch(`/user/wishlist/remove/${activeProductId}`, { method: 'DELETE' });
+                    const wishlistResponse = await fetch(`/wishlist/remove/${activeProductId}`, { method: 'DELETE' });
                     const wishlistData = await wishlistResponse.json();
                     if (!wishlistResponse.ok) throw new Error(wishlistData.message);
                     
                     closeModal('variantSelectorModal');
                     Swal.fire({ icon: 'success', title: 'Success!', text: 'Item moved to cart!'});
-                    window.location.href='/user/profile?section=wishlist'
+                    window.location.href='/profile?section=wishlist'
                 } catch (error) {
                     console.error("Move to cart error:", error);
                     Swal.fire({ icon: 'error', title: 'Error', text: error.message || 'An error occurred.' });
@@ -972,7 +972,7 @@ document.addEventListener('click', (event) => {
 });
 function changePage(page, section) {
   const limit = 5; 
-  fetch(`/user/profile/section/${section}?page=${page}&limit=${limit}`)
+  fetch(`/profile/section/${section}?page=${page}&limit=${limit}`)
     .then(response => response.text())
     .then(html => {
       document.getElementById('profile-content').innerHTML = html;

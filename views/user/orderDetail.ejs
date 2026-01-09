@@ -109,7 +109,7 @@
                 Return
               </button>
             <% } %>
-            <a href="/user/orders/<%= order.order_id || order._id %>/items/<%= itemDetail._id %>/invoice" class="ml-4 inline-block px-6 py-3 rounded-xl font-semibold text-white bg-gray-700 hover:bg-gray-600 transition">
+            <a href="/orders/<%= order.order_id || order._id %>/items/<%= itemDetail._id %>/invoice" class="ml-4 inline-block px-6 py-3 rounded-xl font-semibold text-white bg-gray-700 hover:bg-gray-600 transition">
               Download Invoice
             </a>
           </div>
@@ -132,7 +132,7 @@
                   const canReturn = productItem.status === 'DELIVERED';
                 %>
                 <div class="rounded-lg p-4 flex flex-col sm:flex-row items-start sm:items-center gap-6 cursor-pointer" 
-                     onclick="window.location.href='/user/orders/<%= order._id %>/items/<%= productItem._id %>'">
+                     onclick="window.location.href='/orders/<%= order._id %>/items/<%= productItem._id %>'">
                   <div class="w-24 h-28 rounded-lg overflow-hidden flex-shrink-0">
                     <img src="<%= imagePath %>" alt="<%= product ? product.title : 'Product Image Unavailable' %>" 
                          class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://placehold.co/96x96/1f2937/d1d5db?text=IMG'">
@@ -175,7 +175,7 @@
                         Return
                       </button>
                     <% } %>
-                    <a href="/user/orders/<%= order.order_id || order._id %>/items/<%= productItem._id %>/invoice" 
+                    <a href="/orders/<%= order.order_id || order._id %>/items/<%= productItem._id %>/invoice" 
                        class="single-item-invoice-btn w-full sm:w-auto px-6 py-3 rounded-xl font-semibold text-white transition text-center"
                        data-order-id="<%= order.order_id || order._id %>">
                       Download Invoice
@@ -325,7 +325,7 @@
       <p class="text-purple-200 text-sm sm:text-lg mb-6 max-w-2xl mx-auto">
           We hope you are excited about your purchase. Explore our collection to find your next favorite item and enjoy more seamless shopping.
       </p>
-      <a href="/user/product" class="inline-block px-8 py-4 rounded-full font-bold text-lg text-white bg-black transition-all duration-300 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-purple-500">
+      <a href="/product" class="inline-block px-8 py-4 rounded-full font-bold text-lg text-white bg-black transition-all duration-300 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-purple-500">
           Shop Again
       </a>
     </div>
@@ -551,7 +551,7 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
     const orderId = document.getElementById('cancelOrderId').value;
     const itemId = document.getElementById('cancelItemId').value;
-    const url = `/user/orders/${orderId}/items/${itemId}/request-cancellation`;
+    const url = `/orders/${orderId}/items/${itemId}/request-cancellation`;
     handleFormSubmit('cancelForm', url);
   });
 
@@ -560,7 +560,7 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
     const orderId = document.getElementById('returnOrderId').value;
     const itemId = document.getElementById('returnItemId').value;
-    const url = `/user/orders/${orderId}/items/${itemId}/request-return`;
+    const url = `/orders/${orderId}/items/${itemId}/request-return`;
     handleFormSubmit('returnForm', url);
   });
 });

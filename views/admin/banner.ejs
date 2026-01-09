@@ -3,70 +3,326 @@
 <head>
   <meta charset="UTF-8">
   <title>Banner Management - Admin</title>
+  
   <link rel="stylesheet" href="/styles/admin/adminnavbar.css">
   <link rel="stylesheet" href="/styles/admin/adminsidebar.css">
-  <link rel="stylesheet" href="/styles/admin/banner.css">
+  <link rel="stylesheet" href="/styles/admin/category.css"> 
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+  <style>
+    .admin-wrapper {
+      display: flex;
+      min-height: 100vh;
+    }
+    .admin-main {
+      flex-grow: 1;
+      padding: 2rem;
+      background-color: #f8f9fa;
+    }
+    .breadcrumb {
+      margin-bottom: 1.5rem;
+      font-size: 0.9rem;
+      color: #6c757d;
+    }
+    .breadcrumb a {
+      color: #6c757d;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .breadcrumb a:hover {
+      color: #4a5568;
+    }
+    .form-section {
+      background-color: #ffffff;
+      padding: 2rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+
+    .form-section h2, .form-section h3 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      color: #1a202c;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: #4a5568;
+      margin-top: 1rem;
+    }
+
+    input[type="text"],
+    input[type="date"],
+    input[type="file"],
+    select {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #cbd5e0;
+      border-radius: 0.375rem;
+      font-size: 1rem;
+      box-sizing: border-box;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      background-color: #fff;
+    }
+
+    input:focus, select:focus {
+      border-color: #4299e1;
+      box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
+      outline: none;
+    }
+    .banner-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+      background-color: #f8fafc;
+      transition: all 0.3s ease;
+    }
+    .banner-card:hover {
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      background-color: #fff;
+    }
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 24px;
+    }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 24px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider { background-color: #4CAF50; }
+    input:checked + .slider:before { transform: translateX(16px); }
+  </style>
 </head>
 <body>
 
-  <%- include('../partials/admin/adminnavbar') %>
-  <div class="admin-wrapper">
-    <%- include('../partials/admin/adminsidebar', { current: 'banner' }) %>
+<%- include('../partials/admin/adminnavbar') %>
 
-    <div class="admin-main" style="margin-left: 250px; margin-top: 85px; padding: 30px;">
-      <div class="breadcrumb">Admin > Dashboard</div>
-      <h2>Banner Management</h2>
+<div class="admin-wrapper">
+  <%- include('../partials/admin/adminsidebar', { current: 'banner' }) %>
 
-      <div class="sort-filter-section">
-        <select>
-          <option>End Date</option>
-          <option>Start Date</option>
-        </select>
-        <select>
-          <option>Ascending</option>
-          <option>Descending</option>
-        </select>
-        <select>
-          <option>All</option>
-          <option>Active</option>
-          <option>Expired</option>
-        </select>
+  <div class="admin-main" style="margin-left: 250px; margin-top: 55px;">
+    
+    <div class="breadcrumb " style="margin-bottom: -1px;">
+      <a href="/admin/dashboard">Admin</a> > 
+      <a href="/admin/banner">Banner Management</a>
+    </div>
+
+    <div class="bg-white p-6 rounded-lg shadow-md mb-8 mt-5">
+      <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">Page Banners</h2>
+        
+        <div class="flex gap-2 mt-4 md:mt-0">
+          <select class="!w-auto !py-2">
+            <option>Sort by Date</option>
+            <option>End Date</option>
+          </select>
+        </div>
       </div>
 
-      <form method="POST" action="/admin/banner/add" enctype="multipart/form-data" class="banner-list">
-        <% const bannerPages = ['home page', 'shopping cart', 'checkout page', 'thankyou page', 'shop page']; %>
-        <% bannerPages.forEach((page, index) => { %>
-          <div class="banner-box">
-            <h4>Banner for <%= page %></h4>
-            <div class="upload-row">
-              <label>Image (1440px x 300px):</label>
-              <input type="file" name="images" multiple accept="image/*" required />
+      <form method="POST" action="/admin/banner/update" enctype="multipart/form-data">
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <% const bannerPages = ['home page', 'shopping cart', 'checkout page', 'thankyou page', 'shop page']; %>
+          <% bannerPages.forEach((page, index) => { %>
+            
+            <div class="banner-card relative">
+              <h4 class="text-lg font-bold capitalize text-gray-700 mb-3 border-b pb-2">
+                <i class="fas fa-desktop mr-2 text-blue-500"></i> <%= page %>
+              </h4>
+              
+              <div class="space-y-4">
+                <div>
+                  <label class="text-sm">Upload Image (1440px x 300px)</label>
+                  <input type="file" name="images" multiple accept="image/*" class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
+                </div>
 
-
+                <div class="flex items-center justify-between pt-2">
+                   <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                    Static Slot
+                  </span>
+                  
+                  <button type="button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded text-sm transition-colors duration-200">
+                    <i class="fas fa-save mr-1"></i> Update
+                  </button>
+                </div>
+              </div>
             </div>
-            <div class="date-row">
-              <input type="date" name="startDates[]">
-              <input type="date" name="endDates[]">
-              <input type="text" value="30 Days Left" readonly>
-              <button type="submit" class="update-btn">Update</button>
+
+          <% }) %>
+        </div>
+      </form>
+    </div>
+
+    <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6">Active Promotional Banners</h2>
+      
+      <% if (banners && banners.length > 0) { %>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <% banners.forEach(banner => { %>
+            <div class="banner-card relative bg-gray-50 border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow p-0">
+              
+              <div class="h-40 w-full relative group">
+                <img src="/uploads/banners/<%= banner.image %>" alt="<%= banner.title %>" class="w-full h-full object-cover">
+                
+                <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-3 transition-opacity duration-300">
+                  <button onclick="deleteBanner('<%= banner._id %>')" class="bg-white text-red-600 p-2 rounded-full hover:bg-red-50 transition">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="p-4">
+                <div class="flex justify-between items-start">
+                  <h3 class="font-bold text-gray-800 truncate pr-2"><%= banner.title %></h3>
+                  <% if (banner.isActive) { %>
+                    <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-semibold">Active</span>
+                  <% } else { %>
+                    <span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full font-semibold">Inactive</span>
+                  <% } %>
+                </div>
+                
+                <% if(banner.startDate && banner.endDate) { %>
+                  <div class="text-xs text-gray-500 mt-2">
+                    <i class="far fa-calendar-alt mr-1"></i>
+                    <%= new Date(banner.startDate).toLocaleDateString() %> - <%= new Date(banner.endDate).toLocaleDateString() %>
+                  </div>
+                <% } %>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      <% } else { %>
+        <div class="text-center py-10 bg-gray-50 rounded border border-dashed border-gray-300">
+          <p class="text-gray-500 text-lg">No promotional banners active.</p>
+          <p class="text-sm text-gray-400">Use the form below to add one.</p>
+        </div>
+      <% } %>
+    </div>
+
+    <div class="form-section mt-8">
+      <h2>ADD NEW PROMOTIONAL BANNER</h2>
+      <form method="POST" action="/admin/banner/add" enctype="multipart/form-data" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <div>
+          <label for="title">Banner Title:</label>
+          <input type="text" name="title" id="title" placeholder="e.g. Summer Sale 2025" required>
+
+          <label for="image">Banner Image:</label>
+          <input type="file" name="images" id="image" accept="image/*" required class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100">
+        </div>
+
+        <div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label for="startDate">Start Date:</label>
+               <input type="date" id="startDate" name="startDate" required class="mt-1"  min="<%= new Date().toISOString().split('T')[0] %>"  onchange="document.getElementById('endDate').min = this.value"/>
+            </div>
+            <div>
+              <label for="endDate">End Date:</label>
+              <input type="date" id="endDate" name="endDate" required class="mt-1" />
             </div>
           </div>
-        <% }) %>
-      </form>
 
-      <div class="add-banner-form">
-        <h3>Add New Banner</h3>
-        <form method="POST" action="/admin/banner/add" enctype="multipart/form-data">
-          <input type="text" name="title" placeholder="Title" required>
-          <input type="text" name="status" placeholder="Status">
-          <input type="file" name="image" accept="image/*" required>
-          <input type="date" name="startDate">
-          <input type="date" name="endDate">
-          <button type="submit">ADD</button>
-        </form>
-      </div>
+          <label for="status" class="block ml-48 mt-8">Status:</label>
+          <div class="flex items-center gap-3">
+             <label class="switch mt-0 ml-48">
+              <input type="checkbox" name="status" checked>
+              <span class="slider round"></span>
+            </label>
+            <span class="text-sm text-gray-600 mb-3">Active</span>
+          </div>
+        </div>
+
+        <div class="md:col-span-2 mt-2">
+          <button type="submit" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg w-full transition-colors duration-200 text-lg shadow-md">
+            <i class="fas fa-plus-circle mr-2"></i> Create Banner
+          </button>
+        </div>
+
+      </form>
     </div>
+
   </div>
+</div>
+
+<script>
+  // Server Messages Handling
+  document.addEventListener('DOMContentLoaded', () => {
+    try {
+      const serverMessage = <%- typeof message !== 'undefined' ? JSON.stringify(message) : 'null' %>;
+      if (serverMessage) {
+        Swal.fire({
+          icon: serverMessage.type || 'info',
+          title: serverMessage.text || 'Notification',
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 3000
+        });
+      }
+    } catch (e) {
+      console.log('No server message');
+    }
+  });
+
+  // Delete Banner Function
+  function deleteBanner(id) {
+    Swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+      if (result.isConfirmed) {
+                axios.delete(`/admin/banner/delete/${id}`)
+          .then(response => {
+            if (response.data.success) {
+              Swal.fire(
+                'Deleted!',
+                'The banner has been deleted.',
+                'success'
+              ).then(() => {
+                window.location.reload();
+              });
+            } else {
+              Swal.fire('Error!', response.data.message, 'error');
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            Swal.fire('Error!', 'Something went wrong.', 'error');
+          });
+      }
+    });
+  }
+</script>
 
 </body>
 </html>
