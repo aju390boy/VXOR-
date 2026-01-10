@@ -151,22 +151,35 @@
                     <p class="text-sm text-slate-500">Customer details not available.</p>
                 <% } %>
             </div>
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center">
-                    <i class="fas fa-truck mr-3 text-purple-500"></i>
-                    Shipping Address
-                </h2>
-                <% if (order.address_id) { %>
-                    <div class="space-y-1 text-sm text-slate-600 leading-relaxed">
-                        <p class="font-medium text-slate-800"><%= order.address_id.name %></p>
-                        <p><%= order.address_id.address1 %></p>
-                        <p><%= order.address_id.city %>, <%= order.address_id.state %> - <%= order.address_id.pincode %></p>
-                        <p class="font-medium text-slate-800 pt-1"><i class="fas fa-phone-alt mr-2 text-xs"></i><%= order.address_id.mobile %></p>
-                    </div>
-                <% } else { %>
-                    <p class="text-sm text-slate-500">No address provided.</p>
-                <% } %>
-            </div>
+            <!-- address section -->
+           <div class="bg-white rounded-xl shadow-lg p-6">
+    <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center">
+        <i class="fas fa-truck mr-3 text-purple-500"></i>
+        Shipping Address
+    </h2>
+    <% 
+       const addr = order.shipping_address || order.address_id; 
+    %>
+    <% if (addr) { %>
+        <div class="space-y-1 text-sm text-slate-600 leading-relaxed">
+            <p class="font-medium text-slate-800"><%= addr.name %></p>
+            <p><%= addr.address1 %></p>
+            <% if (addr.address2) { %>
+                <p><%= addr.address2 %></p>
+            <% } %>
+            <p>
+                <%= addr.city || addr.district %>, 
+                <%= addr.state %> - <%= addr.pincode %>
+            </p>
+            <p class="font-medium text-slate-800 pt-1">
+                <i class="fas fa-phone-alt mr-2 text-xs"></i><%= addr.mobile %>
+            </p>
+        </div>
+    <% } else { %>
+        <p class="text-sm text-slate-500">No address provided.</p>
+    <% } %>
+</div>
+            <!-- address section end -->
             <div class="bg-white rounded-xl shadow-lg p-6">
                 <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center">
                     <i class="fas fa-receipt mr-3 text-purple-500"></i>

@@ -24,6 +24,9 @@ exports.placeOrder = async (req, res) => {
         if (!shippingAddress) {
             return res.status(400).json({ message: "Shipping address not found." });
         }
+
+const { _id, createdAt, updatedAt, __v, user_id, ...addressData } = shippingAddress.toObject();
+
         const cart = await Cart.findOne({ userId: userId }).populate({
             path: "items.productId",
             populate: ['category_id', 'brand_id']
@@ -117,6 +120,7 @@ exports.placeOrder = async (req, res) => {
         const newOrder = new Order({
             user_id: userId,
             address_id: shippingAddress._id,
+            shipping_address: addressData,
             products: productsToOrder,
             total_amount: finalAmount.toFixed(2),
             payment_status: paymentStatus,

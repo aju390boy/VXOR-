@@ -32,6 +32,17 @@ const productInOrderSchema = new mongoose.Schema({
   prev_status:{type:String}
 });
 
+const shippingAddressSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  mobile: { type: String, required: true },
+  address1: { type: String, required: true },
+  address2: { type: String },
+  city: { type: String, required: true },
+  state: { type: String, required: true },
+  pincode: { type: String, required: true },
+  country: { type: String, default: 'India' }
+}, { _id: false });
+
 const orderSchema = new mongoose.Schema({
   user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
   order_id: { type: String},
@@ -51,7 +62,8 @@ const orderSchema = new mongoose.Schema({
   concern:{type:String,enum:['RETURN','CANCELLATION','NONE'],default:'NONE'}, 
   total_offer_applied: { type: Number, min: 0, default: 0 },
   tax: { type: Number, min: 0, default: 0 },
-  total_amount: { type: Number, min: 0, required: true }
+  total_amount: { type: Number, min: 0, required: true },
+  shipping_address: { type: shippingAddressSchema, required: true }
 }, { timestamps: true });
 
 
