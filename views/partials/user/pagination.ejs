@@ -22,7 +22,7 @@ function buildQuery(q) {
 
     <% if (currentPage > 1) { %>
       <% q.page = currentPage - 1; %>
-      <a href="/user/product?<%= buildQuery(q) %>"
+      <a href="/product?<%= buildQuery(q) %>"
          class="px-2 py-1 rounded bg-gray-800 hover:bg-gray-700">
         Prev
       </a>
@@ -34,7 +34,7 @@ function buildQuery(q) {
 
     <% for (let p = 1; p <= totalPages; p++) { %>
       <% q.page = p; %>
-      <a href="/user/product?<%= buildQuery(q) %>"
+      <a href="/product?<%= buildQuery(q) %>"
          class="px-2 py-1 rounded <%= p === currentPage ? 'bg-gray-400 text-black' : 'bg-gray-800 hover:bg-gray-700' %>">
         <%= p %>
       </a>
@@ -42,7 +42,7 @@ function buildQuery(q) {
 
     <% if (currentPage < totalPages) { %>
       <% q.page = currentPage + 1; %>
-      <a href="/user/product?<%= buildQuery(q) %>"
+      <a href="/product?<%= buildQuery(q) %>"
          class="px-2 py-1 rounded bg-gray-800 hover:bg-gray-700">
         Next
       </a>
